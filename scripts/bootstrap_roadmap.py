@@ -144,7 +144,7 @@ def organize_issues(prefix: str, milestone_numbers: dict):
         if issue["state"] == "closed":
             wanted.add("status:Done")
             # Prevent an already closed issue from retaining a stale status.
-            for label in existing_labels:
+            for label in list(existing_labels):
                 if label.startswith("status:") and label != "status:Done":
                     api("DELETE", f"{prefix}/issues/{number}/labels/{quote(label, safe='')}")
                     existing_labels.discard(label)
