@@ -15,7 +15,7 @@ docker compose ps
 curl -f http://127.0.0.1:8000/healthz/
 ```
 
-Das Web-Container-Startkommando führt **Django-Migrationen und den lokalen Katalogimport automatisch** vor Gunicorn aus. Alle Inhalte kommen aus den im Repository versionierten JSON-Dateien – **keine Live-API-Abfrage**. Die App ist standardmäßig nur über die Loopback-Schnittstelle des Hosts erreichbar; PostgreSQL veröffentlicht keinen Port.
+Das Web-Container-Startkommando führt **Django-Migrationen und den lokalen Katalogimport automatisch** vor Gunicorn aus. Für einen VPS mit Cloudflare Tunnel gilt die **separate** [Tunnel-Deployment-Anleitung](../ops/cloudflare-tunnel.md) mit `compose.tunnel.yaml`; die dortige Variante veröffentlicht keine Host-Ports und nutzt HTTPS über Cloudflare. Alle Inhalte kommen aus den im Repository versionierten JSON-Dateien – **keine Live-API-Abfrage**. Die App ist standardmäßig nur über die Loopback-Schnittstelle des Hosts erreichbar; PostgreSQL veröffentlicht keinen Port.
 
 Falls der Start aufgrund fehlender Berechtigungen/Migrationsdaten scheitert, zuerst die Logs untersuchen, nicht das Datenbank-Volume löschen: `docker compose logs --tail=100 web`.
 

@@ -9,7 +9,9 @@ on:
       - "requirements.txt"
       - "Dockerfile"
       - "compose.yaml"
+      - "compose.tunnel.yaml"
       - ".env.example"
+      - "scripts/verify_tunnel_compose.py"
       - "scripts/smoke_offline_catalog.py"
       - "scripts/postgres_backup.sh"
       - "scripts/verify_postgres_backup.sh"
@@ -22,7 +24,9 @@ on:
       - "requirements.txt"
       - "Dockerfile"
       - "compose.yaml"
+      - "compose.tunnel.yaml"
       - ".env.example"
+      - "scripts/verify_tunnel_compose.py"
       - "scripts/smoke_offline_catalog.py"
       - "scripts/postgres_backup.sh"
       - "scripts/verify_postgres_backup.sh"
@@ -32,6 +36,30 @@ permissions:
   contents: read
 
 jobs:
+  tunnel_config:
+    name: Cloudflare Tunnel production configuration (no token/network required)
+    runs-on: ubuntu-latest
+    # No real Cloudflare account/token is used here. Only merged Compose config.
+    env:
+      POSTGRES_PASSWORD: "ci-only-not-secret-db-password"
+      DJANGO_SECRET_KEY: "ci-only-not-secret-django-key"
+      CLOUDFLARE_TUNNEL_TOKEN: "ci-only-tunnel-placeholder-never-valid"
+    steps:
+      - uses: actions/checkout@v5
+      - name: Compose version and production overlay safety checks
+        run: |
+          set -euo pipefail
+          docker compose version
+          docker compose -f compose.yaml -f compose.tunnel.yaml config --format json |
+            python scripts/verify_tunnel_compose.py
+          # The private token is mandatory: no tunnel must start with no credential.
+          if env -u CLOUDFLARE_TUNNEL_TOKEN docker compose -f compose.yaml -f compose.tunnel.yaml config --quiet >/dev/null 2>&1; then
+            echo "ERROR: tunnel configuration accepted a missing token." >&2
+            exit 1
+          fi
+          # Validate that we can still start the original local-only stack.
+          docker compose -f compose.yaml config --quiet
+
   django:
     runs-on: ubuntu-latest
     env:
