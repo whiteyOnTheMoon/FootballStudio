@@ -3,7 +3,7 @@
 **Datum der Produktentscheidung:** 10.11.2026  
 **Entscheidung:** Product Owner bestätigt **10,00 USD je Kalendermonat** als Obergrenze für kostenpflichtige externe API-Ausgaben von FootballStudio.  
 **Status:** **Budgetentscheidung bestätigt; Kostenkontrollen noch nicht implementiert.**  
-**Betroffene Issues:** [#8 – LLM/Kosten](https://github.com/whiteyOnTheMoon/FootballStudio/issues/8), [#9 – TTS](https://github.com/whiteyOnTheMoon/FootballStudio/issues/9).  
+**Betroffene Issues:** [#8 – LLM/Kosten](https://github.com/whiteyOnTheMoon/FootballStudio/issues/8), [#9 – TTS](https://github.com/whiteyOnTheMoon/FootballStudio/issues/9), [#90 – verbindlicher API-Kostenwächter vor Paid-Calls](https://github.com/whiteyOnTheMoon/FootballStudio/issues/90).  
 **Kontext:** [LLM-Vergleich](llm-and-budget.md), [TTS-Vergleich](tts-and-voice.md), [MVP-Spezifikation](../mvp/acceptance-criteria.md).
 
 ## Geltungsbereich
