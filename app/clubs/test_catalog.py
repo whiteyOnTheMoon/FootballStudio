@@ -73,7 +73,7 @@ class GlobalOfflineCatalogTests(TestCase):
                 self.assertEqual(league.catalog_season, "2026-27")
                 self.assertIn("openfootball", league.source_url)
         self.assertEqual(
-            League.objects.get(country__code="WAL", tier=1).clubs.count(), 0
+            League.objects.get(country__code="WAL", name="Cymru North").clubs.count(), 0
         )
 
     def test_third_tier_including_parallel_groups_is_correct(self):
@@ -225,7 +225,7 @@ class GlobalOfflineCatalogTests(TestCase):
         )
 
     def test_empty_league_is_visible_but_never_populated_with_fake_clubs(self):
-        league = League.objects.get(country__code="WAL", tier=1)
+        league = League.objects.get(country__code="WAL", name="Cymru North")
         self.assertEqual(league.coverage_status, "reference")
         response = self.client.get(reverse("clubs:clubs"), {
             "country": "WAL", "league": league.pk,
