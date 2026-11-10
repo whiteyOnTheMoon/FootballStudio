@@ -37,3 +37,20 @@ Python 3.12 und Django 5.2 LTS (gepinnter Patchstand) mit PostgreSQL 17, Gunicor
 Offizielle Referenzen: [Django-LTS-Unterstützung](https://www.djangoproject.com/download/), [Docker Compose Service-Healthy](https://docs.docker.com/reference/compose-file/services/).
 
 **Nächste Issues:** Anmelde- und Sessionfunktionen #20/#21, Länder-/Liga-/Vereinsmodelle #22, das Katalog-/Dropdown-UI #24/#25 und ein frei gewählter Verein im Testjob #26. Der MVP ist **nicht auf einen Pilotclub beschränkt**.
+
+## E-Mail-Login und Session-Sicherheit (M1 #20/#21)
+
+Die Studio-Startseite ist ab diesem Stand **loginpflichtig**. `/accounts/login/` verwendet E-Mail und Passwort; `/accounts/logout/` akzeptiert **nur POST mit CSRF-Token**. Es gibt keine öffentliche Registrierung.
+
+**Neues Benutzermodell:** `accounts.User` mit eindeutigem E-Mail-Login ersetzt Django `auth.User`, **bevor echte Benutzerdaten existieren**. Eine reale DB mit Nutzern darf nicht ohne eigene Datenmigration umgestellt werden; die bisherigen CI-Umgebungen waren Wegwerf-Datenbanken.
+
+Benutzer in einer autorisierten lokalen Compose-Testumgebung erstellen:
+1. `docker compose exec web python manage.py migrate --noinput`
+2. `docker compose exec web python manage.py createsuperuser` und eine eigene E-Mail-Adresse sowie ein starkes Passwort wählen.
+3. Die Login-Seite unter `http://127.0.0.1:8000/accounts/login/` aufrufen.
+
+**HTTP nur lokal:** Sicher markierte Session- und CSRF-Cookies benötigen HTTPS. Für einen lokalen HTTP-Browsertest in der nicht versionierten `.env` `DJANGO_LOCAL_HTTP=1` aktivieren und den Web-Container neu erstellen. Die App verweigert das bei nichtlokalen `DJANGO_ALLOWED_HOSTS` oder `DJANGO_TRUST_PROXY=1`. Auf einem öffentlichen VPS bleibt `DJANGO_LOCAL_HTTP=0`; HTTPS-/Proxy-Härtung folgt #27/#28.
+
+**Login-Drosselung:** `django-axes` 9.0 speichert Fehlversuche in PostgreSQL und sperrt nach fünf Fehlversuchen binnen 15 Minuten. Zunächst wird nur die Socket-IP und nicht ungeprüfter `X-Forwarded-For`-Inhalt verwendet. Reverse-Proxy-IP-Handling ist vor öffentlichem Deployment gesondert zu prüfen.
+
+Django-Tests prüfen E-Mail-Eindeutigkeit, gültige/ungültige Anmeldung, Sessions, CSRF, POST-Logout und wiederholte Fehlversuche. Zusätzliche öffentliche Deploymentkontrollen (TLS, HSTS, Proxy/Firewall) bleiben in eigenen Issues.

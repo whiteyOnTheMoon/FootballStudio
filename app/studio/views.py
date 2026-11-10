@@ -1,10 +1,12 @@
 """No production features yet: this is the M1 project foundation."""
+from django.contrib.auth.decorators import login_required
 from django.db import connections
 from django.db.utils import DatabaseError
 from django.http import HttpResponse, HttpResponseServerError
 from django.shortcuts import render
 
 
+@login_required
 def home(request):
     return render(request, "studio/home.html")
 

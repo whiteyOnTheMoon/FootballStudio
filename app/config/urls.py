@@ -1,10 +1,18 @@
 """Routes for the foundational M1 Django application."""
 from django.contrib import admin
+from django.contrib.auth.views import LoginView, LogoutView
+from app.accounts.forms import EmailAuthenticationForm
 from django.urls import path
 from app.studio import views
 
 urlpatterns = [
     path("", views.home, name="home"),
+    path("accounts/login/", LoginView.as_view(
+        template_name="registration/login.html",
+        authentication_form=EmailAuthenticationForm,
+        redirect_authenticated_user=True,
+    ), name="login"),
+    path("accounts/logout/", LogoutView.as_view(next_page="login"), name="logout"),
     path("healthz/", views.healthz, name="healthz"),
     path("admin/", admin.site.urls),
 ]

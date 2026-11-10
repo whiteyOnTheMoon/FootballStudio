@@ -41,8 +41,10 @@ jobs:
         run: python -m pip install -r requirements.txt
       - name: Django system checks
         run: python manage.py check
+      - name: Check pending migrations
+        run: python manage.py makemigrations --check --dry-run
       - name: HTTP / readiness tests (SQLite test database)
-        run: python manage.py test app.studio --verbosity=2
+        run: python manage.py test app.studio app.accounts --verbosity=2
 
   compose:
     runs-on: ubuntu-latest
@@ -76,8 +78,9 @@ jobs:
           curl --fail --silent --show-error http://127.0.0.1:8000/ > /dev/null
           curl --fail --silent --show-error http://127.0.0.1:8000/healthz/ | grep -qx "ok"
           docker compose exec -T web python manage.py check
+          docker compose exec -T web python manage.py makemigrations --check --dry-run
           docker compose exec -T web python manage.py migrate --noinput
-          docker compose exec -T web python manage.py test app.studio --verbosity=1
+          docker compose exec -T web python manage.py test app.studio app.accounts --verbosity=1
       - name: Check PostgreSQL data survives database restart
         run: |
           set -euo pipefail

@@ -9,19 +9,25 @@
     main { max-width: 50rem; margin: 12vh auto; padding: 2rem; }
     h1 { line-height: 1.2; }
     .note { color: #bac9d5; }
-    .steps { background: #1b2838; padding: 1.2rem 1.8rem; border-radius: 0.8rem; }
+    .steps { background: #1b2838; padding: 1.2rem 1.8rem; border-radius: .8rem; }
+    button { border: 1px solid #bac9d5; background: transparent; color: inherit; padding: .55rem 1rem; cursor: pointer; border-radius: .5rem; }
   </style>
 </head>
 <body>
 <main>
   <h1>FootballStudio</h1>
-  <p class="note">Django foundation is running. This is not yet the complete prototype.</p>
-  <section class="steps" aria-label="Planned selection flow">
+  <p>Signed in as {{ request.user.email }}</p>
+  <form method="post" action="{% url 'logout' %}">
+    {% csrf_token %}
+    <button type="submit">Sign out</button>
+  </form>
+  <p class="note">The Django app now requires login. This is not yet the complete prototype.</p>
+  <section class="steps" aria-label="Planned club selection">
     <h2>Coming next: Land → Liga → Verein</h2>
-    <p>The first prototype will let you select any available football club by country and league,
+    <p>The first prototype will let you choose any available football club by country and league,
        or add a missing club manually. No fixed pilot club is required.</p>
   </section>
-  <p class="note">Login, the live club selector, job management and video generation will be added in subsequent M1/M2 issues.</p>
+  <p class="note">Live club selection, jobs and video generation follow in later M1/M2 issues.</p>
 </main>
 </body>
 </html>

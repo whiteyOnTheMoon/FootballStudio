@@ -4,6 +4,7 @@ DATABASE_URL is required by default. An explicit SQLite fallback is allowed
 only for local/unit tests; the Docker Compose stack always uses PostgreSQL.
 """
 import os
+from datetime import timedelta
 from pathlib import Path
 
 import dj_database_url
@@ -29,6 +30,7 @@ if not ALLOWED_HOSTS:
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
+    "axes",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
@@ -46,7 +48,25 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "axes.middleware.AxesMiddleware",
 ]
+AUTH_USER_MODEL = "accounts.User"
+AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesStandaloneBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "home"
+LOGOUT_REDIRECT_URL = "login"
+# Database-based lockouts work across Gunicorn workers.
+AXES_FAILURE_LIMIT = 5
+AXES_COOLOFF_TIME = timedelta(minutes=15)
+AXES_USE_ATTEMPT_EXPIRATION = True
+AXES_LOCKOUT_PARAMETERS = ["ip_address", ["username", "ip_address"]]
+AXES_USERNAME_FORM_FIELD = "username"
+AXES_HTTP_RESPONSE_CODE = 429
+AXES_ENABLE_RETRY_AFTER_HEADER = True
+AXES_VERBOSE = False
 ROOT_URLCONF = "app.config.urls"
 TEMPLATES = [{
     "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -99,8 +119,20 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SECURE = not DEBUG
-CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_AGE = 8 * 60 * 60
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+local_http = os.environ.get("DJANGO_LOCAL_HTTP", "0") == "1"
+if local_http and (
+    set(ALLOWED_HOSTS) - {"localhost", "127.0.0.1", "testserver"}
+    or os.environ.get("DJANGO_TRUST_PROXY") == "1"
+):
+    raise ImproperlyConfigured(
+        "DJANGO_LOCAL_HTTP is allowed only with loopback hosts and no trusted proxy."
+    )
+SESSION_COOKIE_SECURE = not DEBUG and not local_http
+CSRF_COOKIE_SECURE = not DEBUG and not local_http
 # HTTPS/proxy and HSTS remain separate M1 deployment tasks (#27/#28).
 SECURE_HSTS_SECONDS = 0
 SECURE_SSL_REDIRECT = False
