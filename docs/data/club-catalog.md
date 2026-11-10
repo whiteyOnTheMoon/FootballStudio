@@ -60,4 +60,14 @@ Die dokumentierte freie V1-Schnittstelle hat je Endpoint eingeschränkte Ergebni
 
 Die Django-Unit-Tests nutzen **ausschließlich Mock-Provider**, um nicht bei jedem CI-Run von fremden APIs abhängig zu werden. Eine zusätzliche Liveprüfung ist erforderlich, bevor von produktiver Länder-/Vereinsabdeckung gesprochen werden darf. Der VPS wurde bisher nicht verändert.
 
-**Noch nicht erledigt:** öffentliches VPS-Deployment, manuelle Clubanlage im Nutzer-Dashboard (#25), persistenter Testjob (#26), Video-Worker/Filmproduktion (M2).
+## Manuell angelegte Vereine im Dashboard (FS-011b / #25)
+
+In der interaktiven Vereinsauswahl erscheint nach der Ligawahl eine **separate Eingabemaske** für nicht gelistete Clubs. Ein angemeldeter Nutzer kann einen Namen erfassen und als **neuen Verein in exakt dieser Liga** speichern. Der neue Datensatz hat `is_manual=True`, `provider=manual` und steht anschließend sofort in derselben Auswahl zur Verfügung.
+
+**Geschützter Endpoint:** `POST /clubs/api/manual/` mit `country`, `league` und `name`. Django prüft Session und CSRF-Token. Der Server validiert Land/Liga gegen den aktuellen Katalog und lehnt fremde Ligazuordnungen ab (HTTP 404). Fehlende oder ungültige Pflichtfelder führen zu HTTP 400, doppelte Clubnamen **unabhängig von Groß-/Kleinschreibung** innerhalb einer Liga zu HTTP 409. Der Datenbank-Constraint verhindert auch parallele Dubletten. Bereits importierte API-Clubs bleiben unberührt; ein manuell angelegter Club wird bei späterem API-Sync **nicht überschrieben**.
+
+**Grenze:** Eine manuelle Vereinsanlage ist in dieser Phase nur für **bereits unterstützte Länder/Ligen** möglich. Das frei anlegbare Länder-/Ligen-Verzeichnis ist derzeit über den Django Admin verwaltbar; ein eigenes Nutzerformular dafür ist noch nicht Bestandteil des MVP. Wer einen Club in einer nicht unterstützten Liga eintragen möchte, benötigt zunächst eine unterstützte Liga oder später eine entsprechende Erweiterung.
+
+**Abnahmetests #25:** Django-Tests validieren normalen POST, sofortige serverseitige Auswahl, Duplikatnamen, ungültige Felder, Länder-/Ligenwechsel, Loginpflicht, CSRF und dass die Vereinsanlage **keinen kostenpflichtigen externen API-Aufruf** benötigt.
+
+**Noch nicht erledigt:** öffentliches VPS-Deployment, persistenter Testjob (#26), Video-Worker/Filmproduktion (M2).
