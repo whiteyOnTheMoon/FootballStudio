@@ -139,7 +139,7 @@
     <h2 id="next-heading">Was ist bereits möglich?</h2>
     <p>Du kannst einen Verein aus einer angebotenen Liga auswählen. Ein bestimmter Pilotverein ist nicht vorgegeben.</p>
     <p class="muted">Fehlt ein Verein in einer unterstützten Liga? Du kannst ihn oben manuell hinzufügen. Den M1-Testjob kannst du jetzt speichern. Die Filmproduktion mit KI, TTS und FFmpeg wird später im M2-Worker aktiviert.</p>
-    <p class="muted">Die UEFA ist mit allen 55 Verbänden und ihren bekannten Ligastrukturen erfasst. In anderen Verbänden ist die Abdeckung im Aufbau. Ligen ohne geprüfte Teilnehmerliste bleiben sichtbar, melden aber ausdrücklich fehlende Vereinsdaten. Liechtenstein hat keine eigene Liga; Gibraltar und San Marino besitzen nur eine nationale höchste Spielklasse.</p>
+    <p class="muted">Alle 211 FIFA-Mitgliedsverbände sind als Offline-Verzeichnis erfasst. Für viele fehlen noch geprüfte Ligastrukturen und Vereinslisten. Ligen ohne geprüfte Teilnehmerliste bleiben sichtbar, melden aber ausdrücklich fehlende Vereinsdaten. Liechtenstein hat keine eigene Liga; Gibraltar und San Marino besitzen nur eine nationale höchste Spielklasse.</p>
   </section>
 
   <footer>
@@ -284,7 +284,9 @@
       const result = await readJson(api.leagues + "?country=" + encodeURIComponent(country.value));
       if (token !== revision) return;
       fill(league, result.leagues, "Liga wählen …", "id");
-      message("Wähle eine Liga. Die Vereinsliste wird anschließend geladen.");
+      message(result.leagues.length
+        ? "Wähle eine Liga. Die Vereinsliste wird anschließend geladen."
+        : result.notice, !result.leagues.length && country.value !== "LI");
     } catch (error) {
       if (token !== revision) return;
       message(error.message, true);

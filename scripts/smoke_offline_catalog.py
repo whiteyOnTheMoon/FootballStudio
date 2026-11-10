@@ -27,12 +27,20 @@ def main():
         again = (Country.objects.count(), League.objects.count(), Club.objects.count())
         assert first == again, "Offline data import must be idempotent."
         assert Confederation.objects.count() == 6
-        assert Country.objects.filter(confederation__code="UEFA").count() == 55
+        assert Country.objects.count() == 211
+        expected = {
+            "UEFA": 55, "CAF": 54, "AFC": 46,
+            "CONCACAF": 35, "CONMEBOL": 10, "OFC": 11,
+        }
+        for code, amount in expected.items():
+            assert Country.objects.filter(confederation__code=code).count() == amount
         assert League.objects.filter(coverage_status="snapshot").count() == 16
         assert Club.objects.filter(is_manual=False).count() == 278
         assert Country.objects.filter(code="LI").exists()
+        assert Country.objects.filter(code="AF", confederation__code="AFC").exists()
+        assert not League.objects.filter(country__code="AF").exists()
         assert not League.objects.filter(country__code="LI").exists()
-    print("Offline directory OK:", first, "UEFA 55; 6 confeds; 16 club snapshots.")
+    print("Offline directory OK:", first, "FIFA 211; UEFA 55; 6 confeds; 16 club snapshots.")
     print("No HTTP/API calls were made during migration or import.")
 
 

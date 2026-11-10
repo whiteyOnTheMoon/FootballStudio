@@ -62,7 +62,7 @@ jobs:
           python-version: "3.12"
       - name: Install application dependencies
         run: python -m pip install -r requirements.txt
-      - name: "Verify offline confederations, UEFA 55 and roster snapshots"
+      - name: "Verify offline FIFA 211, UEFA 55 and roster snapshots"
         run: python scripts/smoke_offline_catalog.py
 
   compose:

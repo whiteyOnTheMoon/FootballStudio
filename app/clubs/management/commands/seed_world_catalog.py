@@ -27,9 +27,18 @@ def validate_data(index, snapshots):
     confeds = {x["code"] for x in index["confederations"]}
     if confeds != {"UEFA", "AFC", "CAF", "CONCACAF", "CONMEBOL", "OFC"}:
         raise CommandError("Unexpected set of football confederations.")
-    uefa = [x for x in index["associations"] if x["confederation"] == "UEFA"]
-    if len(uefa) != 55:
-        raise CommandError(f"Expected all 55 UEFA associations, found {len(uefa)}")
+    expected_members = {
+        "UEFA": 55, "CAF": 54, "AFC": 46,
+        "CONCACAF": 35, "CONMEBOL": 10, "OFC": 11,
+    }
+    actual_members = {
+        code: sum(row["confederation"] == code for row in index["associations"])
+        for code in expected_members
+    }
+    if actual_members != expected_members:
+        raise CommandError(
+            f"Invalid FIFA membership directory: {actual_members}; expected {expected_members}"
+        )
     keys = set()
     for association in index["associations"]:
         key = association["code"]
@@ -63,7 +72,7 @@ def validate_data(index, snapshots):
 
 
 class Command(BaseCommand):
-    help = "Seed offline world confederations, UEFA 55 and versioned club rosters without APIs."
+    help = "Seed FIFA 211 member associations and versioned league/club data, offline."
 
     def add_arguments(self, parser):
         parser.add_argument("--without-teams", action="store_true",
@@ -71,6 +80,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         index = read_data("world_catalog.json")
+        extension = read_data("fifa_member_associations_2026.json")
+        index["associations"].extend(extension["associations"])
         snapshots = read_data("teams-2026-27.json")
         validate_data(index, snapshots)
         club_count = 0

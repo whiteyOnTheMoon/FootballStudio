@@ -58,7 +58,7 @@ def leagues(request):
         Country.objects.select_related("confederation"),
         code=code, is_active=True,
     )
-    results = country.leagues.filter(is_active=True).order_by("tier", "name")
+    results = list(country.leagues.filter(is_active=True).order_by("tier", "name"))
     return JsonResponse({
         "association": country.name,
         "leagues": [{
@@ -70,6 +70,9 @@ def leagues(request):
         "notice": (
             "This association has no domestic league. Consult the relevant cross-border system."
             if country.code == "LI" else (
+                "League data for this association has not yet been verified or imported. "
+                "No placeholder leagues or clubs have been invented."
+                if not results else
                 "Some associations have only one national league or regional parallel divisions."
             )
         ),
