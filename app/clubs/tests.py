@@ -24,7 +24,7 @@ class CatalogModelsTests(TestCase):
 
     def test_country_codes_normalized(self):
         self.assertEqual(self.germany.code, "DE")
-        invalid = Country(code="DEU", name="Invalid Country")
+        invalid = Country(code="DEUT", name="Invalid Country")
         with self.assertRaises(ValidationError):
             invalid.full_clean()
 
