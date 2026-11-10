@@ -1,0 +1,40 @@
+# Production-only Cloudflare Tunnel overlay. Use with compose.yaml:
+# docker compose -f compose.yaml -f compose.tunnel.yaml up -d --build
+# Never run this overlay without configuring a remotely-managed Cloudflare tunnel.
+services:
+  web:
+    # Do NOT publish Gunicorn on the VPS, not even on loopback, in tunnel mode.
+    # Cloudflare is the only ingress; the DB stays on the private default network.
+    ports: !reset []
+    networks:
+      - default
+      - tunnel_frontend
+    environment:
+      DJANGO_ALLOWED_HOSTS: "studio2.ap-pixels.com"
+      DJANGO_DEBUG: "0"
+      DJANGO_LOCAL_HTTP: "0"
+      DJANGO_TRUST_PROXY: "1"
+      DJANGO_FORCE_HTTPS: "1"
+      DJANGO_CSRF_TRUSTED_ORIGINS: "https://studio2.ap-pixels.com"
+      # Keep HSTS disabled until a live HTTPS check succeeds.
+      DJANGO_HSTS_SECONDS: "${DJANGO_HSTS_SECONDS:-0}"
+
+  cloudflared:
+    image: cloudflare/cloudflared:2026.10.7
+    restart: unless-stopped
+    depends_on:
+      web:
+        condition: service_healthy
+    command: ["tunnel", "--no-autoupdate", "run"]
+    environment:
+      # cloudflared's documented token environment variable avoids CLI leaks.
+      TUNNEL_TOKEN: "${CLOUDFLARE_TUNNEL_TOKEN:?Set CLOUDFLARE_TUNNEL_TOKEN in the private .env}"
+    networks:
+      - tunnel_frontend
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  tunnel_frontend:
