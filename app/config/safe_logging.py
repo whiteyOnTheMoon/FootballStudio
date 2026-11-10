@@ -17,7 +17,7 @@ _REQUEST_ID = re.compile(r"^[0-9a-f]{16}$")
 class SafeJsonFormatter(logging.Formatter):
     def format(self, record):
         event = getattr(record, "event", "framework_error")
-        if event not in _ALLOWED_EVENTS:
+        if not isinstance(event, str) or event not in _ALLOWED_EVENTS:
             event = "framework_error"
 
         data = {
@@ -37,7 +37,7 @@ class SafeJsonFormatter(logging.Formatter):
             data["status_code"] = status
 
         method = getattr(record, "http_method", None)
-        if method in _ALLOWED_METHODS:
+        if isinstance(method, str) and method in _ALLOWED_METHODS:
             data["method"] = method
 
         request_id = getattr(record, "request_id", None)
