@@ -1,89 +1,81 @@
-# FS-001c – Pilotvereine und Testszenarien
+# FS-001c – Frei wählbare Vereine und Testszenarien
 
-**Status:** M0 – Testplanung vorbereitet; **Freigabe des ersten Pilotvereins durch Product Owner ausstehend**.  
-**Issue:** [#3](https://github.com/whiteyOnTheMoon/FootballStudio/issues/3) · **Roadmap:** FS-001 / M0, Pilotvereine aus Seite 4 der Version 1.0 (09.11.2026).  
-**Verwandt:** [MVP-Nutzerfluss](user-flow.md), [MVP-Abnahmekriterien](acceptance-criteria.md), [M2-Filmtest #50](https://github.com/whiteyOnTheMoon/FootballStudio/issues/50), [M2-Abnahme #51](https://github.com/whiteyOnTheMoon/FootballStudio/issues/51).
+**Status:** M0-Spezifikation; keine Festlegung auf einen bestimmten Verein.  
+**Issue:** [#3](https://github.com/whiteyOnTheMoon/FootballStudio/issues/3) · **Roadmap:** FS-001 / M0 (Version 1.0 vom 09.11.2026, Seite 4).  
+**Verwandt:** [MVP-Nutzerfluss](user-flow.md), [Abnahmekriterien](acceptance-criteria.md), [M1-Auswahl #24](https://github.com/whiteyOnTheMoon/FootballStudio/issues/24), [M2-End-to-End-Test #50](https://github.com/whiteyOnTheMoon/FootballStudio/issues/50).
 
-## 1. Auswahlprinzip
+## 1. Verbindliche Produktentscheidung: kein festgelegter Pilotverein
 
-Das erste M2-Ziel bleibt ein **einfacher, vollständiger englischsprachiger 8–10-Minuten-Film** aus der geschützten, via **Docker Compose** betriebenen Web-App. Der Pilotverein muss durch den Nutzer über **Land → Liga → Verein** ausgewählt werden können; eine fest verdrahtete Club-Auswahl erfüllt die Anforderung **nicht**.
+Der Nutzer wählt **auch im ersten M1-Prototyp** den Verein selbst über **Land → Liga → Verein**. In M2 wird das fertige Video für **den ausgewählten Verein** produziert.
 
-Für die erste technische End-to-End-Abnahme ist eine **voraussichtlich praktikable Quellen- und Erzählgrundlage** hilfreich. Danach prüfen wir bewusst schwierigere Fälle. Das ist ein Planungskriterium, keine Behauptung, dass Quellen oder Medienrechte bereits geprüft wären.
+- **Kein hart codierter Verein**, keine technisch vorgegebene feste Pilotclub-Liste und keine Pflicht, Malmö FF oder einen anderen benannten Club zu verwenden.
+- Nach Wahl eines Landes werden dessen unterstützte Ligen angeboten; nach Wahl einer Liga die zugehörigen Vereine. Ein Wechsel setzt abhängige Auswahlen zurück.
+- Das MVP soll für jedes unterstützte Land möglichst die höchsten **zwei** Ligen anbieten, eine dritte wo die Datenquelle sie liefert. Die tatsächliche Länder-/Ligenabdeckung wird beim Adapter geprüft und dokumentiert.
+- Kann ein Verein nicht über die Datenquelle gefunden werden, steht die **manuelle Vereinsanlage** zur Verfügung. Ein manuell angelegter Club kann genauso für einen Produktionsjob ausgewählt werden.
+- **Testbeispiele sind keine Produktbeschränkung.** Weder die Oberfläche noch das Backend dürfen den Produktionsablauf auf die nachstehenden Beispiele begrenzen.
+- Ausgewähltes Land, Liga und Verein müssen im Job nachvollziehbar gespeichert werden. Die App läuft dabei über **Docker Compose**.
 
-## 2. Vier Kandidaten aus der Projektroadmap
+Der MVP-Erfolg ist ein end-to-end erzeugter **englischer Film von 8–10 Minuten** für einen **zur Laufzeit frei ausgewählten** Verein, mit Quellen, Skript, Untertiteln und MP4-Download. Ein einzelner End-to-End-Abnahmelauf ist ausreichend, sofern die dynamische Auswahl **mit mindestens zwei unterschiedlichen Clubs** separat nachgewiesen wird.
 
-| Verein | In der Roadmap vorgesehenes Testziel | Einsatz im Testplan | Status |
-| --- | --- | --- | --- |
-| **Malmö FF** | Historisch erzählbare internationale Ereignisse; **möglicherweise** gute Quellenlage | **Empfehlung für den ersten End-to-End-Film**: Kernpipeline und englischen Erzählbogen prüfen | Vorgeschlagen, **nicht freigegeben** |
-| **SK Sturm Graz** | Längere Geschichte mit mehreren Epochen und durchgängigem Erzählbogen | Szenenplanung, Chronologie und längere Dramaturgie testen | Weitere Testoption |
-| **NK Celje** | Weniger international zugängliche Quellen und Bildmaterial | Schwieriger Fall: fehlende Fakten, alternative Text-/Karten-Szenen und Medienfallback | Geplanter Belastungstest |
-| **FC Zürich** | Alternativer deutschsprachiger Quellraum und Vereinsprofil | Quellenarbeit in einem weiteren deutschsprachigen Umfeld testen | Weitere Testoption |
+## 2. Unverbindliche Testbeispiele aus der Roadmap
 
-**Grenze der Aussage:** Die Matrix übernimmt die vorgesehenen **Testzwecke aus der Roadmap**. Tatsächliche API-Abdeckung, Beleglage, Lizenzlage, Aktualität der Liga und verfügbare Medien wurden **noch nicht live geprüft**. Ergebnisse einer späteren Recherche dürfen die Reihenfolge verändern.
+| Beispielverein | Möglicher Testschwerpunkt | Verbindlichkeit |
+| --- | --- | --- |
+| Malmö FF | Historischer Erzählbogen und potenziell umfangreiche Quellen | Optionales Testbeispiel |
+| SK Sturm Graz | Ereignisse über mehrere Epochen | Optionales Testbeispiel |
+| NK Celje | Potenziell weniger zugängliche Quellen und Medien; Fallback | Optionales Testbeispiel |
+| FC Zürich | Deutschsprachige Recherchequellen | Optionales Testbeispiel |
 
-## 3. Empfohlene Reihenfolge (zur Entscheidung)
+Die vier Beispiele sind **austauschbar**. Sie stammen als Vorschläge aus der Roadmap; Quellenqualität, tatsächliche API-Erreichbarkeit und Medienrechte wurden nicht live verifiziert. Der Nutzer muss für keinen dieser Clubs eine Vorabentscheidung treffen.
 
-1. **Malmö FF als erster vollständiger M2-Pilot:** Die Roadmap sieht hier einen aussichtsreichen Erzählansatz und mögliche Quellenbreite vor. Ein einfach zu prüfender Film bietet den schnellsten Nachweis der gesamten Produktionskette.
-2. **NK Celje als nächster schwieriger Quellen-/Medienfall:** Gezielter Nachweis, dass das System fehlende Informationen klar markiert und statt ungeklärter Bilder **eigene Grafiken** verwenden kann.
-3. **SK Sturm Graz** zum Test einer längeren, epochenübergreifenden Geschichte.
-4. **FC Zürich** zum zusätzlichen Test deutschsprachiger Quellen.
+## 3. Testfälle für den Prototyp und M2
 
-**Kein Automatismus:** Die Entscheidung über den ersten Pilotverein trifft der **Product Owner**. Eine Zustimmung in Chat oder im Issue wird nachträglich hier dokumentiert, bevor die Aufgabe #3 abgeschlossen wird.
+### T1 – Frei wählbare Clubs und abhängige Dropdowns (M1)
+- [ ] Anmeldung in der Docker-betriebenen Web-App.
+- [ ] Land auswählen → passende Ligen anzeigen → Liga auswählen → passende Clubs anzeigen.
+- [ ] Land- oder Ligawahl ändern → abhängige Werte zurücksetzen, keine veraltete Vereinszuordnung.
+- [ ] **Zwei verschiedene Clubs aus der Datenquelle** nacheinander auswählen und jeweils als getrennten Testjob verwenden; kein vorprogrammierter Standardclub als einziger Weg.
+- [ ] Für das gewählte unterstützte Land die höchsten zwei Ligen testen, sofern die Datenquelle die Abdeckung bietet; fehlende Abdeckung als Einschränkung und eigenes Issue dokumentieren.
+- [ ] Nicht gefundener Verein: manuell anlegen, auswählen und Testjob anlegen; damit wird der dritte unabhängige Auswahlweg geprüft.
+- [ ] Ausgewählter Verein ist für jeden Job korrekt gespeichert.
 
-## 4. Konkrete Prüfszenarien
+**Implementierung:** [#24](https://github.com/whiteyOnTheMoon/FootballStudio/issues/24), [#25](https://github.com/whiteyOnTheMoon/FootballStudio/issues/25), [#26](https://github.com/whiteyOnTheMoon/FootballStudio/issues/26).
 
-### T1 – Interaktive Vereinswahl im M1-Prototyp
-**Vorbedingungen:** Web-App läuft via Docker Compose; Testnutzer ist angemeldet.
+### T2 – Frei ausgewählter Club wird vollständiger Film (M2)
+- [ ] Einen beliebigen aus der unterstützten Auswahl **zur Laufzeit** wählen oder zuvor manuell anlegen; nicht im Code hart hinterlegen.
+- [ ] Titel manuell eingeben oder aus drei KI-Vorschlägen auswählen.
+- [ ] Vollständigen Job mit Recherche/Faktendossier, Quellen, Drehbuch, TTS, Grafiken, Untertiteln und MP4 im Docker-Stack durchführen.
+- [ ] 8–10 Minuten tatsächliche Laufzeit prüfen; 16:9, Ziel 1080p, interne 720p-Testrender separat kennzeichnen.
+- [ ] MP4, Skript und Quellen über die geschützte App ansehen und herunterladen.
+- [ ] Einen Fehler-/Wiederaufnahmefall protokollieren, ohne abgeschlossene Recherche unnötig neu durchzuführen.
 
-- [ ] Nutzer wählt zuerst das Land; nur passende Ligen erscheinen.
-- [ ] Nutzer wählt eine Liga; passende Vereine erscheinen.
-- [ ] Wechsel von Land/Liga setzt darunter liegende Auswahlen zurück.
-- [ ] Mindestens zwei höchste Ligen pro unterstütztem Land werden für die pilotierten Länder geprüft; Verfügbarkeitsgrenzen dokumentieren.
-- [ ] Der gewählte Club wird im Testjob gespeichert und im Dashboard dargestellt.
-- [ ] Bei Datenlücken funktioniert die manuelle Vereinsanlage als Fallback.
-- [ ] Der Test verwendet **nicht** ausschließlich einen fest codierten Pilotclub.
+**Implementierung und Abnahme:** [#50](https://github.com/whiteyOnTheMoon/FootballStudio/issues/50), [#51](https://github.com/whiteyOnTheMoon/FootballStudio/issues/51). Es gibt **keine vorgeschriebene Club-ID oder vorherige Einzelfreigabe**.
 
-**Nachweis:** Screenshots/Protokoll der Auswahl, verwendete Datenquelle und Job-ID. Implementierung in [#24](https://github.com/whiteyOnTheMoon/FootballStudio/issues/24), [#25](https://github.com/whiteyOnTheMoon/FootballStudio/issues/25), [#26](https://github.com/whiteyOnTheMoon/FootballStudio/issues/26).
+### T3 – Unvollständige Quellen oder fehlende Medien (M2/M3)
+- [ ] Einen Club mit tatsächlich knapper Quellen- oder Medienlage im Test auswählen; NK Celje ist ein mögliches, aber nicht vorgeschriebenes Beispiel.
+- [ ] Unbelegte Aussagen nicht als gesicherte Fakten ausgeben.
+- [ ] Fehlende lizenzrechtlich geeignete Bilder durch eigene Karten/Textgrafiken/Zeitleisten ersetzen.
+- [ ] Quellen und Lizenzstatus verwendeter Medien nachvollziehbar speichern; ohne Freigabe nicht öffentlich publizieren.
 
-### T2 – Erster durchgängiger englischer Film (M2)
-- [ ] Verein über T1 ausgewählt, Titel (KI-Vorschlag oder manuell) festgelegt.
-- [ ] Faktendossier mit Quellen, Drehbuch, Szenen und Medien-/Lizenzmetadaten erstellt.
-- [ ] TTS, Untertitel und MP4 aus der Docker-basierten Produktionspipeline erzeugt – **ohne manuelle Montage**.
-- [ ] Tatsächliche Laufzeit von **8 bis 10 Minuten** nachgemessen; Format **16:9**, Ziel **1920×1080**, interne 720p-Testausgabe zulässig.
-- [ ] Geschützte Vorschau und Download von MP4 sowie Skript und Quellen geprüft.
-- [ ] Jobstatus und ein gezielter Fehler-/Retry-Fall nachvollzogen.
-- [ ] Keine ungeprüfte Veröffentlichung des Films.
+### T4 – Zeitlich komplexe Vereinsgeschichte (M3/M4)
+Einen Club mit belegbarer, längerer Chronologie aus der UI wählen (z. B. SK Sturm Graz). Epochen/Datumsangaben korrekt verarbeiten; Template-Ausbau erst M4.
 
-**Nachweis:** Job-ID, generierte Ausgaben, Probe-Render, tatsächliche Medienmetadaten, Quellenliste, Retry-Protokoll. Abnahme in [#50](https://github.com/whiteyOnTheMoon/FootballStudio/issues/50) und [#51](https://github.com/whiteyOnTheMoon/FootballStudio/issues/51).
+### T5 – Anderer Quellraum (M3)
+Einen Club mit anderen Sprachquellen wählen (z. B. FC Zürich). Originalbelege behalten und korrekt ins englische Skript übertragen.
 
-### T3 – Schwache Quellenlage / Medien fehlen (M2/M3)
-**Kandidat:** **NK Celje**, vorbehaltlich Bestätigung der konkreten Datenlage bei der Recherche.
+## 4. Nachweispflicht und Grenzen
 
-- [ ] Wenig belegte oder widersprüchliche Angaben werden **nicht als Fakten erfunden**.
-- [ ] Fehlt geeignetes oder rechtlich klares Bildmaterial, werden Karten, Zeitleisten oder eigene Infografiken als Ersatz verwendet.
-- [ ] Quellen und Lizenzstatus je verwendeter externer Mediendatei dokumentiert.
-- [ ] Fehlende Daten führen nicht zu unbegründeten Superlativen oder erfundenen Zitaten.
-- [ ] Nicht eindeutig nutzbares Material wird **nicht ungeprüft veröffentlicht**.
+Für alle Pilotläufe: Land, Liga, Vereins-ID/Name, Datenquelle oder Kennzeichen „manuell angelegt“, Job-ID, Sprache, Titeleingabe/-auswahl, Pipeline-Status, MP4-Dauer/-Auflösung, Quellen und Medien-/Lizenzstatus protokollieren.
 
-**Hinweis:** Belastungstest und anspruchsvollere Qualitäts-/Lizenz-Gates werden in M3 vertieft; für den M2-Prototyp muss zunächst der grundlegende sichere Fallback funktionieren.
+**Noch keine Implementierung und kein Test bestanden:** API-Abdeckung, Medienrechte, Container-Start, Renderausgabe und Mehrfachauswahl werden erst in M1/M2 tatsächlich getestet.
 
-### T4 – Komplexe Chronologie (M3/M4)
-**Kandidat:** SK Sturm Graz. Über mehrere Epochen verteilte, belegbare Ereignisse werden in einer nachvollziehbaren Timeline / Szenenabfolge verarbeitet, ohne Zeitangaben zu erfinden. Umfangreiche Timeline-Templates folgen erst in M4.
+## 5. M0-Abnahme dieser Spezifikation
 
-### T5 – Alternativer Quellraum (M3)
-**Kandidat:** FC Zürich. Quellen aus einem weiteren deutschsprachigen Umfeld werden unter Wahrung der Originalbelege in ein englisches Skript überführt; Eigennamen und Daten bleiben überprüfbar.
+- [x] Kein bestimmter Pilotverein wird vom Product Owner verlangt.
+- [x] Beispielvereine aus der Roadmap sind als **optional** gekennzeichnet.
+- [x] M1 muss dynamische Vereinsauswahl in Docker bieten.
+- [x] Abnahmetests mit zwei unterschiedlichen API-Clubs und einem manuell angelegten Club sind geplant.
+- [x] M2-End-to-End-Video ist für einen zur Laufzeit ausgewählten Verein vorgesehen.
+- [x] Schwache Fakten-/Medienlage wird als separater Testfall berücksichtigt.
 
-## 5. Dokumentation der späteren Abnahme
-
-Zum jeweiligen Lauf werden gesammelt: Pilotclub, Land/Liga, Auswahlweg, Quelle der Clubdaten, Sprache `en`, generierter Titel, Job-ID, Pipeline-Status, MP4-Dauer/-Auflösung, Medienmetadaten und Quellenreferenzen. Der M1-Auswahltest beweist **keine** erfolgreiche M2-Filmproduktion.
-
-**Noch nicht durchgeführt:** Live-API-Prüfung, Verfügbarkeit externer Medien, Lizenzfreigabe, Render- oder VPS-Benchmark. Diese Arbeitspakete stehen erst in späteren GitHub-Issues.
-
-## 6. Product-Owner-Entscheidung (offen)
-
-- [ ] **Malmö FF** als erster Pilotverein bestätigen **oder** Alternative benennen.
-- [x] Vier Kandidaten mitsamt Roadmap-Testzweck dokumentiert.
-- [x] Mindestens ein absichtlich schwieriger Quellen-/Medien-Testfall (NK Celje) beschrieben.
-- [x] Prüfszenarien mit M1-Auswahl und Docker sowie M2-Filmabnahme verbunden.
-
-**Erst wenn die erste Checkbox entschieden ist**, kann FS-001c / #3 als erledigt geschlossen werden.
+Die Dokumentationsaufgabe kann damit ohne Vereinsentscheidung geschlossen werden; die eigentlichen Funktionstests bleiben in M1/M2 offen.
