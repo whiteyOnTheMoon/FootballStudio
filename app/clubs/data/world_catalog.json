@@ -5,7 +5,11 @@
     "https://github.com/openfootball/leagues",
     "https://www.lfv.li/breitenfussball/vereinsfussball/erwachsenenfussball/",
     "https://www.gibraltarfa.com/competitions/gibraltar-football-league-26-27-3395567",
-    "https://www.fsgc.sm/en/history"
+    "https://www.fsgc.sm/en/history",
+    "https://rfef.es/es/noticias/aprobados-los-grupos-de-primera-federacion-para-la-temporada-202627",
+    "https://www.fff.fr/article/17022-le-calendrier-2026-2027-est-servi.html",
+    "https://ettanfotboll.se/seriesammansattning-for-ettan-2026/",
+    "https://www.jleague.jp/en/outline/j3/"
   ],
   "confederations": [
     {
@@ -97,6 +101,26 @@
         {
           "tier": 2,
           "name": "2. Liga"
+        },
+        {
+          "tier": 3,
+          "name": "Regionalliga Nord",
+          "source_url": "https://www.oefb.at/oefb/Regionalliga-Richtlinien-ab-1-7-2025.pdf"
+        },
+        {
+          "tier": 3,
+          "name": "Regionalliga Ost",
+          "source_url": "https://www.oefb.at/oefb/Regionalliga-Richtlinien-ab-1-7-2025.pdf"
+        },
+        {
+          "tier": 3,
+          "name": "Regionalliga Süd",
+          "source_url": "https://www.oefb.at/oefb/Regionalliga-Richtlinien-ab-1-7-2025.pdf"
+        },
+        {
+          "tier": 3,
+          "name": "Regionalliga West",
+          "source_url": "https://www.oefb.at/oefb/Regionalliga-Richtlinien-ab-1-7-2025.pdf"
         }
       ],
       "exception": "",
@@ -254,6 +278,11 @@
         {
           "tier": 2,
           "name": "Danish 1st Division"
+        },
+        {
+          "tier": 3,
+          "name": "Danish 2nd Division",
+          "source_url": "https://github.com/openfootball/leagues/blob/master/europe/leagues.txt"
         }
       ],
       "exception": "",
@@ -271,6 +300,11 @@
         {
           "tier": 2,
           "name": "Championship"
+        },
+        {
+          "tier": 3,
+          "name": "League One",
+          "source_url": "https://www.efl.com/competitions/efl-league-one/"
         }
       ],
       "exception": "",
@@ -339,6 +373,11 @@
         {
           "tier": 2,
           "name": "Ligue 2"
+        },
+        {
+          "tier": 3,
+          "name": "Ligue 3",
+          "source_url": "https://www.fff.fr/article/17022-le-calendrier-2026-2027-est-servi.html"
         }
       ],
       "exception": "",
@@ -475,6 +514,21 @@
         {
           "tier": 2,
           "name": "Serie B"
+        },
+        {
+          "tier": 3,
+          "name": "Serie C – Girone A",
+          "source_url": "https://github.com/openfootball/leagues/blob/master/europe/leagues.txt"
+        },
+        {
+          "tier": 3,
+          "name": "Serie C – Girone B",
+          "source_url": "https://github.com/openfootball/leagues/blob/master/europe/leagues.txt"
+        },
+        {
+          "tier": 3,
+          "name": "Serie C – Girone C",
+          "source_url": "https://github.com/openfootball/leagues/blob/master/europe/leagues.txt"
         }
       ],
       "exception": "",
@@ -636,6 +690,11 @@
         {
           "tier": 2,
           "name": "Eerste Divisie"
+        },
+        {
+          "tier": 3,
+          "name": "Tweede Divisie",
+          "source_url": "https://github.com/openfootball/leagues/blob/master/europe/leagues.txt"
         }
       ],
       "exception": "",
@@ -704,6 +763,11 @@
         {
           "tier": 2,
           "name": "I liga"
+        },
+        {
+          "tier": 3,
+          "name": "II liga",
+          "source_url": "https://github.com/openfootball/leagues/blob/master/europe/leagues.txt"
         }
       ],
       "exception": "",
@@ -721,6 +785,16 @@
         {
           "tier": 2,
           "name": "Liga Portugal 2"
+        },
+        {
+          "tier": 3,
+          "name": "Liga 3 – Série A",
+          "source_url": "https://www.guimaraesdigital.pt/index.php/informacao/desporto/100690-fpf-define-series-da-liga-3"
+        },
+        {
+          "tier": 3,
+          "name": "Liga 3 – Série B",
+          "source_url": "https://www.guimaraesdigital.pt/index.php/informacao/desporto/100690-fpf-define-series-da-liga-3"
         }
       ],
       "exception": "",
@@ -802,6 +876,11 @@
         {
           "tier": 2,
           "name": "Scottish Championship"
+        },
+        {
+          "tier": 3,
+          "name": "Scottish League One",
+          "source_url": "https://github.com/openfootball/leagues/blob/master/europe/leagues.txt"
         }
       ],
       "exception": "",
@@ -870,6 +949,16 @@
         {
           "tier": 2,
           "name": "Segunda División"
+        },
+        {
+          "tier": 3,
+          "name": "Primera Federación – Grupo 1",
+          "source_url": "https://rfef.es/es/noticias/aprobados-los-grupos-de-primera-federacion-para-la-temporada-202627"
+        },
+        {
+          "tier": 3,
+          "name": "Primera Federación – Grupo 2",
+          "source_url": "https://rfef.es/es/noticias/aprobados-los-grupos-de-primera-federacion-para-la-temporada-202627"
         }
       ],
       "exception": "",
@@ -887,6 +976,16 @@
         {
           "tier": 2,
           "name": "Superettan"
+        },
+        {
+          "tier": 3,
+          "name": "Ettan Norra",
+          "source_url": "https://ettanfotboll.se/seriesammansattning-for-ettan-2026/"
+        },
+        {
+          "tier": 3,
+          "name": "Ettan Södra",
+          "source_url": "https://ettanfotboll.se/seriesammansattning-for-ettan-2026/"
         }
       ],
       "exception": "",
@@ -904,6 +1003,11 @@
         {
           "tier": 2,
           "name": "Swiss Challenge League"
+        },
+        {
+          "tier": 3,
+          "name": "Swiss Promotion League",
+          "source_url": "https://github.com/openfootball/leagues/blob/master/europe/leagues.txt"
         }
       ],
       "exception": "",
@@ -1010,6 +1114,11 @@
         {
           "tier": 2,
           "name": "Campeonato Brasileiro Série B"
+        },
+        {
+          "tier": 3,
+          "name": "Campeonato Brasileiro Série C",
+          "source_url": "https://www.cbf.com.br/futebol-brasileiro/tabelas/campeonato-brasileiro/serie-c/2026"
         }
       ],
       "exception": "",
@@ -1142,9 +1251,19 @@
         {
           "tier": 1,
           "name": "Major League Soccer"
+        },
+        {
+          "tier": 2,
+          "name": "USL Championship",
+          "source_url": "https://www.uslsoccer.com/our-leagues"
+        },
+        {
+          "tier": 3,
+          "name": "USL League One",
+          "source_url": "https://www.uslsoccer.com/our-leagues"
         }
       ],
-      "exception": "",
+      "exception": "MLS, USL Championship and USL League One have independent clubs/structures without conventional promotion and relegation; professional division sanctioning, not a unified open pyramid.",
       "league_names_review": "pending-current-season-check"
     },
     {
@@ -1508,6 +1627,11 @@
         {
           "tier": 2,
           "name": "J2 League"
+        },
+        {
+          "tier": 3,
+          "name": "J3 League",
+          "source_url": "https://www.jleague.jp/en/outline/j3/"
         }
       ],
       "exception": "",
@@ -1542,6 +1666,11 @@
         {
           "tier": 2,
           "name": "China League One"
+        },
+        {
+          "tier": 3,
+          "name": "China League Two",
+          "source_url": "https://en.wikipedia.org/wiki/2026_China_League_Two"
         }
       ],
       "exception": "",

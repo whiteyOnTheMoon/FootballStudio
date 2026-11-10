@@ -1,8 +1,9 @@
 """Idempotent, zero-network seed of all configured confederations and associations.
 
 Never deletes manual clubs, league records or previous jobs. Run after migrations.
-Only 2026/27, source-attributed participant lists in the versioned snapshot
-receive coverage_status=snapshot; reference-only leagues are not falsely verified.
+Only source-attributed, dated participant lists receive coverage_status=snapshot.
+Older seasons remain selectable with visible season warnings; missing leagues
+and parallel league groups are not silently invented or conflated.
 """
 from __future__ import annotations
 
@@ -52,21 +53,52 @@ def validate_data(index, snapshots):
             association["exception"] or association["confederation"] != "UEFA"
         ):
             raise CommandError(f"Unexplained missing UEFA tier: {key}")
+    lookup = {row["code"]: row for row in index["associations"]}
+    seen_league_rosters = set()
     for item in snapshots["leagues"]:
         if item["association"] not in keys or len(item["teams"]) < 10:
             raise CommandError("Invalid snapshot: unknown association/too few teams")
+        league_matches = [
+            entry for entry in lookup[item["association"]]["leagues"]
+            if entry["tier"] == item["tier"]
+            and (
+                not item.get("league")
+                or entry["name"].casefold() == item["league"].casefold()
+            )
+        ]
+        if len(league_matches) != 1:
+            raise CommandError(
+                f"Ambiguous/missing league in {item['association']} at tier {item['tier']}: "
+                f"{item.get('league', '(unspecified)')}"
+            )
+        roster_key = (item["association"], league_matches[0]["name"].casefold())
+        if roster_key in seen_league_rosters:
+            raise CommandError("Duplicate league snapshot across offline packages.")
+        seen_league_rosters.add(roster_key)
         allowed_sources = (
             "https://raw.githubusercontent.com/openfootball/football.json/master/2026-27/",
             "https://raw.githubusercontent.com/openfootball/europe/master/",
             "https://raw.githubusercontent.com/openfootball/austria/master/2026-27/",
             "https://raw.githubusercontent.com/openfootball/deutschland/master/openliga/2026-27_",
+            "https://raw.githubusercontent.com/openfootball/football.json/master/2025-26/",
+            "https://raw.githubusercontent.com/openfootball/football.json/master/2025/",
+            "https://raw.githubusercontent.com/openfootball/football.json/master/2026/",
+            "https://raw.githubusercontent.com/openfootball/football.json/master/2024-25/",
+            "https://rfef.es/es/noticias/aprobados-los-grupos-de-primera-federacion-para-la-temporada-202627",
+            "https://www.fff.fr/article/17022-le-calendrier-2026-2027-est-servi.html",
+            "https://ettanfotboll.se/seriesammansattning-for-ettan-2026/",
+            "https://www.jleague.jp/en/j3/standings/2026-27/",
         )
         if not item.get("source_url", "").startswith(allowed_sources):
             raise CommandError("Untrusted snapshot source.")
         if item.get("provider") == "openligadb-snapshot" and "ODbL" not in item.get("license", ""):
             raise CommandError("Missing OpenLigaDB ODbL attribution.")
-        if item.get("provider") not in ("openfootball", "openligadb-snapshot"):
+        if item.get("provider") not in ("openfootball", "openligadb-snapshot", "official-roster"):
             raise CommandError("Unsupported snapshot provider.")
+        if item.get("provider") == "official-roster" and "attribution" not in item.get("license", "").lower():
+            raise CommandError("Official-roster source attribution is missing.")
+        if not item.get("season") or not item.get("license"):
+            raise CommandError("Snapshot season and license statement are mandatory.")
         if len({x.casefold() for x in item["teams"]}) != len(item["teams"]):
             raise CommandError("Duplicate club in versioned source snapshot.")
 
@@ -83,6 +115,8 @@ class Command(BaseCommand):
         extension = read_data("fifa_member_associations_2026.json")
         index["associations"].extend(extension["associations"])
         snapshots = read_data("teams-2026-27.json")
+        snapshots["leagues"].extend(read_data("teams-additional.json")["leagues"])
+        snapshots["leagues"].extend(read_data("teams-verified-2026.json")["leagues"])
         validate_data(index, snapshots)
         club_count = 0
         with transaction.atomic():
@@ -113,6 +147,7 @@ class Command(BaseCommand):
                             name=league_row["name"], tier=league_row["tier"],
                             provider="offline-reference",
                             coverage_status="reference",
+                            source_url=league_row.get("source_url", ""),
                         )
                     elif league.tier != league_row["tier"]:
                         # Do not silently change manually edited league tiers.
@@ -123,14 +158,18 @@ class Command(BaseCommand):
             if not options["without_teams"]:
                 for row in snapshots["leagues"]:
                     country = countries[row["association"]]
-                    league = League.objects.filter(
-                        country=country, tier=row["tier"],
-                        is_active=True,
-                    ).order_by("pk").first()
-                    if league is None:
+                    candidates = League.objects.filter(
+                        country=country, tier=row["tier"], is_active=True,
+                    )
+                    if row.get("league"):
+                        candidates = candidates.filter(name__iexact=row["league"])
+                    matches = list(candidates[:2])
+                    if len(matches) != 1:
                         raise CommandError(
-                            f"Missing catalog league for snapshot: {country.code}"
+                            f"Ambiguous/missing catalog league for {country.code} "
+                            f"tier {row['tier']} ({row.get('league', 'unspecified')})"
                         )
+                    league = matches[0]
                     for name in row["teams"]:
                         existing = Club.objects.filter(
                             league=league, name__iexact=name

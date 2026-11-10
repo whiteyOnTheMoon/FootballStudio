@@ -139,7 +139,7 @@
     <h2 id="next-heading">Was ist bereits möglich?</h2>
     <p>Du kannst einen Verein aus einer angebotenen Liga auswählen. Ein bestimmter Pilotverein ist nicht vorgegeben.</p>
     <p class="muted">Fehlt ein Verein in einer unterstützten Liga? Du kannst ihn oben manuell hinzufügen. Den M1-Testjob kannst du jetzt speichern. Die Filmproduktion mit KI, TTS und FFmpeg wird später im M2-Worker aktiviert.</p>
-    <p class="muted">Alle 211 FIFA-Mitgliedsverbände sind als Offline-Verzeichnis erfasst. Für viele fehlen noch geprüfte Ligastrukturen und Vereinslisten. Ligen ohne geprüfte Teilnehmerliste bleiben sichtbar, melden aber ausdrücklich fehlende Vereinsdaten. Liechtenstein hat keine eigene Liga; Gibraltar und San Marino besitzen nur eine nationale höchste Spielklasse.</p>
+    <p class="muted">Alle 211 FIFA-Mitgliedsverbände sind als Offline-Verzeichnis erfasst. Ziel sind die drei höchsten realen Ligastufen samt Vereinen je Verband. Einige Stufen besitzen mehrere regionale Gruppen; Datensätze können noch unvollständig oder aus älteren Saisons sein. Ligen ohne geprüfte Teilnehmerliste bleiben sichtbar, melden aber ausdrücklich fehlende Vereinsdaten. Liechtenstein hat keine eigene Liga; Gibraltar und San Marino besitzen nur eine nationale höchste Spielklasse.</p>
   </section>
 
   <footer>
@@ -283,7 +283,14 @@
     try {
       const result = await readJson(api.leagues + "?country=" + encodeURIComponent(country.value));
       if (token !== revision) return;
-      fill(league, result.leagues, "Liga wählen …", "id");
+      const visibleLeagues = result.leagues.map(item => ({
+        ...item,
+        name: item.tier + ". Stufe · " + item.name +
+          (item.coverage === "snapshot"
+            ? " (" + item.season + ")"
+            : " (Vereinsliste noch unvollständig)")
+      }));
+      fill(league, visibleLeagues, "Liga wählen …", "id");
       message(result.leagues.length
         ? "Wähle eine Liga. Die Vereinsliste wird anschließend geladen."
         : result.notice, !result.leagues.length && country.value !== "LI");

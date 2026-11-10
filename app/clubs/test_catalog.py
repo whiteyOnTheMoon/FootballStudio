@@ -56,7 +56,7 @@ class GlobalOfflineCatalogTests(TestCase):
 
     def test_snapshot_contains_real_clubs_only_for_sourced_leagues(self):
         self.assertEqual(
-            League.objects.filter(coverage_status="snapshot").count(), 16
+            League.objects.filter(coverage_status="snapshot").count(), 39
         )
         rows = [
             ("GB", 1, 20), ("GB", 2, 24), ("DE", 1, 18),
@@ -75,6 +75,72 @@ class GlobalOfflineCatalogTests(TestCase):
         self.assertEqual(
             League.objects.get(country__code="WAL", tier=1).clubs.count(), 0
         )
+
+    def test_third_tier_including_parallel_groups_is_correct(self):
+        self.assertEqual(League.objects.count(), 227)
+        expected = {
+            "ES": 2, "SE": 2, "AT": 4, "IT": 3,
+            "FR": 1, "GB": 1, "JP": 1,
+        }
+        for code, count in expected.items():
+            with self.subTest(country=code):
+                self.assertEqual(
+                    League.objects.filter(country__code=code, tier=3).count(), count
+                )
+        self.assertEqual(
+            list(League.objects.filter(country__code="LI")), []
+        )
+        self.assertEqual(League.objects.filter(country__code="US", tier=2).count(), 1)
+
+    def test_official_tier_three_rosters_are_not_mixed_between_groups(self):
+        expected = [
+            ("ES", "Primera Federación – Grupo 1", 20, "2026-27"),
+            ("ES", "Primera Federación – Grupo 2", 20, "2026-27"),
+            ("FR", "Ligue 3", 18, "2026-27"),
+            ("SE", "Ettan Norra", 16, "2026"),
+            ("SE", "Ettan Södra", 16, "2026"),
+            ("JP", "J3 League", 20, "2026-27"),
+        ]
+        for code, league_name, team_count, season in expected:
+            with self.subTest(code=code, league=league_name):
+                league = League.objects.get(country__code=code, name=league_name)
+                self.assertEqual(league.tier, 3)
+                self.assertEqual(league.clubs.count(), team_count)
+                self.assertEqual(league.catalog_season, season)
+                self.assertEqual(league.coverage_status, "snapshot")
+                self.assertTrue(league.source_url.startswith("https://"))
+                response = self.client.get(reverse("clubs:clubs"), {
+                    "country": code, "league": league.pk,
+                })
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(len(response.json()["clubs"]), team_count)
+                self.assertEqual(response.json()["season"], season)
+        g1 = League.objects.get(country__code="ES", name="Primera Federación – Grupo 1")
+        g2 = League.objects.get(country__code="ES", name="Primera Federación – Grupo 2")
+        self.assertFalse(
+            set(g1.clubs.values_list("name", flat=True))
+            & set(g2.clubs.values_list("name", flat=True))
+        )
+
+    def test_older_sourced_rosters_show_season_and_warning(self):
+        examples = [
+            ("GB", "League One", 24, "2025-26"),
+            ("ES", "Segunda División", 22, "2025-26"),
+            ("BR", "Campeonato Brasileiro Série B", 20, "2025"),
+            ("AR", "Argentine Primera División", 30, "2025"),
+            ("MA", "Botola Pro", 16, "2024-25"),
+        ]
+        for code, name, count, season in examples:
+            with self.subTest(league=name):
+                league = League.objects.get(country__code=code, name=name)
+                self.assertEqual(league.clubs.count(), count)
+                self.assertEqual(league.catalog_season, season)
+                response = self.client.get(reverse("clubs:clubs"), {
+                    "country": code, "league": league.pk,
+                })
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(season, response.json()["warning"])
+        self.assertEqual(Club.objects.filter(is_manual=False).count(), 728)
 
     def test_no_network_even_when_switching_region_and_fetching_clubs(self):
         with patch("urllib.request.urlopen", side_effect=AssertionError("network forbidden")):
