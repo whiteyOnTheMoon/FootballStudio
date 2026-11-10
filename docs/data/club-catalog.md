@@ -70,4 +70,4 @@ In der interaktiven Vereinsauswahl erscheint nach der Ligawahl eine **separate E
 
 **Abnahmetests #25:** Django-Tests validieren normalen POST, sofortige serverseitige Auswahl, Duplikatnamen, ungültige Felder, Länder-/Ligenwechsel, Loginpflicht, CSRF und dass die Vereinsanlage **keinen kostenpflichtigen externen API-Aufruf** benötigt.
 
-**Noch nicht erledigt:** öffentliches VPS-Deployment, persistenter Testjob (#26), Video-Worker/Filmproduktion (M2).
+**Umgesetzt:** Der im Dashboard ausgewählte (oder manuell angelegte) Verein kann mit Titel und geprüfter Land-/Liga-Zuordnung als persistenter, benutzerbezogener **M1-Testjob** gespeichert werden (#23/#26). **Noch nicht erledigt:** öffentliches VPS-Deployment und echte Video-Worker-/Filmproduktion (M2).
