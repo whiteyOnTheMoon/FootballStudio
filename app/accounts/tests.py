@@ -15,7 +15,7 @@ class EmailLoginTests(TestCase):
 
     def test_email_is_unique_identity(self):
         self.assertEqual(get_user_model().USERNAME_FIELD, "email")
-        self.assertFalse(hasattr(self.user, "username"))
+        self.assertIsNone(self.user.username)  # no username column; inherited attr is None
         with self.assertRaises(ValidationError):
             get_user_model().objects.create_user(
                 email="VIEWER@EXAMPLE.COM", password="Different-passphrase-2026!"
