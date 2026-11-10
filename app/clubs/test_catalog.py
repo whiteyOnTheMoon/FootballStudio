@@ -133,7 +133,7 @@ class GlobalOfflineCatalogTests(TestCase):
                 response = self.client.get(reverse("clubs:leagues"), {"country": code})
                 self.assertEqual(response.status_code, 200)
                 self.assertEqual(response.json()["leagues"], [])
-                self.assertIn("not yet verified", response.json()["notice"])
+                self.assertIn("not yet been verified", response.json()["notice"])
         for confed, code in (("CAF", "AO"), ("AFC", "AF"),
                              ("CONCACAF", "AI"), ("OFC", "CK")):
             response = self.client.get(
