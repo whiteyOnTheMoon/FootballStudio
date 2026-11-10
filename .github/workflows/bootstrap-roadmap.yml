@@ -1,0 +1,45 @@
+name: FootballStudio roadmap metadata
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/bootstrap-roadmap.yml"
+      - "scripts/bootstrap_roadmap.py"
+      - "tests/test_bootstrap_roadmap.py"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/bootstrap-roadmap.yml"
+      - "scripts/bootstrap_roadmap.py"
+      - "tests/test_bootstrap_roadmap.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: footballstudio-roadmap-metadata-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Run offline bootstrap tests
+        run: python3 -m unittest discover -s tests -p "test_bootstrap_roadmap.py"
+
+  setup:
+    needs: test
+    if: github.event_name != 'pull_request' && github.repository == 'whiteyOnTheMoon/FootballStudio'
+    permissions:
+      contents: read
+      issues: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up milestones and labels, then classify existing issues
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/bootstrap_roadmap.py
