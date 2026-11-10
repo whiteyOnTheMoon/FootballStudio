@@ -28,11 +28,11 @@ def main():
         assert first == again, "Offline data import must be idempotent."
         assert Confederation.objects.count() == 6
         assert Country.objects.filter(confederation__code="UEFA").count() == 55
-        assert League.objects.filter(coverage_status="snapshot").count() == 8
-        assert Club.objects.filter(is_manual=False).count() == 156
+        assert League.objects.filter(coverage_status="snapshot").count() == 16
+        assert Club.objects.filter(is_manual=False).count() == 278
         assert Country.objects.filter(code="LI").exists()
         assert not League.objects.filter(country__code="LI").exists()
-    print("Offline directory OK:", first, "UEFA 55; 6 confeds; 8 club snapshots.")
+    print("Offline directory OK:", first, "UEFA 55; 6 confeds; 16 club snapshots.")
     print("No HTTP/API calls were made during migration or import.")
 
 
