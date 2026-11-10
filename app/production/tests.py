@@ -175,7 +175,7 @@ class PrototypeJobTests(TestCase):
 
     def test_no_paid_provider_or_background_worker_is_invoked(self):
         from unittest.mock import patch
-        with patch("app.clubs.catalog.fetch_json") as network:
+        with patch("urllib.request.urlopen") as network:
             response = self.create()
             self.assertEqual(response.status_code, 201)
             network.assert_not_called()
