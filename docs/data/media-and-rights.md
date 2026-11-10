@@ -69,6 +69,10 @@ Ein Asset kann in mehreren Szenen und Formaten verwendet werden. Für jede Verwe
 
 **MVP vs. M3:** Im M2-Prototyp werden diese Informationen **erfasst** und unklare Assets durch eigene Grafiken ersetzt. In M3 ergänzen wir systematisierte Lizenz- und Attributionsprüfung sowie eine formale Veröffentlichungssperre/-freigabe. Es erfolgt im MVP **kein automatischer YouTube-Upload**.
 
+## Speicherung im Docker-Prototyp
+
+Die Web-App, PostgreSQL und der M2-Worker laufen als getrennte **Docker-Compose-Services**. Mediendateien, Attributionsexporte und das Job-Medienmanifest liegen in einem **persistenten, nicht öffentlich freigegebenen Volume**; Metadaten und Zuordnungen liegen in PostgreSQL. Die Web-App gewährt Zugriff auf verwendete Medien und Begleitdaten erst nach Authentifizierung und Berechtigungsprüfung. Das Volume darf nicht als freier Webserver-Pfad offengelegt werden.
+
 ## Auswahl- und Fallback-Ablauf
 
 1. **Szenenbedarf** aus dem Szenenplan bestimmen; der Club wird aus dem Job übernommen, **nicht hardcodiert**.
