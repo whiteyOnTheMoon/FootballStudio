@@ -8,7 +8,10 @@ from __future__ import annotations
 
 import os
 import sys
+from pathlib import Path
 
+# Running a file from scripts/ does not automatically add the repo root to sys.path.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app.config.settings")
 
 import django  # noqa: E402
