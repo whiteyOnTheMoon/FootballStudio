@@ -9,7 +9,6 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST
 
-from app.clubs.catalog import season_label, season_start
 from app.clubs.models import Club
 
 from .forms import TestJobForm
@@ -55,7 +54,6 @@ def create_test_job(request):
         Club.objects.select_related("league__country"),
         pk=payload["club"], is_active=True,
         league_id=payload["league"], league__is_active=True,
-        league__catalog_season=season_label(season_start()),
         league__country__code=payload["country"],
         league__country__is_active=True,
     )

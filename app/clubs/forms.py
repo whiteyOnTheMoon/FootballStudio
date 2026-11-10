@@ -1,13 +1,8 @@
 """Validation of manually entered clubs in an existing, supported league."""
 from django import forms
 
-from .catalog import CATALOG
-
-
 class ManualClubForm(forms.Form):
-    country = forms.ChoiceField(
-        choices=[(code, details["name"]) for code, details in CATALOG.items()]
-    )
+    country = forms.CharField(min_length=2, max_length=3)
     league = forms.IntegerField(min_value=1)
     name = forms.CharField(min_length=2, max_length=160, strip=True)
 

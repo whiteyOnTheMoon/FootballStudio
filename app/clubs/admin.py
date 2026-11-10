@@ -1,12 +1,18 @@
 """Admins can maintain countries, leagues and clubs while the public UI is built."""
 from django.contrib import admin
-from .models import Club, Country, League
+from .models import Club, Confederation, Country, League
+
+
+@admin.register(Confederation)
+class ConfederationAdmin(admin.ModelAdmin):
+    list_display = ("code", "name")
+    search_fields = ("code", "name")
 
 
 @admin.register(Country)
 class CountryAdmin(admin.ModelAdmin):
-    list_display = ("name", "code", "is_active")
-    list_filter = ("is_active",)
+    list_display = ("name", "code", "confederation", "is_active")
+    list_filter = ("confederation", "is_active")
     search_fields = ("name", "code")
     ordering = ("name",)
 

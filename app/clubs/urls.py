@@ -6,6 +6,7 @@ from . import views
 app_name = "clubs"
 
 urlpatterns = [
+    path("confederations/", views.confederations, name="confederations"),
     path("countries/", views.countries, name="countries"),
     path("leagues/", views.leagues, name="leagues"),
     path("clubs/", views.clubs, name="clubs"),

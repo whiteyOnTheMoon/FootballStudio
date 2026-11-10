@@ -5,8 +5,25 @@ from django.db.models import F
 from django.db.models.functions import Lower
 
 
+class Confederation(models.Model):
+    code = models.CharField(max_length=10, unique=True)
+    name = models.CharField(max_length=120)
+
+    class Meta:
+        ordering = ("name",)
+
+    def __str__(self):
+        return self.code
+
+
 class Country(models.Model):
-    code = models.CharField(max_length=2, unique=True)  # ISO 3166-1 alpha-2
+    # Association IDs: ISO-2 where possible, legacy GB for England, and
+    # ENG home-nation counterparts NIR/SCO/WAL; XK for Kosovo.
+    code = models.CharField(max_length=3, unique=True)
+    confederation = models.ForeignKey(
+        Confederation, on_delete=models.PROTECT, null=True, blank=True,
+        related_name="associations",
+    )
     name = models.CharField(max_length=120)
     is_active = models.BooleanField(default=True)
 
@@ -17,8 +34,8 @@ class Country(models.Model):
         super().clean()
         self.code = (self.code or "").strip().upper()
         self.name = " ".join((self.name or "").split())
-        if len(self.code) != 2 or not self.code.isalpha() or not self.code.isascii():
-            raise ValidationError({"code": "Use a two-letter ISO country code."})
+        if len(self.code) not in (2, 3) or not self.code.isalpha() or not self.code.isascii():
+            raise ValidationError({"code": "Use a 2–3-letter football-association code."})
 
     def save(self, *args, **kwargs):
         self.code = (self.code or "").strip().upper()
@@ -35,6 +52,8 @@ class League(models.Model):
     tier = models.PositiveSmallIntegerField(default=1)
     provider = models.CharField(max_length=60, default="manual")
     provider_id = models.CharField(max_length=120, blank=True)
+    coverage_status = models.CharField(max_length=16, default="reference")
+    source_url = models.URLField(max_length=500, blank=True)
     catalog_season = models.CharField(max_length=10, blank=True)
     last_synced_at = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)

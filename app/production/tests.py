@@ -86,14 +86,14 @@ class PrototypeJobTests(TestCase):
                 self.assertEqual(response.status_code, 404)
         self.assertFalse(ProductionJob.objects.exists())
 
-    def test_rejects_inactive_or_outdated_club(self):
+    def test_rejects_inactive_club_or_league(self):
         self.club.is_active = False
         self.club.save()
         self.assertEqual(self.create().status_code, 404)
         self.club.is_active = True
         self.club.save()
-        self.league.catalog_season = "2020-21"
-        self.league.save()
+        self.league.is_active = False
+        self.league.save(update_fields=["is_active"])
         self.assertEqual(self.create().status_code, 404)
 
     def test_title_required_with_minimum_length(self):
@@ -175,7 +175,7 @@ class PrototypeJobTests(TestCase):
 
     def test_no_paid_provider_or_background_worker_is_invoked(self):
         from unittest.mock import patch
-        with patch("app.clubs.catalog.fetch_json") as network:
+        with patch("urllib.request.urlopen") as network:
             response = self.create()
             self.assertEqual(response.status_code, 201)
             network.assert_not_called()

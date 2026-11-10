@@ -1,4 +1,7 @@
-"""Authenticated JSON endpoints for the first dynamic club picker."""
+"""Offline-only, authenticated confederation → association → league → club API.
+
+No external request occurs when a user opens or changes a selection.
+"""
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError, transaction
 from django.http import JsonResponse
@@ -6,9 +9,9 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST
 
-from .catalog import CatalogUnavailable, discover_countries, season_label, season_start, sync_league_teams
+from .catalog import season_label, season_start
 from .forms import ManualClubForm
-from .models import Club, Country, League
+from .models import Club, Confederation, Country, League
 
 
 def _error(message, status=400):
@@ -18,18 +21,29 @@ def _error(message, status=400):
 @login_required
 @require_GET
 @never_cache
-def countries(request):
-    available, errors = discover_countries()
-    if not available:
-        return _error(
-            "No two-tier country catalog is currently available. "
-            "Please try again later. Manual clubs require a supported country and league.",
-            status=503,
-        )
+def confederations(request):
+    values = Confederation.objects.all().order_by("name")
     return JsonResponse({
-        "season": season_label(season_start()),
-        "countries": [{"code": x.code, "name": x.name} for x in available],
-        "warnings": errors,
+        "confederations": [
+            {"code": item.code, "name": item.name} for item in values
+        ]
+    })
+
+
+@login_required
+@require_GET
+@never_cache
+def countries(request):
+    code = request.GET.get("confederation", "").strip().upper()
+    if not code or len(code) > 10:
+        return _error("Choose a confederation first.")
+    confed = get_object_or_404(Confederation, code=code)
+    available = Country.objects.filter(
+        confederation=confed, is_active=True
+    ).order_by("name")
+    return JsonResponse({
+        "countries": [{"code": item.code, "name": item.name} for item in available],
+        "notice": "Association directory is stored locally; not all clubs have been verified.",
     })
 
 
@@ -38,19 +52,27 @@ def countries(request):
 @never_cache
 def leagues(request):
     code = request.GET.get("country", "").strip().upper()
-    if code not in ("GB", "DE"):
-        return _error("Choose a supported country.")
-    country = get_object_or_404(Country, code=code, is_active=True)
-    items = list(country.leagues.filter(
-        is_active=True, catalog_season=season_label(season_start())
-    ).order_by("tier", "name"))
-    if not {1, 2}.issubset({item.tier for item in items}):
-        return _error("The current season has fewer than two supported leagues.", 503)
+    if not code or len(code) > 3:
+        return _error("Choose a football association.")
+    country = get_object_or_404(
+        Country.objects.select_related("confederation"),
+        code=code, is_active=True,
+    )
+    results = country.leagues.filter(is_active=True).order_by("tier", "name")
     return JsonResponse({
+        "association": country.name,
         "leagues": [{
-            "id": x.id, "name": x.name, "tier": x.tier,
-            "provider": x.provider,
-        } for x in items],
+            "id": x.pk, "name": x.name, "tier": x.tier,
+            "coverage": x.coverage_status,
+            "season": x.catalog_season,
+            "clubs_available": x.clubs.filter(is_active=True).count(),
+        } for x in results],
+        "notice": (
+            "This association has no domestic league. Consult the relevant cross-border system."
+            if country.code == "LI" else (
+                "Some associations have only one national league or regional parallel divisions."
+            )
+        ),
     })
 
 
@@ -59,33 +81,34 @@ def leagues(request):
 @never_cache
 def clubs(request):
     code = request.GET.get("country", "").strip().upper()
-    league_id = request.GET.get("league", "")
-    if code not in ("GB", "DE") or not league_id.isdecimal():
-        return _error("Choose a valid country and league.")
+    league_id = request.GET.get("league", "").strip()
+    if not code or not league_id.isdecimal():
+        return _error("Choose a valid association and league.")
     league = get_object_or_404(
         League.objects.select_related("country"),
-        pk=int(league_id), country__code=code, country__is_active=True,
-        is_active=True, catalog_season=season_label(season_start()),
+        pk=int(league_id), country__code=code,
+        country__is_active=True, is_active=True,
     )
+    results = list(league.clubs.filter(is_active=True).order_by("name"))
     warning = None
-    try:
-        sync_league_teams(league)
-    except CatalogUnavailable:
-        if not league.clubs.filter(is_active=True).exists():
-            return _error(
-                "The current club list could not be loaded from its public source. "
-                "Please try again later.",
-                status=503,
-            )
+    if league.coverage_status != "snapshot":
         warning = (
-            "The live source is unavailable. This saved club list may be outdated."
+            "Only a league reference is stored. Verified club membership has "
+            "not yet been imported; please do not treat this as a full roster."
         )
-    results = league.clubs.filter(is_active=True).order_by("name")
+    elif league.catalog_season != season_label(season_start()):
+        warning = (
+            f"The last imported club roster is for {league.catalog_season}; "
+            "it may not reflect the current season."
+        )
     return JsonResponse({
         "clubs": [
             {"id": item.pk, "name": item.name, "manual": item.is_manual}
             for item in results
         ],
+        "coverage": league.coverage_status,
+        "season": league.catalog_season or None,
+        "source": league.source_url or None,
         "warning": warning,
     })
 
@@ -95,28 +118,31 @@ def clubs(request):
 @never_cache
 def selection(request):
     code = request.GET.get("country", "").strip().upper()
-    league_id = request.GET.get("league", "")
-    club_id = request.GET.get("club", "")
-    if code not in ("GB", "DE") or not league_id.isdecimal() or not club_id.isdecimal():
-        return _error("Choose a country, league and club.")
+    league_id = request.GET.get("league", "").strip()
+    club_id = request.GET.get("club", "").strip()
+    if not code or not league_id.isdecimal() or not club_id.isdecimal():
+        return _error("Choose an association, league and club.")
     club = get_object_or_404(
-        Club.objects.select_related("league__country"),
+        Club.objects.select_related("league__country__confederation"),
         pk=int(club_id), is_active=True,
         league_id=int(league_id), league__is_active=True,
-        league__catalog_season=season_label(season_start()),
         league__country__code=code, league__country__is_active=True,
     )
     return JsonResponse({
         "selection": {
+            "confederation": (
+                club.league.country.confederation.code
+                if club.league.country.confederation else None
+            ),
             "country": club.league.country.name,
             "country_code": club.league.country.code,
             "league": club.league.name,
             "league_id": club.league_id,
             "club": club.name,
-            "club_id": club.id,
+            "club_id": club.pk,
             "source": club.provider,
         },
-        "job_enabled": False,  # FS-011c #26 creates persistent jobs later.
+        "job_enabled": True,
     })
 
 
@@ -124,28 +150,20 @@ def selection(request):
 @require_POST
 @never_cache
 def create_manual_club(request):
-    """Create a club in the chosen league; no API data may be overwritten.
-
-    CSRF is enforced by Django middleware. The selected country is verified
-    against the league even if a caller forges or edits the HTML form.
-    """
+    """Optional fallback; the user is never *required* to supply missing club data."""
     form = ManualClubForm(request.POST)
     if not form.is_valid():
-        return _error("Enter a valid club name, country and league.")
+        return _error("Enter a valid club name, association and league.")
     code = form.cleaned_data["country"]
     league_id = form.cleaned_data["league"]
     name = form.cleaned_data["name"]
     league = get_object_or_404(
         League.objects.select_related("country"),
-        pk=league_id,
-        country__code=code, country__is_active=True, is_active=True,
-        catalog_season=season_label(season_start()),
+        pk=league_id, country__code=code,
+        country__is_active=True, is_active=True,
     )
     if Club.objects.filter(league=league, name__iexact=name).exists():
-        return _error(
-            "This club already exists in the selected league. Choose it from the list.",
-            409,
-        )
+        return _error("This club already exists in the league.", 409)
     try:
         with transaction.atomic():
             club = Club.objects.create(
@@ -153,13 +171,8 @@ def create_manual_club(request):
                 provider_id="", is_manual=True, is_active=True,
             )
     except IntegrityError:
-        # Case-insensitive database constraint prevents concurrent duplicates.
-        return _error(
-            "This club already exists in the selected league. Choose it from the list.",
-            409,
-        )
+        return _error("This club already exists in the league.", 409)
     return JsonResponse({
         "club": {"id": club.pk, "name": club.name, "manual": True},
-        "country": code,
-        "league_id": league.pk,
+        "country": code, "league_id": league.pk,
     }, status=201)
