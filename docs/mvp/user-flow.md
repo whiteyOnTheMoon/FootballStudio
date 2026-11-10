@@ -34,6 +34,18 @@ Das MVP wird zunächst an einem vollständigen, einfach gestalteten End-to-End-F
 - Nutzer können einen Verein **manuell anlegen**, falls er nicht in der Auswahl vorhanden ist.
 - Fehler beim Laden von Ländern, Ligen oder Vereinen dürfen nicht zu einer unverständlichen oder blockierenden Oberfläche führen; bei fehlendem Verein bleibt die manuelle Anlage als vorgesehener Pfad.
 
+### 2.1a Verbindlicher Prototyp-Umfang: Vereinsauswahl (Entscheidung 10.11.2026)
+
+**Schon der erste M1-Prototyp** muss die **kaskadierende Auswahl Land → Liga → Verein** in der Web-App anbieten. Die Auswahl ist kein späteres Feature und darf nicht auf einen fest eingebauten Beispielverein oder ein freies Texteingabefeld reduziert werden.
+
+- Das gewählte **Land** bestimmt die **Liga**-Optionen; die gewählte Liga bestimmt die **Vereins**-Optionen.
+- Wird das Land geändert, verfallen bereits gewählte Liga und Verein; bei Ligawechsel verfällt der zuvor gewählte Verein.
+- Bei API-Ausfällen oder unbekannten Vereinen bleibt die manuelle Vereinsanlage als Fallback erhalten.
+- Der ausgewählte Verein wird im Testjob und später im eigentlichen Produktionsjob gespeichert.
+- Die Länder-/Ligenabdeckung der freien Datenquelle wird für den Prototyp dokumentiert; **mindestens zwei höchste Ligen pro unterstütztem Land**, eine dritte wenn verfügbar.
+
+**Verbindliche GitHub-Aufgaben:** [#24](https://github.com/whiteyOnTheMoon/FootballStudio/issues/24), [#25](https://github.com/whiteyOnTheMoon/FootballStudio/issues/25), [#26](https://github.com/whiteyOnTheMoon/FootballStudio/issues/26).
+
 ### 2.2 Titelauswahl
 
 - Drei KI-generierte Titelvorschläge werden zur Auswahl angeboten.
@@ -63,6 +75,18 @@ Die Pipeline speichert **Zwischenergebnisse getrennt**, sodass ein fehlgeschlage
 - Zu Medien werden mindestens **Quelle/URL, Urheber, Lizenz bzw. Lizenzstatus und Verwendungszweck** gespeichert.
 - **Interner Prototyp ≠ Freigabe zur Veröffentlichung:** Material mit ungeklärten Rechten wird nicht ungeprüft öffentlich veröffentlicht.
 - Bei knapper Materiallage sind eigene Karten, Zeitleisten und Infografiken als Ersatz vorgesehen.
+
+### 2.5 Docker-Betrieb bereits ab Prototyp (Entscheidung 10.11.2026)
+
+Der M1-Prototyp läuft **in Docker**, ebenso die spätere M2-Filmproduktion. Orchestrierung erfolgt über **Docker Compose**. Eine einzelne Containerisierung der Web-App genügt als Abgrenzung für die App, die zugehörigen Dienste werden aus Gründen der Wartbarkeit als separate Services/Container geführt:
+
+- **`web`:** Django-Web-Anwendung in eigenem Docker-Container.
+- **`db`:** PostgreSQL in separatem Container mit persistentem Datenvolume.
+- **`worker`:** separater Docker-Service für die asynchrone Filmproduktion ab M2.
+- **Reverse Proxy/HTTPS:** auf dem VPS gemäß M1-Infrastruktur-Issues; der konkrete Proxy-Aufbau wird im Architektur-/Deployment-Entscheid dokumentiert.
+- Kein direktes Host-Python-Setup für den App-Betrieb; Konfiguration und Secrets über Umgebungsvariablen/Secret-Handling außerhalb der Images.
+
+**M1-Nachweis:** Die Web-App startet mit Compose, erlaubt Anmeldung und die vollständige kaskadierende Vereinsauswahl und kann einen Testjob anlegen. **M2-Nachweis:** Ein englischer Film wird innerhalb des containerisierten Stacks erzeugt. Details in [#16](https://github.com/whiteyOnTheMoon/FootballStudio/issues/16), [#46](https://github.com/whiteyOnTheMoon/FootballStudio/issues/46) und dem Abnahmeprotokoll [#51](https://github.com/whiteyOnTheMoon/FootballStudio/issues/51).
 
 ## 3. Funktionale Muss-Anforderungen als User Stories
 
