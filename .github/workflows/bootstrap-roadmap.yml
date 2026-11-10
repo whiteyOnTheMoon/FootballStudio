@@ -1,0 +1,29 @@
+name: FootballStudio roadmap metadata
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/bootstrap-roadmap.yml"
+      - "scripts/bootstrap_roadmap.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: footballstudio-roadmap-metadata
+  cancel-in-progress: false
+
+jobs:
+  setup:
+    if: github.repository == 'whiteyOnTheMoon/FootballStudio'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up milestones and labels, then classify existing issues
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/bootstrap_roadmap.py
