@@ -1,0 +1,1795 @@
+{
+  "version": "2026-11-10",
+  "sources": [
+    "https://www.uefa.com/nationalassociations/",
+    "https://github.com/openfootball/leagues",
+    "https://www.lfv.li/breitenfussball/vereinsfussball/erwachsenenfussball/",
+    "https://www.gibraltarfa.com/competitions/gibraltar-football-league-26-27-3395567",
+    "https://www.fsgc.sm/en/history"
+  ],
+  "confederations": [
+    {
+      "code": "UEFA",
+      "name": "Europe – UEFA"
+    },
+    {
+      "code": "CONMEBOL",
+      "name": "South America – CONMEBOL"
+    },
+    {
+      "code": "CONCACAF",
+      "name": "North, Central America and Caribbean – CONCACAF"
+    },
+    {
+      "code": "CAF",
+      "name": "Africa – CAF"
+    },
+    {
+      "code": "AFC",
+      "name": "Asia – AFC"
+    },
+    {
+      "code": "OFC",
+      "name": "Oceania – OFC"
+    }
+  ],
+  "associations": [
+    {
+      "code": "AL",
+      "name": "Albania",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Kategoria Superiore"
+        },
+        {
+          "tier": 2,
+          "name": "Kategoria e Parë"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "AD",
+      "name": "Andorra",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Primera Divisió"
+        },
+        {
+          "tier": 2,
+          "name": "Segona Divisió"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "AM",
+      "name": "Armenia",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Armenian Premier League"
+        },
+        {
+          "tier": 2,
+          "name": "Armenian First League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "AT",
+      "name": "Austria",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Austrian Bundesliga"
+        },
+        {
+          "tier": 2,
+          "name": "2. Liga"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "AZ",
+      "name": "Azerbaijan",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Azerbaijan Premier League"
+        },
+        {
+          "tier": 2,
+          "name": "Azerbaijan First Division"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "BY",
+      "name": "Belarus",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Belarusian Premier League"
+        },
+        {
+          "tier": 2,
+          "name": "Belarusian First League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "BE",
+      "name": "Belgium",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Belgian Pro League"
+        },
+        {
+          "tier": 2,
+          "name": "Challenger Pro League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "BA",
+      "name": "Bosnia and Herzegovina",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Premier League of Bosnia and Herzegovina"
+        },
+        {
+          "tier": 2,
+          "name": "First League of the Federation of Bosnia and Herzegovina"
+        },
+        {
+          "tier": 2,
+          "name": "First League of the Republika Srpska"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "BG",
+      "name": "Bulgaria",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "First Professional Football League"
+        },
+        {
+          "tier": 2,
+          "name": "Second Professional Football League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "HR",
+      "name": "Croatia",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Croatian Football League"
+        },
+        {
+          "tier": 2,
+          "name": "First Football League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "CY",
+      "name": "Cyprus",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Cypriot First Division"
+        },
+        {
+          "tier": 2,
+          "name": "Cypriot Second Division"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "CZ",
+      "name": "Czechia",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Czech First League"
+        },
+        {
+          "tier": 2,
+          "name": "Czech National Football League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "DK",
+      "name": "Denmark",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Danish Superliga"
+        },
+        {
+          "tier": 2,
+          "name": "Danish 1st Division"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "GB",
+      "name": "England",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Premier League"
+        },
+        {
+          "tier": 2,
+          "name": "Championship"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "EE",
+      "name": "Estonia",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Meistriliiga"
+        },
+        {
+          "tier": 2,
+          "name": "Esiliiga"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "FO",
+      "name": "Faroe Islands",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Faroe Islands Premier League"
+        },
+        {
+          "tier": 2,
+          "name": "1. deild"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "FI",
+      "name": "Finland",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Veikkausliiga"
+        },
+        {
+          "tier": 2,
+          "name": "Ykkösliiga"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "FR",
+      "name": "France",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Ligue 1"
+        },
+        {
+          "tier": 2,
+          "name": "Ligue 2"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "GE",
+      "name": "Georgia",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Erovnuli Liga"
+        },
+        {
+          "tier": 2,
+          "name": "Erovnuli Liga 2"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "DE",
+      "name": "Germany",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Bundesliga"
+        },
+        {
+          "tier": 2,
+          "name": "2. Bundesliga"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "GI",
+      "name": "Gibraltar",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Gibraltar Football League"
+        }
+      ],
+      "exception": "Gibraltar operates the Gibraltar Football League as one national top-level men's league in 2026/27.",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "GR",
+      "name": "Greece",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Super League Greece"
+        },
+        {
+          "tier": 2,
+          "name": "Super League Greece 2"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "HU",
+      "name": "Hungary",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Nemzeti Bajnokság I"
+        },
+        {
+          "tier": 2,
+          "name": "Nemzeti Bajnokság II"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "IS",
+      "name": "Iceland",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Besta deild karla"
+        },
+        {
+          "tier": 2,
+          "name": "1. deild karla"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "IL",
+      "name": "Israel",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Israeli Premier League"
+        },
+        {
+          "tier": 2,
+          "name": "Liga Leumit"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "IT",
+      "name": "Italy",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Serie A"
+        },
+        {
+          "tier": 2,
+          "name": "Serie B"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "KZ",
+      "name": "Kazakhstan",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Kazakhstan Premier League"
+        },
+        {
+          "tier": 2,
+          "name": "Kazakhstan First Division"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "XK",
+      "name": "Kosovo",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Kosovo Superleague"
+        },
+        {
+          "tier": 2,
+          "name": "First Football League of Kosovo"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "LV",
+      "name": "Latvia",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Latvian Higher League"
+        },
+        {
+          "tier": 2,
+          "name": "Latvian First League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "LI",
+      "name": "Liechtenstein",
+      "confederation": "UEFA",
+      "leagues": [],
+      "exception": "Liechtenstein has no national league; its clubs participate in the Swiss league system (Liechtenstein FA 2026/27).",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "LT",
+      "name": "Lithuania",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "A Lyga"
+        },
+        {
+          "tier": 2,
+          "name": "I Lyga"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "LU",
+      "name": "Luxembourg",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Luxembourg National Division"
+        },
+        {
+          "tier": 2,
+          "name": "Luxembourg Division of Honour"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "MT",
+      "name": "Malta",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Maltese Premier League"
+        },
+        {
+          "tier": 2,
+          "name": "Maltese Challenge League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "MD",
+      "name": "Moldova",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Moldovan Super Liga"
+        },
+        {
+          "tier": 2,
+          "name": "Moldovan Liga 1"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "ME",
+      "name": "Montenegro",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Montenegrin First League"
+        },
+        {
+          "tier": 2,
+          "name": "Montenegrin Second League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "NL",
+      "name": "Netherlands",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Eredivisie"
+        },
+        {
+          "tier": 2,
+          "name": "Eerste Divisie"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "MK",
+      "name": "North Macedonia",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Macedonian First Football League"
+        },
+        {
+          "tier": 2,
+          "name": "Macedonian Second Football League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "NIR",
+      "name": "Northern Ireland",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "NIFL Premiership"
+        },
+        {
+          "tier": 2,
+          "name": "NIFL Championship"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "NO",
+      "name": "Norway",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Eliteserien"
+        },
+        {
+          "tier": 2,
+          "name": "Norwegian First Division"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "PL",
+      "name": "Poland",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Ekstraklasa"
+        },
+        {
+          "tier": 2,
+          "name": "I liga"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "PT",
+      "name": "Portugal",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Primeira Liga"
+        },
+        {
+          "tier": 2,
+          "name": "Liga Portugal 2"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "IE",
+      "name": "Republic of Ireland",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "League of Ireland Premier Division"
+        },
+        {
+          "tier": 2,
+          "name": "League of Ireland First Division"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "RO",
+      "name": "Romania",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Liga I"
+        },
+        {
+          "tier": 2,
+          "name": "Liga II"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "RU",
+      "name": "Russia",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Russian Premier League"
+        },
+        {
+          "tier": 2,
+          "name": "Russian First League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "SM",
+      "name": "San Marino",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Campionato Sammarinese di Calcio"
+        }
+      ],
+      "exception": "San Marino has a single-tier domestic championship; the second division was abolished in 1996.",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "SCO",
+      "name": "Scotland",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Scottish Premiership"
+        },
+        {
+          "tier": 2,
+          "name": "Scottish Championship"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "RS",
+      "name": "Serbia",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Serbian SuperLiga"
+        },
+        {
+          "tier": 2,
+          "name": "Serbian First League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "SK",
+      "name": "Slovakia",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Slovak Super Liga"
+        },
+        {
+          "tier": 2,
+          "name": "2. Liga"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "SI",
+      "name": "Slovenia",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Slovenian PrvaLiga"
+        },
+        {
+          "tier": 2,
+          "name": "Slovenian Second League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "ES",
+      "name": "Spain",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "La Liga"
+        },
+        {
+          "tier": 2,
+          "name": "Segunda División"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "SE",
+      "name": "Sweden",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Allsvenskan"
+        },
+        {
+          "tier": 2,
+          "name": "Superettan"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "CH",
+      "name": "Switzerland",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Swiss Super League"
+        },
+        {
+          "tier": 2,
+          "name": "Swiss Challenge League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "TR",
+      "name": "Türkiye",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Süper Lig"
+        },
+        {
+          "tier": 2,
+          "name": "TFF First League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "UA",
+      "name": "Ukraine",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Ukrainian Premier League"
+        },
+        {
+          "tier": 2,
+          "name": "Ukrainian First League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "WAL",
+      "name": "Wales",
+      "confederation": "UEFA",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Cymru Premier"
+        },
+        {
+          "tier": 2,
+          "name": "Cymru North"
+        },
+        {
+          "tier": 2,
+          "name": "Cymru South"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "AR",
+      "name": "Argentina",
+      "confederation": "CONMEBOL",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Argentine Primera División"
+        },
+        {
+          "tier": 2,
+          "name": "Primera Nacional"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "BO",
+      "name": "Bolivia",
+      "confederation": "CONMEBOL",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "División Profesional"
+        },
+        {
+          "tier": 2,
+          "name": "Copa Simón Bolívar"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "BR",
+      "name": "Brazil",
+      "confederation": "CONMEBOL",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Campeonato Brasileiro Série A"
+        },
+        {
+          "tier": 2,
+          "name": "Campeonato Brasileiro Série B"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "CL",
+      "name": "Chile",
+      "confederation": "CONMEBOL",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Primera División"
+        },
+        {
+          "tier": 2,
+          "name": "Primera B"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "CO",
+      "name": "Colombia",
+      "confederation": "CONMEBOL",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Categoría Primera A"
+        },
+        {
+          "tier": 2,
+          "name": "Categoría Primera B"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "EC",
+      "name": "Ecuador",
+      "confederation": "CONMEBOL",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "LigaPro Serie A"
+        },
+        {
+          "tier": 2,
+          "name": "LigaPro Serie B"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "PY",
+      "name": "Paraguay",
+      "confederation": "CONMEBOL",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Primera División"
+        },
+        {
+          "tier": 2,
+          "name": "División Intermedia"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "PE",
+      "name": "Peru",
+      "confederation": "CONMEBOL",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Liga 1"
+        },
+        {
+          "tier": 2,
+          "name": "Liga 2"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "UY",
+      "name": "Uruguay",
+      "confederation": "CONMEBOL",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Primera División"
+        },
+        {
+          "tier": 2,
+          "name": "Segunda División"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "VE",
+      "name": "Venezuela",
+      "confederation": "CONMEBOL",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Primera División"
+        },
+        {
+          "tier": 2,
+          "name": "Segunda División"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "US",
+      "name": "United States",
+      "confederation": "CONCACAF",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Major League Soccer"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "CA",
+      "name": "Canada",
+      "confederation": "CONCACAF",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Canadian Premier League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "MX",
+      "name": "Mexico",
+      "confederation": "CONCACAF",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Liga MX"
+        },
+        {
+          "tier": 2,
+          "name": "Liga de Expansión MX"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "CR",
+      "name": "Costa Rica",
+      "confederation": "CONCACAF",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Primera División"
+        },
+        {
+          "tier": 2,
+          "name": "Liga de Ascenso"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "JM",
+      "name": "Jamaica",
+      "confederation": "CONCACAF",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Jamaica Premier League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "GT",
+      "name": "Guatemala",
+      "confederation": "CONCACAF",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Liga Nacional"
+        },
+        {
+          "tier": 2,
+          "name": "Primera División"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "SV",
+      "name": "El Salvador",
+      "confederation": "CONCACAF",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Primera División"
+        },
+        {
+          "tier": 2,
+          "name": "Segunda División"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "HN",
+      "name": "Honduras",
+      "confederation": "CONCACAF",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Liga Nacional"
+        },
+        {
+          "tier": 2,
+          "name": "Liga de Ascenso"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "NI",
+      "name": "Nicaragua",
+      "confederation": "CONCACAF",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Liga Primera"
+        },
+        {
+          "tier": 2,
+          "name": "Segunda División"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "PA",
+      "name": "Panama",
+      "confederation": "CONCACAF",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Liga Panameña de Fútbol"
+        },
+        {
+          "tier": 2,
+          "name": "Liga PROM"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "EG",
+      "name": "Egypt",
+      "confederation": "CAF",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Egyptian Premier League"
+        },
+        {
+          "tier": 2,
+          "name": "Egyptian Second Division A"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "DZ",
+      "name": "Algeria",
+      "confederation": "CAF",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Algerian Ligue 1"
+        },
+        {
+          "tier": 2,
+          "name": "Algerian Ligue 2"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "MA",
+      "name": "Morocco",
+      "confederation": "CAF",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Botola Pro"
+        },
+        {
+          "tier": 2,
+          "name": "Botola 2"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "TN",
+      "name": "Tunisia",
+      "confederation": "CAF",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Ligue Professionnelle 1"
+        },
+        {
+          "tier": 2,
+          "name": "Ligue Professionnelle 2"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "ZA",
+      "name": "South Africa",
+      "confederation": "CAF",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "South African Premiership"
+        },
+        {
+          "tier": 2,
+          "name": "National First Division"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "NG",
+      "name": "Nigeria",
+      "confederation": "CAF",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Nigeria Premier Football League"
+        },
+        {
+          "tier": 2,
+          "name": "Nigeria National League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "GH",
+      "name": "Ghana",
+      "confederation": "CAF",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Ghana Premier League"
+        },
+        {
+          "tier": 2,
+          "name": "Division One League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "KE",
+      "name": "Kenya",
+      "confederation": "CAF",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Kenyan Premier League"
+        },
+        {
+          "tier": 2,
+          "name": "National Super League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "UG",
+      "name": "Uganda",
+      "confederation": "CAF",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Uganda Premier League"
+        },
+        {
+          "tier": 2,
+          "name": "FUFA Big League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "ZW",
+      "name": "Zimbabwe",
+      "confederation": "CAF",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Premier Soccer League"
+        },
+        {
+          "tier": 2,
+          "name": "Northern Region Division One"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "TZ",
+      "name": "Tanzania",
+      "confederation": "CAF",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Tanzanian Premier League"
+        },
+        {
+          "tier": 2,
+          "name": "Championship League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "AU",
+      "name": "Australia",
+      "confederation": "AFC",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "A-League Men"
+        },
+        {
+          "tier": 2,
+          "name": "National Premier Leagues"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "JP",
+      "name": "Japan",
+      "confederation": "AFC",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "J1 League"
+        },
+        {
+          "tier": 2,
+          "name": "J2 League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "KR",
+      "name": "South Korea",
+      "confederation": "AFC",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "K League 1"
+        },
+        {
+          "tier": 2,
+          "name": "K League 2"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "CN",
+      "name": "China",
+      "confederation": "AFC",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Chinese Super League"
+        },
+        {
+          "tier": 2,
+          "name": "China League One"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "IN",
+      "name": "India",
+      "confederation": "AFC",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Indian Super League"
+        },
+        {
+          "tier": 2,
+          "name": "I-League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "ID",
+      "name": "Indonesia",
+      "confederation": "AFC",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Super League"
+        },
+        {
+          "tier": 2,
+          "name": "Championship"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "TH",
+      "name": "Thailand",
+      "confederation": "AFC",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Thai League 1"
+        },
+        {
+          "tier": 2,
+          "name": "Thai League 2"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "MY",
+      "name": "Malaysia",
+      "confederation": "AFC",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Malaysia Super League"
+        },
+        {
+          "tier": 2,
+          "name": "A1 Semi-Pro League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "SA",
+      "name": "Saudi Arabia",
+      "confederation": "AFC",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Saudi Pro League"
+        },
+        {
+          "tier": 2,
+          "name": "Saudi First Division League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "QA",
+      "name": "Qatar",
+      "confederation": "AFC",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Qatar Stars League"
+        },
+        {
+          "tier": 2,
+          "name": "Qatari Second Division"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "IR",
+      "name": "Iran",
+      "confederation": "AFC",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Persian Gulf Pro League"
+        },
+        {
+          "tier": 2,
+          "name": "Azadegan League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "UZ",
+      "name": "Uzbekistan",
+      "confederation": "AFC",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Uzbekistan Super League"
+        },
+        {
+          "tier": 2,
+          "name": "Uzbekistan Pro League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "VN",
+      "name": "Vietnam",
+      "confederation": "AFC",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "V.League 1"
+        },
+        {
+          "tier": 2,
+          "name": "V.League 2"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "SG",
+      "name": "Singapore",
+      "confederation": "AFC",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Singapore Premier League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "NZ",
+      "name": "New Zealand",
+      "confederation": "OFC",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "New Zealand National League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "FJ",
+      "name": "Fiji",
+      "confederation": "OFC",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Fiji Premier League"
+        },
+        {
+          "tier": 2,
+          "name": "Fiji Senior League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "SB",
+      "name": "Solomon Islands",
+      "confederation": "OFC",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "S-League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "PG",
+      "name": "Papua New Guinea",
+      "confederation": "OFC",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "National Soccer League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "NC",
+      "name": "New Caledonia",
+      "confederation": "OFC",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Super Ligue"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    },
+    {
+      "code": "VU",
+      "name": "Vanuatu",
+      "confederation": "OFC",
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Port Vila Football League"
+        }
+      ],
+      "exception": "",
+      "league_names_review": "pending-current-season-check"
+    }
+  ]
+}
