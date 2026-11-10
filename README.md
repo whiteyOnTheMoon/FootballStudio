@@ -6,7 +6,7 @@
 
 ## Projektstatus
 
-**M1 – technische Grundlage im Aufbau.** Django, Docker Compose, PostgreSQL und E-Mail-Authentifizierung sind umgesetzt. Die kaskadierende **Land → Liga → Verein**-Auswahl ist als M1-Weboberfläche mit öffentlichen Katalogadaptern implementiert. Die **manuelle Vereinsanlage innerhalb einer ausgewählten Liga** ist ebenfalls umgesetzt. **Noch keine produktive VPS-Bereitstellung, dauerhafter Jobstart oder Videopipeline.** Diese werden in weiteren M1-/M2-Issues umgesetzt.
+**M1 – technische Grundlage im Aufbau.** Django, Docker Compose, PostgreSQL und E-Mail-Authentifizierung sind umgesetzt. Die kaskadierende **Land → Liga → Verein**-Auswahl ist als M1-Weboberfläche mit öffentlichen Katalogadaptern implementiert. Die **manuelle Vereinsanlage innerhalb einer ausgewählten Liga** ist ebenfalls umgesetzt. Der **M1-Testjob** speichert bereits den zur Laufzeit gewählten Club und einen Titel; er führt **keinen Videorender** aus. **Noch keine produktive VPS-Bereitstellung und keine echte Videopipeline.** Diese werden in weiteren M1-/M2-Issues umgesetzt.
 
 ## Architektur in Kürze
 
