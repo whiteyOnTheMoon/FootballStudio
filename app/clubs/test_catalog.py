@@ -56,7 +56,7 @@ class GlobalOfflineCatalogTests(TestCase):
 
     def test_snapshot_contains_real_clubs_only_for_sourced_leagues(self):
         self.assertEqual(
-            League.objects.filter(coverage_status="snapshot").count(), 39
+            League.objects.filter(coverage_status="snapshot").count(), 105
         )
         rows = [
             ("GB", 1, 20), ("GB", 2, 24), ("DE", 1, 18),
@@ -77,7 +77,7 @@ class GlobalOfflineCatalogTests(TestCase):
         )
 
     def test_third_tier_including_parallel_groups_is_correct(self):
-        self.assertEqual(League.objects.count(), 227)
+        self.assertEqual(League.objects.count(), 231)
         expected = {
             "ES": 2, "SE": 2, "AT": 4, "IT": 3,
             "FR": 1, "GB": 1, "JP": 1,
@@ -140,7 +140,54 @@ class GlobalOfflineCatalogTests(TestCase):
                 })
                 self.assertEqual(response.status_code, 200)
                 self.assertIn(season, response.json()["warning"])
-        self.assertEqual(Club.objects.filter(is_manual=False).count(), 728)
+        self.assertEqual(Club.objects.filter(is_manual=False).count(), 1682)
+
+
+    def test_new_world_club_snapshot_coverage_and_small_leagues(self):
+        self.assertEqual(League.objects.filter(coverage_status="partial").count(), 1)
+        self.assertEqual(
+            League.objects.filter(coverage_status__in=("snapshot", "partial")).count(),
+            106,
+        )
+        examples = [
+            ("AL", "Kategoria Superiore", 10, "2024-25"),
+            ("MD", "Moldovan Super Liga", 8, "2024-25"),
+            ("NG", "Nigeria National League", 36, "2025-26"),
+            ("IL", "Liga Leumit", 16, "2024-25"),
+            ("MX", "Liga de Expansión MX", 15, "2024-25"),
+            ("EC", "LigaPro Serie A", 16, "2025"),
+            ("PT", "Liga Portugal 2", 18, "2024-25"),
+            ("MW", "Malawi Super League", 16, "2025"),
+        ]
+        for code, league_name, count, season in examples:
+            with self.subTest(code=code, league=league_name):
+                league = League.objects.get(country__code=code, name=league_name)
+                self.assertEqual(league.clubs.count(), count)
+                self.assertEqual(league.catalog_season, season)
+                self.assertEqual(league.coverage_status, "snapshot")
+                self.assertTrue(league.source_url.startswith("https://"))
+                response = self.client.get(
+                    reverse("clubs:clubs"), {"country": code, "league": league.pk}
+                )
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.json()["season"], season)
+                self.assertIn(season, response.json()["warning"])
+
+    def test_partial_roster_does_not_claim_full_membership(self):
+        league = League.objects.get(country__code="AU", name="A-League Men")
+        self.assertEqual(league.coverage_status, "partial")
+        self.assertEqual(league.catalog_season, "2024-25")
+        self.assertEqual(league.clubs.count(), 13)
+        response = self.client.get(
+            reverse("clubs:clubs"), {"country": "AU", "league": league.pk}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json()["clubs"]), 13)
+        self.assertEqual(response.json()["coverage"], "partial")
+        self.assertIn("partial club list", response.json()["warning"])
+        self.assertNotIn("N.N.", [
+            club["name"] for club in response.json()["clubs"]
+        ])
 
     def test_no_network_even_when_switching_region_and_fetching_clubs(self):
         with patch("urllib.request.urlopen", side_effect=AssertionError("network forbidden")):

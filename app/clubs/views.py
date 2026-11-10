@@ -95,7 +95,12 @@ def clubs(request):
     )
     results = list(league.clubs.filter(is_active=True).order_by("name"))
     warning = None
-    if league.coverage_status != "snapshot":
+    if league.coverage_status == "partial":
+        warning = (
+            f"Only a partial club list ({len(results)} names) from {league.catalog_season} "
+            "is available; one or more teams are missing and the season may be outdated."
+        )
+    elif league.coverage_status != "snapshot":
         warning = (
             "Only a league reference is stored. Verified club membership has "
             "not yet been imported; please do not treat this as a full roster."
