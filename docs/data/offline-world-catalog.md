@@ -6,7 +6,7 @@
 
 Die vier Dropdown-Stufen sind **Konföderation → Nationalverband/Land → Liga → Verein**. Die App fragt dabei **ausschließlich PostgreSQL** ab. Weder im Browser noch im Django-View wird ein öffentliches API aufgerufen. Der Katalog wird aus **versionierten lokalen JSON-Dateien** eingespielt – beim ersten Docker-Start und danach idempotent beim Anwendungsstart. Spätere Updates sind **bewusste und prüfbare Daten-Releases**, keine regelmäßigen Webabrufe.
 
-**Zielbild:** Alle sechs FIFA-Konföderationen und möglichst die gesamte Welt; UEFA hat Priorität. Aktuelle verfügbare Vereinszuordnungen pro Liga sind eine **gesonderte Qualitätsanforderung**, die nicht durch das Anlegen leerer Ligen erfüllt wird.
+**Zielbild (Scope-Update 10.11.2026):** Alle **211 FIFA-Mitgliedsverbände**, pro Verband soweit tatsächlich vorhanden die **obersten drei nationalen Ligastufen** und ihre Teams. Verifizierbare Teilbestände und ältere datierte Saisons sind vorläufig ausdrücklich zulässig. Regionalgruppen der gleichen Stufe werden als mehrere Ligen geführt; fehlende Listen bleiben sichtbar, es werden keine Ligen oder Vereine erfunden.
 
 ## Aktuell tatsächlich enthalten
 
@@ -15,9 +15,9 @@ Die vier Dropdown-Stufen sind **Konföderation → Nationalverband/Land → Liga
 | FIFA-Kontinentalverbände | 6 | Referenzverzeichnis |
 | UEFA-Mitgliedsverbände | **55 von 55** | nach [UEFA-Verbandsliste](https://www.uefa.com/nationalassociations/) |
 | Verbände weltweit in dieser ersten Ausgabe | **211 von 211** | FIFA-Mitgliedsverbände im Referenzverzeichnis; viele Ligen und Clubs fehlen noch |
-| Nationale Liga-Referenzen weltweit | **202** | Namensverzeichnis; einzelne Wettbewerbsnamen können veraltet sein und müssen überprüft werden |
+| Nationale Liga-Referenzen weltweit | **227** | 24 weitere drittklassige Wettbewerbe/Regionalgruppen, plus USL Championship als eigenständige US-Division-II-Liga; Referenzen ohne vollständige Clubs möglich |
 | UEFA-Verbände mit zwei als Referenz erfassten Ligastufen | **52** | Liga-Namen **nicht automatisch als Saison 2026/27 verifiziert** |
-| Verifizierbare Teilnehmerlisten aus OpenFootball 2026/27 | **16 Ligen / 278 Clubs** | Stand des versionierten OpenFootball-Spielplanauszugs; zu prüfen bei Saisonwechsel |
+| Teilnehmerlisten insgesamt | **39 Ligen / 728 Vereinsdatensätze** | 16 vorherige 2026/27-Snapshots (278), 17 weitere datierte OpenFootball-Snapshots (340), 6 offizielle Saisonlisten auf 3. Stufe (110); nicht alle aktuell oder komplett |
 
 Die 16 Club-Snapshots umfassen **England 1. und 2. Liga**, dazu jeweils die 1. Liga von Deutschland, Spanien, Frankreich, Italien, Niederlanden und Portugal. Weitere in der Datenbank gelistete Ligen haben noch **keine belegte vollständige Club-Zuordnung**. Das UI zeigt sie als Referenz und weist darauf hin, statt falsche Vereine zuzuordnen. Ein Verein aus einem fehlenden Bestand kann optional weiterhin manuell angelegt werden, **ist aber nicht Voraussetzung oder Standardweg**.
 
@@ -43,7 +43,9 @@ Die **Namen der weiteren Wettbewerbe** wurden für das erste Verzeichnis redakti
 **Lokale Dateien:**
 - `app/clubs/data/world_catalog.json`: Konföderationen, bestehende 106 Verbände, nationale Liga-Namen, besondere Strukturen.
 - `app/clubs/data/fifa_member_associations_2026.json`: die zusätzlich aufgenommenen 105 FIFA-Verbände, bewusst ohne unbelegte Liga- und Vereinszuordnungen.
-- `app/clubs/data/teams-2026-27.json`: mit Quelle, Saison und CC0-Lizenz versehene Teilnehmerlisten.
+- `app/clubs/data/teams-2026-27.json`: vorherige 16 Teilnehmerlisten aus 2026/27.
+- `app/clubs/data/teams-additional.json`: 17 ausdrücklich datierte OpenFootball-Listen der Saisons 2024/25, 2025, 2025/26 und 2026.
+- `app/clubs/data/teams-verified-2026.json`: 6 dritte Ligastufen bzw. Gruppen in Spanien, Frankreich, Schweden und Japan, nach offiziellen öffentlichen Teilnehmerlisten; Lizenzrechte vor Weitergabe prüfen.
 - `app/clubs/management/commands/seed_world_catalog.py`: idempotenter Offline-Importer ohne Netzwerkzugriff.
 - `app/clubs/migrations/0003_confederation_offline_coverage.py`: Konföderationsbeziehungen, 2–3-stellige Verbandskennungen und Quell-/Abdeckungsstatus.
 - `app/production/migrations/0002_global_association_code.py`: drei Zeichen für Nationalverbände (u. a. `SCO`, `WAL`, `NIR`).
@@ -60,7 +62,7 @@ Die **Namen der weiteren Wettbewerbe** wurden für das erste Verzeichnis redakti
 - [x] Ligastufen als Referenzen, reale Sonderfälle korrekt modelliert.
 - [x] Vierstufige Dropdowns und nach wie vor überprüfter M1-Testjob.
 - [x] Lokale, versionierte Quellenpakete und idempotenter Import.
-- [ ] **Vollständige tatsächlich belegte Vereinslisten für die beiden höchsten Ligen in jedem UEFA-Verband**, wo zwei Ligen existieren; Sonderfälle prüfen.
+- [ ] **Die drei höchsten real existierenden Ligastufen und ihre Vereine je FIFA-Verband** nach und nach ergänzen; unvollständige oder ältere verifizierbare Daten sind vorerst erlaubt und müssen sichtbar gekennzeichnet werden.
 - [x] Alle **211 FIFA-Mitgliedsverbände weltweit** im Offline-Verzeichnis (106 + 105 zusätzliche Referenzen).
 - [ ] Für alle FIFA-Verbände die tatsächlichen Ligastufen und Clubzuordnungen vervollständigen.
 - [ ] Daten-Saisonalität/Lizenzen je Liga dokumentiert abnehmen; UI-Browsertest auf Test/VPS-Host.
@@ -91,3 +93,49 @@ erneuten Import idempotent.
 Die laufende Saison 2026/27 wurde in den offenen [OpenFootball-Länderdatensätzen](https://github.com/openfootball) anhand der tatsächlichen Spielpaarungen analysiert. Im lokalen Datenpaket sind neu enthalten: **Deutschlands 2. Bundesliga (18 Clubs) und 3. Liga (20)**, **Österreichs Bundesliga (12)**, **Scottish Premiership (12)**, **Swiss Super League (12)**, **Czech First League (16)**, **Super League Greece (14)** und **türkische Süper Lig (18)**. Die Gesamtzahl steigt auf **16 Vereinslisten mit 278 Clubnamen**.
 
 Die deutschen 2./3.-Liga-Dateien stammen aus dem OpenFootball-Export von **OpenLigaDB**; sie sind als **ODbL-abgeleitet** gekennzeichnet und müssen bei einer späteren öffentlichen Weitergabe des gesamten Datenbankpakets hinsichtlich der ODbL-Lizenzpflichten überprüft werden. Diese Datensätze wurden **einmalig für das versionierte Paket** erhoben, nicht für periodische Laufzeitabfragen.
+
+## Datenpaket 4: Weltweit drei Ligaebenen – erste belegte Teilbestände
+
+**Neuer Product-Owner-Scope:** Nicht mehr nur 1./2. UEFA-Liga, sondern möglichst
+die drei höchsten tatsächlichen Ligastufen **aller 211 FIFA-Mitgliedsverbände**.
+Zunächst reicht eine belegte unvollständige Vereinsliste; Datenlücken bleiben offen.
+
+- **227 statt 202 Ligareferenzen**: +24 belegte 3.-Stufen-Ligen/Regionalgruppen
+  unter anderem in England, Spanien, Frankreich, Schweden, Österreich (vier
+  Regionalligen ab 2026/27), Italien (Serie-C-Gruppen), Schottland, Niederlanden,
+  Dänemark, der Schweiz, Polen, Portugal, Brasilien, Japan, China und den USA.
+  Zusätzlich ist die USL Championship als unabhängige zweite US-Profidivision
+  hinterlegt; das US-System ist **kein einheitlicher Auf-/Abstiegsbaum**.
+- **6 neue offizielle Drittliga-Teilnehmerlisten, 110 Clubs**:
+  [Spanien, 2026/27](https://rfef.es/es/noticias/aprobados-los-grupos-de-primera-federacion-para-la-temporada-202627)
+  (2 × 20),
+  [Frankreichs neue Ligue 3, 2026/27](https://www.fff.fr/article/17022-le-calendrier-2026-2027-est-servi.html)
+  (18),
+  [Schweden Ettan 2026](https://ettanfotboll.se/seriesammansattning-for-ettan-2026/)
+  (2 × 16),
+  [Japan J3 2026/27](https://www.jleague.jp/en/j3/standings/2026-27/)
+  (20).
+- **17 weitere OpenFootball-Spielplan-Snapshots, 340 Vereine** aus 2024/25,
+  2025, 2025/26 oder 2026; darunter England League One, mehrere europäische
+  Zweitligen und Liga-1-Listen aus Europa, Südamerika, Nordamerika, Afrika und
+  Asien. Die Quelldatei ist pro Liga hinterlegt, z. B.
+  [League One 2025/26](https://github.com/openfootball/football.json/blob/master/2025-26/en.3.json).
+- **39 Liga-Teilnehmerlisten und 728 Clubdatensätze insgesamt**.
+  Es handelt sich nicht um 728 unterschiedliche historische Clubidentitäten und
+  **nicht um aktuelle Kader aller 211 Länder**.
+- Die App zeigt die **Ligastufe, Regionalgruppe und Saison**. Ältere Saisons
+  erhalten eine Warnung; bei Kalenderjahres-Saisons wie Schweden 2026 wird
+  nicht fälschlich 2026/27 vorausgesetzt.
+- Der Importer erzwingt für parallel laufende Ligen eine eindeutige Zuordnung
+  über den exakten Liganamen; alte offene Vereinslisten werden nicht willkürlich
+  der ersten Liga derselben Stufe zugeordnet. Offline, ohne neue Migration.
+
+**Quellenrecht:** OpenFootball-Datenpakete sind quellenvermerkt, darunter
+OpenLigaDB-abgeleitete ODbL-Daten aus dem vorherigen Release. Für offizielle
+Verbandsseiten sind Fakten wie Teilnehmernamen mit URL dokumentiert, **aber
+keine CC0-Lizenz behauptet**. Vor öffentlicher Weitergabe ganzer
+Datensammlungen ist die rechtliche Nutzung gesondert zu prüfen.
+
+**Weiter offen:** Alle FIFA-Verbände auf drei realen Ebenen erweitern, fehlende
+Teams sowie Saisonstand schrittweise nachpflegen. Keine Anforderungen an
+vollständige Ergebnisse, um eine erste Teilmenge anzubieten.

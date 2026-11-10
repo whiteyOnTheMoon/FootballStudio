@@ -34,13 +34,16 @@ def main():
         }
         for code, amount in expected.items():
             assert Country.objects.filter(confederation__code=code).count() == amount
-        assert League.objects.filter(coverage_status="snapshot").count() == 16
-        assert Club.objects.filter(is_manual=False).count() == 278
+        assert League.objects.filter(coverage_status="snapshot").count() == 39
+        assert Club.objects.filter(is_manual=False).count() == 728
+        assert League.objects.count() == 227
+        assert League.objects.filter(country__code="AT", tier=3).count() == 4
+        assert League.objects.filter(country__code="ES", tier=3).count() == 2
         assert Country.objects.filter(code="LI").exists()
         assert Country.objects.filter(code="AF", confederation__code="AFC").exists()
         assert not League.objects.filter(country__code="AF").exists()
         assert not League.objects.filter(country__code="LI").exists()
-    print("Offline directory OK:", first, "FIFA 211; UEFA 55; 6 confeds; 16 club snapshots.")
+    print("Offline directory OK:", first, "FIFA 211; UEFA 55; 6 confeds; 39 sourced league rosters; 728 clubs.")
     print("No HTTP/API calls were made during migration or import.")
 
 

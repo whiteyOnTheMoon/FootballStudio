@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError, transaction
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST
 
@@ -99,7 +100,7 @@ def clubs(request):
             "Only a league reference is stored. Verified club membership has "
             "not yet been imported; please do not treat this as a full roster."
         )
-    elif league.catalog_season != season_label(season_start()):
+    elif league.catalog_season not in {season_label(season_start()), str(timezone.localdate().year)}:
         warning = (
             f"The last imported club roster is for {league.catalog_season}; "
             "it may not reflect the current season."
