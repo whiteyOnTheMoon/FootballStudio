@@ -35,6 +35,8 @@ class League(models.Model):
     tier = models.PositiveSmallIntegerField(default=1)
     provider = models.CharField(max_length=60, default="manual")
     provider_id = models.CharField(max_length=120, blank=True)
+    catalog_season = models.CharField(max_length=10, blank=True)
+    last_synced_at = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
 
     class Meta:
