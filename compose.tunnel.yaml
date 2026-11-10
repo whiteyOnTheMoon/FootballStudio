@@ -31,6 +31,11 @@ services:
       TUNNEL_TOKEN: "${CLOUDFLARE_TUNNEL_TOKEN:?Set CLOUDFLARE_TUNNEL_TOKEN in the private .env}"
     networks:
       - tunnel_frontend
+    logging:
+      driver: local
+      options:
+        max-size: "10m"
+        max-file: "3"
     read_only: true
     cap_drop: ["ALL"]
     security_opt:

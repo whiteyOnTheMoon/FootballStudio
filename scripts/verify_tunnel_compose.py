@@ -16,6 +16,11 @@ tunnel = services["cloudflared"]
 
 for name, service in (("web", web), ("db", db), ("cloudflared", tunnel)):
     assert not service.get("ports"), f"{name} must not publish any host ports"
+    logging = service.get("logging", {})
+    assert logging.get("driver") == "local", f"{name}: unexpected log driver"
+    options = logging.get("options", {})
+    assert str(options.get("max-size")) == "10m", f"{name}: log size limit missing"
+    assert str(options.get("max-file")) == "3", f"{name}: log rotation missing"
 
 env = web["environment"]
 expected = {

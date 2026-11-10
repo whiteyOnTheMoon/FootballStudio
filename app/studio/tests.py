@@ -27,3 +27,20 @@ class HealthTests(TestCase):
         response = self.client.get(reverse("healthz"))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, b"ok")
+        self.assertEqual(response["Cache-Control"], "no-store")
+        self.assertRegex(response["X-Request-ID"], r"^[0-9a-f]{16}$")
+
+    def test_database_unavailable_is_503_without_sensitive_details(self):
+        from unittest.mock import patch
+        from django.db.utils import DatabaseError
+
+        class BrokenConnection:
+            def cursor(self):
+                raise DatabaseError("sensitive-database-host-or-password")
+
+        with patch("app.studio.views.connections", {"default": BrokenConnection()}):
+            response = self.client.get(reverse("healthz"))
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.content, b"unavailable")
+        self.assertEqual(response["Cache-Control"], "no-store")
+        self.assertNotIn(b"sensitive-database", response.content)

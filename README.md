@@ -32,6 +32,7 @@
 | [VPS-Inventur](docs/ops/vps-inventory.md) | Lesender Prüfplan; tatsächliche Serverwerte noch offen |
 | [PostgreSQL Backup/Restore](docs/ops/postgres-backup-restore.md) | Datenbank-Dumps, isolierter Restore-Test, Aufbewahrung und Risiken |
 | [Cloudflare-Tunnel-Deployment](docs/ops/cloudflare-tunnel.md) | Docker auf VPS, Tunnel, sichere HTTPS-/CSRF-Einstellungen, Live-Abnahmeschritte |
+| [Healthcheck & Logging](docs/ops/health-and-logging.md) | Readiness, datensparsame JSON-Fehlerlogs und Docker-Logrotation |
 | [Repository-Struktur](docs/development/repository-layout.md) | Geplante Verzeichnisse, lokaler Einstieg und Konventionen |
 | [Django- und Docker-Grundlage](docs/development/docker-local.md) | Aktueller lokaler Start, sichere Konfiguration, Tests und Grenzen |
 
