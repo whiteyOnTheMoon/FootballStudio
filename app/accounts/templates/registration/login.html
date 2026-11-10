@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in – FootballStudio</title>
+  <style>
+    body { margin: 0; background: #101722; color: #f2f5f7; font: 1rem/1.6 system-ui, sans-serif; }
+    main { max-width: 26rem; margin: 14vh auto; padding: 2rem; background: #1b2838; border-radius: .9rem; }
+    label { display: block; margin-top: 1rem; }
+    input { display: block; width: 100%; box-sizing: border-box; padding: .75rem; border: 1px solid #64748b; border-radius: .45rem; background: #f5f8ff; }
+    button { width: 100%; margin-top: 1.5rem; padding: .8rem; border: 0; border-radius: .45rem; background: #56c5a8; font-weight: bold; cursor: pointer; }
+    .errorlist { color: #ffb6b6; }
+    .hint { color: #c5d0da; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>FootballStudio</h1>
+  <p class="hint">Sign in with your email and password. Accounts are created by an administrator.</p>
+  {% if form.non_field_errors %}<div role="alert">{{ form.non_field_errors }}</div>{% endif %}
+  <form method="post" action="{% url 'login' %}">
+    {% csrf_token %}
+    <label for="{{ form.username.id_for_label }}">Email</label>
+    {{ form.username }}
+    {{ form.username.errors }}
+    <label for="{{ form.password.id_for_label }}">Password</label>
+    {{ form.password }}
+    {{ form.password.errors }}
+    {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+    <button type="submit">Sign in</button>
+  </form>
+</main>
+</body>
+</html>
