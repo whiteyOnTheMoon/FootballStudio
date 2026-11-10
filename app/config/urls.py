@@ -15,5 +15,6 @@ urlpatterns = [
     path("accounts/logout/", LogoutView.as_view(next_page="login"), name="logout"),
     path("healthz/", views.healthz, name="healthz"),
     path("clubs/api/", include(("app.clubs.urls", "clubs"), namespace="clubs")),
+    path("jobs/api/", include(("app.production.urls", "production"), namespace="production")),
     path("admin/", admin.site.urls),
 ]

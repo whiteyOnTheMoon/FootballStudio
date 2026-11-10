@@ -78,3 +78,17 @@ Nach Login unter `http://127.0.0.1:8000/` lädt die Seite **Land → Liga → Ve
 - **Inzwischen implementiert:** Manuelles Hinzufügen eines Vereins im ausgewählten Land und der Liga (#25), einschließlich CSRF, Dublettenschutz und sofortiger Auswahl im Dropdown. **Nicht enthalten:** dauerhafter Testjob (#26), Video-/KI-Pipeline (M2).
 
 **Testhinweis:** Die normalen Django-Tests arbeiten mit Mock-JSON-Daten und erzeugen keine externen API-Aufrufe. Liveprüfung der tatsächlichen Anbieterabdeckung erfolgt separat und kann aufgrund von Ausfällen eingeschränkt sein. Eine CI-Probe ist keine Prüfung des tatsächlichen VPS.
+
+## Dauerhaft gespeicherter M1-Testjob (FS-010b/#23, FS-011c/#26)
+
+Nach dem Login kannst du im Dashboard **Land → Liga → Verein** auswählen oder einen Club in einer vorhandenen Liga manuell ergänzen. Nach bestätigter Auswahl erscheint der Bereich **„M1-Testjob anlegen“**. Trage einen Arbeitstitel ein und klicke auf „Testjob speichern“.
+
+- Der Browser sendet Land, Liga, Vereins-ID und Titel als **CSRF-geschützten POST** an `/jobs/api/test/`.
+- Der Server prüft **erneut**, dass der Vereinsdatensatz aktiv ist und wirklich zum übergebenen Land und zur Liga der laufenden Saison gehört.
+- Der neue Datenbankeintrag speichert `owner`, `club`, `title`, `language=en`, `kind=prototype`, `status=queued`, Zeitstempel sowie den **Snapshot von Vereins-, Liga- und Ländernamen**.
+- Der Listenendpunkt `GET /jobs/api/list/` zeigt **ausschließlich Jobs des angemeldeten Nutzers**, inklusive Status und bei Fehlschlägen einer Fehlermeldung. Die Oberfläche zeigt die jüngsten 20 Jobs.
+- **Wichtige Abgrenzung:** „queued“ bedeutet in M1 ausschließlich **Auswahl/Testjob gespeichert**. Es wird **kein** Hintergrund-Worker angestoßen, keine KI-/TTS-API aufgerufen und **keine MP4** erzeugt. Ein Prototype-Job kann nicht in `running` oder `completed` wechseln.
+- Filmjobs sind im Datenmodell für M2 vorbereitet. Ein kontrollierter Statusautomat erlaubt `draft → queued → running → completed` bzw. `failed → queued`, mit Fehlermeldung bei Fehlschlägen. Ein abgeschlossener Filmjob benötigt eine vorhandene Ergebnisreferenz.
+- Die Migration `production.0001_initial` wird mit `docker compose exec web python manage.py migrate --noinput` auf einer **leeren oder gesicherten Testdatenbank** eingespielt. Nicht durch Löschen vorhandener Volumes erzwingen.
+
+M1-Tests: `docker compose exec web python manage.py test app.production`, und sämtliche Tests über `docker compose exec web python manage.py test`. Die CI prüft Session/CSRF, ID-Fälschungen, Benutzertrennung, manuelle Vereinsanlage, Migrationen und erlaubte Statuswechsel. Die Pipeline mit FFmpeg folgt **erst in M2**.
