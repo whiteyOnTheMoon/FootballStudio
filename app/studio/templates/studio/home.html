@@ -112,7 +112,7 @@
 
     <section id="job-panel" class="jobs hidden" aria-labelledby="job-heading">
       <h3 id="job-heading">M1-Testjob anlegen</h3>
-      <p class="muted">Vergib einen Arbeitstitel. Wir speichern deine Vereinsauswahl und den Teststatus in PostgreSQL – es wird **noch kein Video produziert**.</p>
+      <p class="muted">Vergib einen Arbeitstitel. Wir speichern deine Vereinsauswahl und den Teststatus in PostgreSQL – es wird <strong>noch kein Video produziert</strong>.</p>
       <form id="job-form" method="post" action="{% url 'production:create-test' %}">
         {% csrf_token %}
         <label for="job-title">Arbeitstitel</label>
