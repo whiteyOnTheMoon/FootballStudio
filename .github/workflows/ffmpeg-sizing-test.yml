@@ -1,0 +1,41 @@
+name: FFmpeg sizing smoke test
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/ffmpeg-sizing-test.yml"
+      - "scripts/benchmark_ffmpeg.py"
+      - "tests/test_benchmark_ffmpeg.py"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/ffmpeg-sizing-test.yml"
+      - "scripts/benchmark_ffmpeg.py"
+      - "tests/test_benchmark_ffmpeg.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - name: Verify Python sizing logic
+        run: python3 -m unittest discover -s tests -p "test_benchmark_ffmpeg.py" -v
+      - name: Install FFmpeg on the ephemeral test runner only
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Check FFmpeg prerequisites
+        run: |
+          ffmpeg -version | head -n 1
+          ffprobe -version | head -n 1
+          ffmpeg -hide_banner -encoders | grep -q libx264
+      - name: Encode short synthetic clips (not a VPS benchmark)
+        run: |
+          python3 scripts/benchmark_ffmpeg.py --seconds 1 --threads 2 --timeout 120 \
+            --workdir "$RUNNER_TEMP" > "$RUNNER_TEMP/ffmpeg-sizing.json"
+          python3 -c 'import json,os; from pathlib import Path; p=Path(os.environ["RUNNER_TEMP"])/"ffmpeg-sizing.json"; d=json.loads(p.read_text()); assert not d["is_vps_measurement"]; assert {x["profile"] for x in d["profiles"]} == {"720p","1080p"}; assert all(x["output"]["video_codec"]=="h264" and x["output"]["audio_codec"]=="aac" for x in d["profiles"]); print("Synthetic 720p/1080p encoding and ffprobe validation passed")'
