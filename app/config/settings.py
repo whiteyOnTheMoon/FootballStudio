@@ -133,8 +133,35 @@ if local_http and (
     )
 SESSION_COOKIE_SECURE = not DEBUG and not local_http
 CSRF_COOKIE_SECURE = not DEBUG and not local_http
-# HTTPS/proxy and HSTS remain separate M1 deployment tasks (#27/#28).
-SECURE_HSTS_SECONDS = 0
-SECURE_SSL_REDIRECT = False
-if os.environ.get("DJANGO_TRUST_PROXY") == "1":
+# Trust X-Forwarded-Proto ONLY when the web service has no published host ports
+# and the sole ingress is the configured Cloudflare Tunnel connector.
+trust_proxy = os.environ.get("DJANGO_TRUST_PROXY") == "1"
+force_https = os.environ.get("DJANGO_FORCE_HTTPS", "0") == "1"
+if force_https and (DEBUG or local_http or not trust_proxy):
+    raise ImproperlyConfigured(
+        "DJANGO_FORCE_HTTPS requires DEBUG=0, LOCAL_HTTP=0 and trusted tunnel proxy."
+    )
+if trust_proxy:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",")
+    if origin.strip()
+]
+if force_https and not CSRF_TRUSTED_ORIGINS:
+    raise ImproperlyConfigured(
+        "DJANGO_CSRF_TRUSTED_ORIGINS is required for HTTPS deployment."
+    )
+SECURE_SSL_REDIRECT = force_https
+# Cloudflared passes HTTPS to the private HTTP origin. Internal Compose health
+# checks use http://127.0.0.1:8000 and must stay healthy without a TLS redirect.
+SECURE_REDIRECT_EXEMPT = [r"^healthz/$"] if force_https else []
+try:
+    SECURE_HSTS_SECONDS = int(os.environ.get("DJANGO_HSTS_SECONDS", "0"))
+except ValueError as exc:
+    raise ImproperlyConfigured("DJANGO_HSTS_SECONDS must be an integer.") from exc
+if SECURE_HSTS_SECONDS < 0:
+    raise ImproperlyConfigured("DJANGO_HSTS_SECONDS must be nonnegative.")
+if SECURE_HSTS_SECONDS and not force_https:
+    raise ImproperlyConfigured("Enable HTTPS before enabling HSTS.")
