@@ -6,7 +6,7 @@
 
 ## Projektstatus
 
-**M1 – technische Grundlage im Aufbau.** Django, Docker Compose, PostgreSQL und E-Mail-Authentifizierung sind umgesetzt. Die neue **Verband → Land → Liga → Verein**-Auswahl ist als Offline-M1-Weboberfläche mit 6 Konföderationen, allen 55 UEFA-Verbänden und lokalen Vereins-Snapshots implementiert. **Aktuelle Vereinslisten aller UEFA-Ligen oder aller Länder weltweit sind noch nicht vollständig**. Die **manuelle Vereinsanlage innerhalb einer ausgewählten Liga** ist ebenfalls umgesetzt. Der **M1-Testjob** speichert bereits den zur Laufzeit gewählten Club und einen Titel; er führt **keinen Videorender** aus. **Noch keine produktive VPS-Bereitstellung und keine echte Videopipeline.** Diese werden in weiteren M1-/M2-Issues umgesetzt.
+**M1 – technische Grundlage im Aufbau.** Django, Docker Compose, PostgreSQL und E-Mail-Authentifizierung sind umgesetzt. Die neue **Verband → Land → Liga → Verein**-Auswahl ist als Offline-M1-Weboberfläche mit 6 Konföderationen, **allen 211 FIFA-Mitgliedsverbänden** (darunter 55 UEFA-Verbände) und lokalen Vereins-Snapshots implementiert. **Die 211 Verbandsnamen sind vollständig, die Ligadaten und aktuellen Vereinslisten weltweit jedoch nicht.** Die **manuelle Vereinsanlage innerhalb einer ausgewählten Liga** ist ebenfalls umgesetzt. Der **M1-Testjob** speichert bereits den zur Laufzeit gewählten Club und einen Titel; er führt **keinen Videorender** aus. **Noch keine produktive VPS-Bereitstellung und keine echte Videopipeline.** Diese werden in weiteren M1-/M2-Issues umgesetzt.
 
 ## Architektur in Kürze
 

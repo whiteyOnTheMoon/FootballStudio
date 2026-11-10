@@ -1,0 +1,853 @@
+{
+  "version": "2026-11-10",
+  "description": "105 additional FIFA member associations missing from world_catalog.json. Reference-only: no league or club rosters are asserted.",
+  "sources": [
+    "https://inside.fifa.com/about-fifa/associations",
+    "https://www.the-afc.com/en/about_afc/member_associations.html/",
+    "https://www.cafonline.com/en/inside-caf/member-associations/",
+    "https://qa-backoffice.concacaf.com/inside-concacaf/member-associations/",
+    "https://www.oceaniafootball.com/member-associations/"
+  ],
+  "associations": [
+    {
+      "code": "AF",
+      "name": "Afghanistan",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "BH",
+      "name": "Bahrain",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "BD",
+      "name": "Bangladesh",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "BT",
+      "name": "Bhutan",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "BN",
+      "name": "Brunei Darussalam",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "KH",
+      "name": "Cambodia",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "TW",
+      "name": "Chinese Taipei",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "KP",
+      "name": "DPR Korea",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "GU",
+      "name": "Guam",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "HK",
+      "name": "Hong Kong, China",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "IQ",
+      "name": "Iraq",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "JO",
+      "name": "Jordan",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "KW",
+      "name": "Kuwait",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "KG",
+      "name": "Kyrgyz Republic",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "LA",
+      "name": "Laos",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "LB",
+      "name": "Lebanon",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "MO",
+      "name": "Macau, China",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "MV",
+      "name": "Maldives",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "MN",
+      "name": "Mongolia",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "MM",
+      "name": "Myanmar",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "NP",
+      "name": "Nepal",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "OM",
+      "name": "Oman",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "PK",
+      "name": "Pakistan",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "PS",
+      "name": "Palestine",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "PH",
+      "name": "Philippines",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "LK",
+      "name": "Sri Lanka",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "SY",
+      "name": "Syria",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "TJ",
+      "name": "Tajikistan",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "TL",
+      "name": "Timor-Leste",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "TM",
+      "name": "Turkmenistan",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "AE",
+      "name": "United Arab Emirates",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "YE",
+      "name": "Yemen",
+      "confederation": "AFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "AO",
+      "name": "Angola",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "BJ",
+      "name": "Benin",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "BW",
+      "name": "Botswana",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "BF",
+      "name": "Burkina Faso",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "BI",
+      "name": "Burundi",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "CV",
+      "name": "Cabo Verde",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "CM",
+      "name": "Cameroon",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "CF",
+      "name": "Central African Republic",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "TD",
+      "name": "Chad",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "KM",
+      "name": "Comoros",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "CG",
+      "name": "Congo",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "CD",
+      "name": "Congo DR",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "CI",
+      "name": "Côte d'Ivoire",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "DJ",
+      "name": "Djibouti",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "GQ",
+      "name": "Equatorial Guinea",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "ER",
+      "name": "Eritrea",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "SZ",
+      "name": "Eswatini",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "ET",
+      "name": "Ethiopia",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "GA",
+      "name": "Gabon",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "GN",
+      "name": "Guinea",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "GW",
+      "name": "Guinea-Bissau",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "LS",
+      "name": "Lesotho",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "LR",
+      "name": "Liberia",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "LY",
+      "name": "Libya",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "MG",
+      "name": "Madagascar",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "MW",
+      "name": "Malawi",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "ML",
+      "name": "Mali",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "MR",
+      "name": "Mauritania",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "MU",
+      "name": "Mauritius",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "MZ",
+      "name": "Mozambique",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "NA",
+      "name": "Namibia",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "NE",
+      "name": "Niger",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "RW",
+      "name": "Rwanda",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "ST",
+      "name": "São Tomé and Príncipe",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "SN",
+      "name": "Senegal",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "SC",
+      "name": "Seychelles",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "SL",
+      "name": "Sierra Leone",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "SO",
+      "name": "Somalia",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "SS",
+      "name": "South Sudan",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "SD",
+      "name": "Sudan",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "GM",
+      "name": "The Gambia",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "TG",
+      "name": "Togo",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "ZM",
+      "name": "Zambia",
+      "confederation": "CAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "AI",
+      "name": "Anguilla",
+      "confederation": "CONCACAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "AG",
+      "name": "Antigua and Barbuda",
+      "confederation": "CONCACAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "AW",
+      "name": "Aruba",
+      "confederation": "CONCACAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "BS",
+      "name": "Bahamas",
+      "confederation": "CONCACAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "BB",
+      "name": "Barbados",
+      "confederation": "CONCACAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "BZ",
+      "name": "Belize",
+      "confederation": "CONCACAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "BM",
+      "name": "Bermuda",
+      "confederation": "CONCACAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "VG",
+      "name": "British Virgin Islands",
+      "confederation": "CONCACAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "KY",
+      "name": "Cayman Islands",
+      "confederation": "CONCACAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "CU",
+      "name": "Cuba",
+      "confederation": "CONCACAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "CW",
+      "name": "Curaçao",
+      "confederation": "CONCACAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "DM",
+      "name": "Dominica",
+      "confederation": "CONCACAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "DO",
+      "name": "Dominican Republic",
+      "confederation": "CONCACAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "GD",
+      "name": "Grenada",
+      "confederation": "CONCACAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "GY",
+      "name": "Guyana",
+      "confederation": "CONCACAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "HT",
+      "name": "Haiti",
+      "confederation": "CONCACAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "MS",
+      "name": "Montserrat",
+      "confederation": "CONCACAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "PR",
+      "name": "Puerto Rico",
+      "confederation": "CONCACAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "KN",
+      "name": "St Kitts and Nevis",
+      "confederation": "CONCACAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "LC",
+      "name": "St Lucia",
+      "confederation": "CONCACAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "VC",
+      "name": "St Vincent and the Grenadines",
+      "confederation": "CONCACAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "SR",
+      "name": "Suriname",
+      "confederation": "CONCACAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "TT",
+      "name": "Trinidad and Tobago",
+      "confederation": "CONCACAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "TC",
+      "name": "Turks and Caicos Islands",
+      "confederation": "CONCACAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "VI",
+      "name": "US Virgin Islands",
+      "confederation": "CONCACAF",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "AS",
+      "name": "American Samoa",
+      "confederation": "OFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "CK",
+      "name": "Cook Islands",
+      "confederation": "OFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "WS",
+      "name": "Samoa",
+      "confederation": "OFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "PF",
+      "name": "Tahiti",
+      "confederation": "OFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    },
+    {
+      "code": "TO",
+      "name": "Tonga",
+      "confederation": "OFC",
+      "leagues": [],
+      "exception": "",
+      "league_names_review": "not-yet-verified"
+    }
+  ]
+}

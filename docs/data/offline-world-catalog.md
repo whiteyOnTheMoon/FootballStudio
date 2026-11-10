@@ -14,7 +14,7 @@ Die vier Dropdown-Stufen sind **Konföderation → Nationalverband/Land → Liga
 | --- | ---: | --- |
 | FIFA-Kontinentalverbände | 6 | Referenzverzeichnis |
 | UEFA-Mitgliedsverbände | **55 von 55** | nach [UEFA-Verbandsliste](https://www.uefa.com/nationalassociations/) |
-| Verbände weltweit in dieser ersten Ausgabe | **106** | nicht 211 von 211; Ausbau noch offen |
+| Verbände weltweit in dieser ersten Ausgabe | **211 von 211** | FIFA-Mitgliedsverbände im Referenzverzeichnis; viele Ligen und Clubs fehlen noch |
 | Nationale Liga-Referenzen weltweit | **202** | Namensverzeichnis; einzelne Wettbewerbsnamen können veraltet sein und müssen überprüft werden |
 | UEFA-Verbände mit zwei als Referenz erfassten Ligastufen | **52** | Liga-Namen **nicht automatisch als Saison 2026/27 verifiziert** |
 | Verifizierbare Teilnehmerlisten aus OpenFootball 2026/27 | **16 Ligen / 278 Clubs** | Stand des versionierten OpenFootball-Spielplanauszugs; zu prüfen bei Saisonwechsel |
@@ -41,7 +41,8 @@ Die **Namen der weiteren Wettbewerbe** wurden für das erste Verzeichnis redakti
 ## Umsetzung und Updateprozess
 
 **Lokale Dateien:**
-- `app/clubs/data/world_catalog.json`: Konföderationen, Verbände, nationale Liga-Namen, besondere Strukturen.
+- `app/clubs/data/world_catalog.json`: Konföderationen, bestehende 106 Verbände, nationale Liga-Namen, besondere Strukturen.
+- `app/clubs/data/fifa_member_associations_2026.json`: die zusätzlich aufgenommenen 105 FIFA-Verbände, bewusst ohne unbelegte Liga- und Vereinszuordnungen.
 - `app/clubs/data/teams-2026-27.json`: mit Quelle, Saison und CC0-Lizenz versehene Teilnehmerlisten.
 - `app/clubs/management/commands/seed_world_catalog.py`: idempotenter Offline-Importer ohne Netzwerkzugriff.
 - `app/clubs/migrations/0003_confederation_offline_coverage.py`: Konföderationsbeziehungen, 2–3-stellige Verbandskennungen und Quell-/Abdeckungsstatus.
@@ -60,8 +61,28 @@ Die **Namen der weiteren Wettbewerbe** wurden für das erste Verzeichnis redakti
 - [x] Vierstufige Dropdowns und nach wie vor überprüfter M1-Testjob.
 - [x] Lokale, versionierte Quellenpakete und idempotenter Import.
 - [ ] **Vollständige tatsächlich belegte Vereinslisten für die beiden höchsten Ligen in jedem UEFA-Verband**, wo zwei Ligen existieren; Sonderfälle prüfen.
-- [ ] Alle **211 FIFA-Verbände weltweit**, dann jeweils ihre real existierenden Ligastufen und Clubzuordnungen vervollständigen.
+- [x] Alle **211 FIFA-Mitgliedsverbände weltweit** im Offline-Verzeichnis (106 + 105 zusätzliche Referenzen).
+- [ ] Für alle FIFA-Verbände die tatsächlichen Ligastufen und Clubzuordnungen vervollständigen.
 - [ ] Daten-Saisonalität/Lizenzen je Liga dokumentiert abnehmen; UI-Browsertest auf Test/VPS-Host.
+
+### Datenpaket 3: alle FIFA-Mitgliedsverbände, noch nicht alle Ligen
+
+Der zweite Offline-Dateibestand ergänzt **105 bisher fehlende Verbände**: CAF +43,
+AFC +32, CONCACAF +25 und OFC +5. Gesamt: **211 Mitgliedsverbände**
+(UEFA 55, CAF 54, AFC 46, CONCACAF 35, CONMEBOL 10, OFC 11).
+Die Zuordnung basiert auf dem [FIFA-Mitgliederverzeichnis](https://inside.fifa.com/about-fifa/associations)
+sowie den Verzeichnissen von [CAF](https://www.cafonline.com/en/inside-caf/member-associations/),
+[AFC](https://www.the-afc.com/en/about_afc/member_associations.html/),
+[Concacaf](https://qa-backoffice.concacaf.com/inside-concacaf/member-associations/)
+und [OFC](https://www.oceaniafootball.com/member-associations/).
+AFC hat zusätzlich Northern Mariana Islands als nicht-FIFA-Mitglied; die Concacaf führt
+auch Nicht-FIFA-Verbände. Hier werden bewusst **nur FIFA-Verbände** importiert.
+
+Für die 105 ergänzten Verbände werden **keine Ligen behauptet**. Die
+Oberfläche erklärt den Status „noch nicht verifiziert“, statt fiktive Wettbewerbe
+oder Vereinszugehörigkeiten anzubieten. Die bereits importierten 202 Liga-Referenzen
+und 278 Clubs bleiben unverändert. Die Erweiterung ist offline und beim
+erneuten Import idempotent.
 
 **Das Issue #100 darf erst nach der sachlichen Club-/Weltabdeckung geschlossen werden.** Die hier umgesetzte Softwarestruktur ist ein wichtiger, aber noch nicht abschließender Teil.
 

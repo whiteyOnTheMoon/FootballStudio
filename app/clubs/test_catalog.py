@@ -31,7 +31,16 @@ class GlobalOfflineCatalogTests(TestCase):
         self.assertTrue(Country.objects.filter(code="WAL").exists())
         self.assertTrue(Country.objects.filter(code="NIR").exists())
         self.assertTrue(Country.objects.filter(code="GB", name="England").exists())
-        self.assertGreater(Country.objects.count(), 100)
+        self.assertEqual(Country.objects.count(), 211)
+        expected = {
+            "UEFA": 55, "CAF": 54, "AFC": 46,
+            "CONCACAF": 35, "CONMEBOL": 10, "OFC": 11,
+        }
+        for confed, count in expected.items():
+            with self.subTest(confederation=confed):
+                self.assertEqual(
+                    Country.objects.filter(confederation__code=confed).count(), count
+                )
 
     def test_uefa_two_league_references_except_actual_single_tier_exceptions(self):
         for association in Country.objects.filter(confederation__code="UEFA"):
@@ -111,6 +120,26 @@ class GlobalOfflineCatalogTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["clubs"], [])
         self.assertIn("not yet been imported", response.json()["warning"])
+
+    def test_new_fifa_members_are_visible_without_invented_leagues(self):
+        for code, confederation in (
+            ("AF", "AFC"), ("AO", "CAF"),
+            ("AI", "CONCACAF"), ("CK", "OFC"),
+        ):
+            with self.subTest(code=code):
+                member = Country.objects.get(code=code)
+                self.assertEqual(member.confederation.code, confederation)
+                self.assertFalse(member.leagues.exists())
+                response = self.client.get(reverse("clubs:leagues"), {"country": code})
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.json()["leagues"], [])
+                self.assertIn("not yet verified", response.json()["notice"])
+        for confed, code in (("CAF", "AO"), ("AFC", "AF"),
+                             ("CONCACAF", "AI"), ("OFC", "CK")):
+            response = self.client.get(
+                reverse("clubs:countries"), {"confederation": confed}
+            )
+            self.assertIn(code, [item["code"] for item in response.json()["countries"]])
 
     def test_liechtenstein_is_not_given_a_fictitious_league(self):
         response = self.client.get(reverse("clubs:leagues"), {"country": "LI"})
