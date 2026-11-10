@@ -1,13 +1,8 @@
 """Validation of the M1 test job: club, title, and selected hierarchy."""
 from django import forms
 
-from app.clubs.catalog import CATALOG
-
-
 class TestJobForm(forms.Form):
-    country = forms.ChoiceField(
-        choices=[(code, descriptor["name"]) for code, descriptor in CATALOG.items()]
-    )
+    country = forms.CharField(min_length=2, max_length=3)
     league = forms.IntegerField(min_value=1)
     club = forms.IntegerField(min_value=1)
     title = forms.CharField(min_length=4, max_length=180, strip=True)
