@@ -6,7 +6,7 @@
 
 ## Projektstatus
 
-**M0 – Planung.** Es gibt bislang **noch keine lauffähige Django-Web-App** und kein fertiges Docker-Deployment. Die Architektur und MVP-Anforderungen sind dokumentiert; die technische Implementierung beginnt in M1/M2. Etwaige ausgefüllte Dokumentationsprüfungen sind **keine** bestandenen Integrationstests.
+**M1 – technische Grundlage im Aufbau.** Django-Grundprojekt, Dockerfile, Compose-Konfiguration und PostgreSQL-Anbindung sind als Code vorhanden. Das bedeutet **noch keine produktive VPS-Bereitstellung** und **noch keine fertige Vereinsauswahl, Anmeldung oder Videopipeline**. Diese werden in weiteren M1-/M2-Issues umgesetzt.
 
 ## Architektur in Kürze
 
@@ -30,20 +30,25 @@
 | [Medien und Rechte](docs/data/media-and-rights.md) | Lizenzmetadaten, Fallback und Publikationsgrenzen |
 | [VPS-Inventur](docs/ops/vps-inventory.md) | Lesender Prüfplan; tatsächliche Serverwerte noch offen |
 | [Repository-Struktur](docs/development/repository-layout.md) | Geplante Verzeichnisse, lokaler Einstieg und Konventionen |
+| [Django- und Docker-Grundlage](docs/development/docker-local.md) | Aktueller lokaler Start, sichere Konfiguration, Tests und Grenzen |
 
-## Lokal starten – erst nach M1-Implementierung
+## Lokale M1-Basis starten (nur auf einem eigenen Testrechner)
 
-Der geplante Entwicklungsstart mit Docker Compose lautet nach Fertigstellung von FS-007a/b und FS-008a:
+Das Projekt enthält jetzt Dockerfile und Compose für **Django `web` + PostgreSQL `db`**. Voraussetzung: Docker Engine, Docker Compose und zwei selbst erzeugte, starke Zugangswerte in einer **nicht eingecheckten** `.env`:
 
 ```sh
-# Diese Befehle funktionieren erst, wenn Compose-Datei, Images und env-Beispiel in M1 umgesetzt sind.
 cp .env.example .env
+# In .env die Felder DJANGO_SECRET_KEY und POSTGRES_PASSWORD setzen.
+# Beide Werte unabhängig mit einem lokalen Passwortgenerator erzeugen.
+docker compose config
 docker compose up -d --build
-docker compose ps
-docker compose logs --tail=100 web
+docker compose exec web python manage.py migrate --noinput
+curl -f http://127.0.0.1:8000/
+curl -f http://127.0.0.1:8000/healthz/
+docker compose exec web python manage.py test app.studio
 ```
 
-**Aktuell sind die benötigten Dateien/Services noch nicht erstellt.** Dies ist ein vorgesehener Ablauf, **keine** schon ausführbare Installationsanleitung. Echte Zugangsdaten gehören ausschließlich in sichere, nicht versionierte Konfiguration.
+**Wichtig:** Standardmäßig ist die Web-App nur über die lokale Loopback-Adresse erreichbar; keine öffentliche VPS-Bereitstellung. Die Login-/Vereins-/Job-Oberfläche ist noch nicht implementiert. [Vollständige Anleitung](docs/development/docker-local.md).
 
 ## GitHub-Arbeitsprozess
 
