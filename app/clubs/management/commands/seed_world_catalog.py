@@ -1,7 +1,7 @@
 """Idempotent, zero-network seed of all configured confederations and associations.
 
 Never deletes manual clubs, league records or previous jobs. Run after migrations.
-Only 2026/27 OpenFootball participant lists actually in the versioned snapshot
+Only 2026/27, source-attributed participant lists in the versioned snapshot
 receive coverage_status=snapshot; reference-only leagues are not falsely verified.
 """
 from __future__ import annotations
@@ -46,10 +46,18 @@ def validate_data(index, snapshots):
     for item in snapshots["leagues"]:
         if item["association"] not in keys or len(item["teams"]) < 10:
             raise CommandError("Invalid snapshot: unknown association/too few teams")
-        if not item.get("source_url", "").startswith(
-            "https://raw.githubusercontent.com/openfootball/football.json/"
-        ):
+        allowed_sources = (
+            "https://raw.githubusercontent.com/openfootball/football.json/master/2026-27/",
+            "https://raw.githubusercontent.com/openfootball/europe/master/",
+            "https://raw.githubusercontent.com/openfootball/austria/master/2026-27/",
+            "https://raw.githubusercontent.com/openfootball/deutschland/master/openliga/2026-27_",
+        )
+        if not item.get("source_url", "").startswith(allowed_sources):
             raise CommandError("Untrusted snapshot source.")
+        if item.get("provider") == "openligadb-snapshot" and "ODbL" not in item.get("license", ""):
+            raise CommandError("Missing OpenLigaDB ODbL attribution.")
+        if item.get("provider") not in ("openfootball", "openligadb-snapshot"):
+            raise CommandError("Unsupported snapshot provider.")
         if len({x.casefold() for x in item["teams"]}) != len(item["teams"]):
             raise CommandError("Duplicate club in versioned source snapshot.")
 
@@ -119,7 +127,7 @@ class Command(BaseCommand):
                         if existing is None:
                             Club.objects.create(
                                 league=league, name=name,
-                                provider="openfootball",
+                                provider=row["provider"],
                                 provider_id=hashlib.sha256(
                                     name.casefold().encode("utf-8")
                                 ).hexdigest()[:32],
@@ -130,7 +138,7 @@ class Command(BaseCommand):
                             Club.objects.filter(pk=existing.pk).update(is_active=True)
                     League.objects.filter(pk=league.pk).update(
                         coverage_status="snapshot",
-                        provider="openfootball",
+                        provider=row["provider"],
                         source_url=row["source_url"],
                         catalog_season=row["season"],
                     )
