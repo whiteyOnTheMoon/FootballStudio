@@ -1,0 +1,68 @@
+{
+  "snapshot_date": "2026-11-10",
+  "description": "Dated OpenFootball European 2024/25 second-division participant snapshots.",
+  "leagues": [
+    {
+      "association": "NL",
+      "tier": 2,
+      "league": "Eerste Divisie",
+      "season": "2024-25",
+      "name": "Netherlands Eerste Divisie 2024/25",
+      "provider": "openfootball",
+      "source_url": "https://raw.githubusercontent.com/openfootball/europe/master/netherlands/2024-25_nl2.txt",
+      "license": "CC0-1.0 (openfootball/europe)",
+      "teams": [
+        "ADO Den Haag",
+        "AZ Alkmaar J",
+        "De Graafschap",
+        "FC Den Bosch",
+        "FC Dordrecht",
+        "FC Eindhoven",
+        "FC Emmen",
+        "FC Utrecht J",
+        "FC Volendam",
+        "Helmond Sport",
+        "Jong Ajax",
+        "Jong PSV",
+        "MVV",
+        "Roda JC Kerkrade",
+        "SBV Excelsior",
+        "SC Cambuur",
+        "Telstar",
+        "TOP Oss",
+        "Vitesse",
+        "VVV-Venlo"
+      ]
+    },
+    {
+      "association": "PT",
+      "tier": 2,
+      "league": "Liga Portugal 2",
+      "season": "2024-25",
+      "name": "Portuguese Segunda Liga 2024/25",
+      "provider": "openfootball",
+      "source_url": "https://raw.githubusercontent.com/openfootball/europe/master/portugal/2024-25_pt2.txt",
+      "license": "CC0-1.0 (openfootball/europe)",
+      "teams": [
+        "Académico de Viseu",
+        "CD Feirense",
+        "CD Mafra",
+        "CD Tondela",
+        "CS Marítimo",
+        "FC Alverca",
+        "FC Felgueiras 1932",
+        "FC Penafiel",
+        "FC Porto B",
+        "FC Vizela",
+        "GD Chaves",
+        "Leixões SC",
+        "Paços de Ferreira",
+        "Portimonense SC",
+        "SL Benfica B",
+        "UD Oliveirense",
+        "União Leiria",
+        "União Torreense"
+      ]
+    }
+  ]
+}

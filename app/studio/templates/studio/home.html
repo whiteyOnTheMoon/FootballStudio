@@ -288,7 +288,9 @@
         name: item.tier + ". Stufe · " + item.name +
           (item.coverage === "snapshot"
             ? " (" + item.season + ")"
-            : " (Vereinsliste noch unvollständig)")
+            : item.coverage === "partial"
+              ? " (Teilbestand · " + item.season + ")"
+              : " (Vereinsliste noch unvollständig)")
       }));
       fill(league, visibleLeagues, "Liga wählen …", "id");
       message(result.leagues.length

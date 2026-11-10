@@ -469,9 +469,15 @@
       "code": "MW",
       "name": "Malawi",
       "confederation": "CAF",
-      "leagues": [],
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Malawi Super League",
+          "source_url": "https://raw.githubusercontent.com/openfootball/world/master/africa/malawi/2025_mw1.txt"
+        }
+      ],
       "exception": "",
-      "league_names_review": "not-yet-verified"
+      "league_names_review": "sourced-historical-participants"
     },
     {
       "code": "ML",
@@ -525,9 +531,15 @@
       "code": "RW",
       "name": "Rwanda",
       "confederation": "CAF",
-      "leagues": [],
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Rwanda Premier League",
+          "source_url": "https://raw.githubusercontent.com/openfootball/world/master/africa/rwanda/2025-26_rw1.txt"
+        }
+      ],
       "exception": "",
-      "league_names_review": "not-yet-verified"
+      "league_names_review": "sourced-historical-participants"
     },
     {
       "code": "ST",
@@ -541,9 +553,15 @@
       "code": "SN",
       "name": "Senegal",
       "confederation": "CAF",
-      "leagues": [],
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Senegal Ligue 1",
+          "source_url": "https://raw.githubusercontent.com/openfootball/world/master/africa/senegal/2025-26_sn1.txt"
+        }
+      ],
       "exception": "",
-      "league_names_review": "not-yet-verified"
+      "league_names_review": "sourced-historical-participants"
     },
     {
       "code": "SC",
@@ -605,9 +623,15 @@
       "code": "ZM",
       "name": "Zambia",
       "confederation": "CAF",
-      "leagues": [],
+      "leagues": [
+        {
+          "tier": 1,
+          "name": "Zambian Super League",
+          "source_url": "https://raw.githubusercontent.com/openfootball/world/master/africa/zambia/2025-26_zm1.txt"
+        }
+      ],
       "exception": "",
-      "league_names_review": "not-yet-verified"
+      "league_names_review": "sourced-historical-participants"
     },
     {
       "code": "AI",

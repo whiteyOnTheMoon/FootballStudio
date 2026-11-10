@@ -15,9 +15,9 @@ Die vier Dropdown-Stufen sind **Konföderation → Nationalverband/Land → Liga
 | FIFA-Kontinentalverbände | 6 | Referenzverzeichnis |
 | UEFA-Mitgliedsverbände | **55 von 55** | nach [UEFA-Verbandsliste](https://www.uefa.com/nationalassociations/) |
 | Verbände weltweit in dieser ersten Ausgabe | **211 von 211** | FIFA-Mitgliedsverbände im Referenzverzeichnis; viele Ligen und Clubs fehlen noch |
-| Nationale Liga-Referenzen weltweit | **227** | 24 weitere drittklassige Wettbewerbe/Regionalgruppen, plus USL Championship als eigenständige US-Division-II-Liga; Referenzen ohne vollständige Clubs möglich |
+| Nationale Liga-Referenzen weltweit | **231** | +4 belegte afrikanische Erstligen; weiterhin kein vollständiger weltweiter Top-3-Katalog |
 | UEFA-Verbände mit zwei als Referenz erfassten Ligastufen | **52** | Liga-Namen **nicht automatisch als Saison 2026/27 verifiziert** |
-| Teilnehmerlisten insgesamt | **39 Ligen / 728 Vereinsdatensätze** | 16 vorherige 2026/27-Snapshots (278), 17 weitere datierte OpenFootball-Snapshots (340), 6 offizielle Saisonlisten auf 3. Stufe (110); nicht alle aktuell oder komplett |
+| Teilnehmerlisten insgesamt | **106 Ligen / 1.682 Vereinsdatensätze** | 105 datierte Snapshots und 1 ausdrücklich unvollständiger A-League-Teilbestand; viele Saisons 2024/25–2025/26 |
 
 Die 16 Club-Snapshots umfassen **England 1. und 2. Liga**, dazu jeweils die 1. Liga von Deutschland, Spanien, Frankreich, Italien, Niederlanden und Portugal. Weitere in der Datenbank gelistete Ligen haben noch **keine belegte vollständige Club-Zuordnung**. Das UI zeigt sie als Referenz und weist darauf hin, statt falsche Vereine zuzuordnen. Ein Verein aus einem fehlenden Bestand kann optional weiterhin manuell angelegt werden, **ist aber nicht Voraussetzung oder Standardweg**.
 
@@ -139,3 +139,44 @@ Datensammlungen ist die rechtliche Nutzung gesondert zu prüfen.
 **Weiter offen:** Alle FIFA-Verbände auf drei realen Ebenen erweitern, fehlende
 Teams sowie Saisonstand schrittweise nachpflegen. Keine Anforderungen an
 vollständige Ergebnisse, um eine erste Teilmenge anzubieten.
+
+## Datenpaket 5: zusätzliche weltweite Vereinslisten aus Offline-Spielplandaten
+
+**Quelle:** [OpenFootball Europe](https://github.com/openfootball/europe),
+[OpenFootball World](https://github.com/openfootball/world) und
+[OpenFootball South America](https://github.com/openfootball/south-america).
+Die drei GitHub-Projekte stehen unter **CC0-1.0**. Die einmalig aus
+Spielplänen extrahierten Namen sind **lokal versioniert**; der spätere
+Django-Import führt keine Netzwerkabfragen aus.
+
+**Erweiterung gegenüber Datenpaket 4:** +67 Liga-Teilnehmerlisten und
++954 Vereinsdatensätze; damit **106 erfasste Ligateilnehmerlisten
+und 1.682 Vereinsdatensätze** in **231 Ligaeinträgen** bei 211 Verbänden.
+Die neuen Daten decken 61 Länder/Verbände ab, darunter zahlreiche
+bislang leere kleinere UEFA-Ligen, acht zusätzliche europäische
+Zweitliga-Teilnehmerlisten, afrikanische Verbände, Liga 2 Nigeria, AFC,
+CONCACAF und CONMEBOL. Die vier ersten Ligareferenzen für Malawi,
+Ruanda, Senegal und Sambia sind separat mit Quell-URLs dokumentiert.
+
+**Qualitätsregeln:**
+- 2024/25, 2025 und 2025/26 sind historische Momentaufnahmen.
+  Die App zeigt das zugehörige Jahr und warnt vor möglicher Veraltung.
+- Bei der **A-League Men 2024/25** enthält die Quelle 14
+  Teilnehmerpositionen, aber nur 13 echte Clubnamen; der verbleibende
+  Platzhalter wird **nicht als Verein importiert**. Die Liga ist daher als
+  `partial` gekennzeichnet und erhält eine eigene Warnung.
+- Nicht alle Ländernamen implizieren vorhandene Liga- oder Vereinslisten.
+  Fehlende zweite/dritte Ebenen werden nicht erfunden; einige
+  Ligasysteme haben parallele Regionalgruppen.
+- Der Import erlaubt auch belegte Ligen mit weniger als 10 Teilnehmern
+  (z. B. Moldau mit 8 Clubs) und validiert Eindeutigkeit, Quellen,
+  Teilabdeckung und reproduzierbare idempotente Importe.
+- `teams-europe-history-a.json` bis `-e.json`,
+  `teams-world-africa.json`, `teams-world-other.json` und
+  `teams-world-recovered.json` enthalten die neuen Daten.
+
+**Offen:** Alle drei realen Ebenen weltweit schrittweise ergänzen,
+Saisons aktualisieren, ehemalige Vereine bei Katalogupdates revisionssicher
+historisieren und tatsächliche Rechte aller Quellen vor Veröffentlichung
+prüfen. Eine vollständige aktuelle Klubauswahl aller 211 Mitgliedsverbände
+ist **nicht** erreicht.

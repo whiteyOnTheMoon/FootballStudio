@@ -56,8 +56,8 @@ def validate_data(index, snapshots):
     lookup = {row["code"]: row for row in index["associations"]}
     seen_league_rosters = set()
     for item in snapshots["leagues"]:
-        if item["association"] not in keys or len(item["teams"]) < 10:
-            raise CommandError("Invalid snapshot: unknown association/too few teams")
+        if item["association"] not in keys or len(item["teams"]) < 4:
+            raise CommandError("Invalid snapshot: unknown association/too few named teams")
         league_matches = [
             entry for entry in lookup[item["association"]]["leagues"]
             if entry["tier"] == item["tier"]
@@ -78,6 +78,8 @@ def validate_data(index, snapshots):
         allowed_sources = (
             "https://raw.githubusercontent.com/openfootball/football.json/master/2026-27/",
             "https://raw.githubusercontent.com/openfootball/europe/master/",
+            "https://raw.githubusercontent.com/openfootball/world/master/",
+            "https://raw.githubusercontent.com/openfootball/south-america/master/",
             "https://raw.githubusercontent.com/openfootball/austria/master/2026-27/",
             "https://raw.githubusercontent.com/openfootball/deutschland/master/openliga/2026-27_",
             "https://raw.githubusercontent.com/openfootball/football.json/master/2025-26/",
@@ -99,6 +101,15 @@ def validate_data(index, snapshots):
             raise CommandError("Official-roster source attribution is missing.")
         if not item.get("season") or not item.get("license"):
             raise CommandError("Snapshot season and license statement are mandatory.")
+        if item.get("coverage", "snapshot") not in {"snapshot", "partial"}:
+            raise CommandError("Unknown snapshot coverage status.")
+        if item.get("coverage") == "partial":
+            if not item.get("coverage_note") or not item.get("expected_team_count"):
+                raise CommandError("Partial rosters require documented gaps and expected count.")
+            if item["expected_team_count"] <= len(item["teams"]):
+                raise CommandError("Partial roster must be strictly smaller than reported field.")
+        if any(not isinstance(n, str) or not n.strip() or n != n.strip() for n in item["teams"]):
+            raise CommandError("Snapshot contains an invalid club name.")
         if len({x.casefold() for x in item["teams"]}) != len(item["teams"]):
             raise CommandError("Duplicate club in versioned source snapshot.")
 
@@ -117,6 +128,19 @@ class Command(BaseCommand):
         snapshots = read_data("teams-2026-27.json")
         snapshots["leagues"].extend(read_data("teams-additional.json")["leagues"])
         snapshots["leagues"].extend(read_data("teams-verified-2026.json")["leagues"])
+        # Reviewed, versioned packages. Never fetch remote data during selection
+        # or seeding. Reorder only after checking overlapping league snapshots.
+        for filename in (
+            "teams-europe-history-a.json",
+            "teams-europe-history-b.json",
+            "teams-europe-history-c.json",
+            "teams-europe-history-d.json",
+            "teams-europe-history-e.json",
+            "teams-world-africa.json",
+            "teams-world-other.json",
+            "teams-world-recovered.json",
+        ):
+            snapshots["leagues"].extend(read_data(filename)["leagues"])
         validate_data(index, snapshots)
         club_count = 0
         with transaction.atomic():
@@ -187,7 +211,7 @@ class Command(BaseCommand):
                         elif not existing.is_manual and not existing.is_active:
                             Club.objects.filter(pk=existing.pk).update(is_active=True)
                     League.objects.filter(pk=league.pk).update(
-                        coverage_status="snapshot",
+                        coverage_status=row.get("coverage", "snapshot"),
                         provider=row["provider"],
                         source_url=row["source_url"],
                         catalog_season=row["season"],
