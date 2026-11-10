@@ -50,6 +50,15 @@ docker compose exec web python manage.py test
 docker compose stop
 ```
 
+Vor Änderungen am Stack einen tatsächlichen Backup-/Restore-Test durchführen:
+
+```sh
+archive="$(bash scripts/postgres_backup.sh)"
+bash scripts/verify_postgres_backup.sh "$archive"
+```
+
+Das Restore-Skript erzeugt ausschließlich eine temporäre Datenbank, keine Live-Änderung. Details zu Berechtigungen, Speicherbedarf und Aufbewahrung: [PostgreSQL-Backup und Restore](../ops/postgres-backup-restore.md).
+
 Das Docker-Datenbank-Volume bleibt nach `docker compose stop` oder `docker compose down` erhalten. **Niemals unüberlegt `docker compose down -v` auf einer Datenbank mit Nutzerdaten ausführen.**
 
 Das aktuelle GitHub Actions CI prüft Django-Tests, Migrationen, Containerstart, PostgreSQL-Persistenz und **Offline-Import ohne Netzwerkzugriff**. Die tatsächliche VPS-Einrichtung, HTTPS/TLS, Reverse-Proxy-Header, Backups und der Filmworker sind eigene noch offene Aufgaben.

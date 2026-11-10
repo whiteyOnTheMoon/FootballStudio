@@ -14,3 +14,6 @@ production-data/
 .pytest_cache/
 .idea/
 .DS_Store
+
+# User data in SQL dumps must never be checked in.
+/backups/

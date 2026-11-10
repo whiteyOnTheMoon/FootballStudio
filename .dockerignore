@@ -13,3 +13,6 @@ media
 staticfiles
 production-data
 tests
+
+# Do not include local SQL archives in application images.
+backups/
