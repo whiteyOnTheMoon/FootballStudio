@@ -16,7 +16,7 @@
     p { margin:.6rem 0 1.2rem; }
     .muted { color:var(--muted); }
     .panel { background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:clamp(18px,4vw,30px); margin-top:25px; }
-    .steps { display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; }
+    .steps { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:12px; }
     label { font-weight:700; display:block; margin-bottom:7px; }
     select { width:100%; min-width:0; padding:13px 12px; background:#101c2b; color:var(--text); border:1px solid #688294; border-radius:9px; font:inherit; }
     select:focus-visible, button:focus-visible { outline:3px solid var(--accent); outline-offset:3px; }
@@ -60,25 +60,31 @@
   </header>
 
   <h1>Welchen Verein möchtest du vorstellen?</h1>
-  <p class="muted">Du entscheidest. Wähle zuerst das Land, dann die Liga und schließlich den Verein. Die verfügbaren Clubs werden aus kostenlosen aktuellen Fußball-Datenquellen geladen.</p>
+  <p class="muted">Du entscheidest: Kontinentalverband → Nationalverband/Land → Liga → Verein. Die Auswahl wird aus unserer lokalen Datenbank geladen – ohne Live-API-Abfragen. Die UEFA umfasst alle 55 Nationalverbände.</p>
 
   <section class="panel" aria-labelledby="pick-heading">
     <h2 id="pick-heading">Verein auswählen</h2>
     <div class="steps">
       <div>
-        <label for="country">1. Land</label>
-        <select id="country" disabled>
-          <option value="">Länder werden geladen …</option>
+        <label for="confederation">1. Kontinentalverband</label>
+        <select id="confederation" disabled>
+          <option value="">Verbände werden geladen …</option>
         </select>
       </div>
       <div>
-        <label for="league">2. Liga</label>
+        <label for="country">2. Land / Nationalverband</label>
+        <select id="country" disabled>
+          <option value="">Zuerst Verband wählen</option>
+        </select>
+      </div>
+      <div>
+        <label for="league">3. Liga</label>
         <select id="league" disabled>
           <option value="">Zuerst Land auswählen</option>
         </select>
       </div>
       <div>
-        <label for="club">3. Verein</label>
+        <label for="club">4. Verein</label>
         <select id="club" disabled>
           <option value="">Zuerst Liga auswählen</option>
         </select>
@@ -87,7 +93,7 @@
 
     <section id="manual-panel" class="manual hidden" aria-labelledby="manual-heading">
       <h3 id="manual-heading">Verein nicht in der Liste?</h3>
-      <p class="muted">Lege den Verein in der ausgewählten Liga selbst an. Er steht anschließend sofort im Vereins-Dropdown.</p>
+      <p class="muted">Nur als optionale Ausnahme: Wenn dein Club in einem noch nicht gepflegten Datensatz fehlt, kannst du ihn weiterhin selbst anlegen. Der weltweite Katalog soll langfristig ohne diese Eingabe vollständig werden.</p>
       <form id="manual-form" method="post" action="{% url 'clubs:manual' %}">
         {% csrf_token %}
         <div class="field">
@@ -100,7 +106,7 @@
     </section>
 
     <div id="status" class="status" role="status" aria-live="polite">
-      Verbinde mit den öffentlichen Vereinsdaten …
+      Lade das lokale Vereinsverzeichnis …
     </div>
 
     <div id="selection" class="summary hidden" aria-live="polite">
@@ -133,13 +139,11 @@
     <h2 id="next-heading">Was ist bereits möglich?</h2>
     <p>Du kannst einen Verein aus einer angebotenen Liga auswählen. Ein bestimmter Pilotverein ist nicht vorgegeben.</p>
     <p class="muted">Fehlt ein Verein in einer unterstützten Liga? Du kannst ihn oben manuell hinzufügen. Den M1-Testjob kannst du jetzt speichern. Die Filmproduktion mit KI, TTS und FFmpeg wird später im M2-Worker aktiviert.</p>
-    <p class="muted">Aktuell werden nur Länder angeboten, für die mindestens die beiden höchsten Ligen im verfügbaren Saisonkatalog nachgewiesen sind. Weitere Länder können später hinzukommen.</p>
+    <p class="muted">Die UEFA ist mit allen 55 Verbänden und ihren bekannten Ligastrukturen erfasst. In anderen Verbänden ist die Abdeckung im Aufbau. Ligen ohne geprüfte Teilnehmerliste bleiben sichtbar, melden aber ausdrücklich fehlende Vereinsdaten. Liechtenstein hat keine eigene Liga; Gibraltar und San Marino besitzen nur eine nationale höchste Spielklasse.</p>
   </section>
 
   <footer>
-    Angemeldet: {{ request.user.email }} · Daten:
-    <a href="https://github.com/openfootball/football.json" rel="noreferrer">OpenFootball (CC0)</a>,
-    <a href="https://www.openligadb.de/lizenz" rel="noreferrer">OpenLigaDB (ODbL 1.0)</a>.
+    Angemeldet: {{ request.user.email }} · Datenpaket: <a href="https://github.com/openfootball/football.json" rel="noreferrer">OpenFootball (CC0)</a>. Offline-Katalog enthält weitere unvollständige Liga-Referenzen.
     Vereinslisten sind keine geprüften Quellen für historische Filmfakten.
   </footer>
 </main>
@@ -148,6 +152,7 @@
 (() => {
   "use strict";
   const api = {
+    confederations: "{% url 'clubs:confederations' %}",
     countries: "{% url 'clubs:countries' %}",
     leagues: "{% url 'clubs:leagues' %}",
     clubs: "{% url 'clubs:clubs' %}",
@@ -156,6 +161,7 @@
     createJob: "{% url 'production:create-test' %}",
     listJobs: "{% url 'production:list' %}"
   };
+  const confederation = document.getElementById("confederation");
   const country = document.getElementById("country");
   const league = document.getElementById("league");
   const club = document.getElementById("club");
@@ -198,7 +204,10 @@
     manualFeedback.textContent = "";
     manualFeedback.classList.remove("error");
     manualPanel.classList.add("hidden");
-    if (start === "country") {
+    if (start === "confederation") {
+      clearChoice(country, "Zuerst Verband wählen");
+    }
+    if (start === "confederation" || start === "country") {
       clearChoice(league, "Zuerst Land auswählen");
     }
     clearChoice(club, "Zuerst Liga auswählen");
@@ -221,23 +230,47 @@
     return payload;
   }
 
-  async function loadCountries() {
+  async function loadConfederations() {
     const token = ++revision;
-    clearChoice(country, "Länder werden geladen …");
-    resetDownstream("country");
+    clearChoice(confederation, "Verbände werden geladen …");
+    resetDownstream("confederation");
     try {
-      const result = await readJson(api.countries);
+      const result = await readJson(api.confederations);
       if (token !== revision) return;
-      fill(country, result.countries, "Land wählen …", "code");
-      message(result.warnings.length
-        ? "Saison " + result.season + " · " + result.warnings.join(" ") + " Verfügbare Länder kannst du trotzdem auswählen."
-        : "Saison " + result.season + " · Wähle ein Land.");
+      fill(confederation, result.confederations, "Verband wählen …", "code");
+      if (result.confederations.some(item => item.code === "UEFA")) {
+        confederation.value = "UEFA";
+        await loadCountries();
+      } else {
+        message("Wähle einen Kontinentalverband.");
+      }
     } catch (error) {
       if (token !== revision) return;
-      clearChoice(country, "Länder nicht verfügbar");
       message(error.message, true);
     }
   }
+
+  async function loadCountries() {
+    const token = ++revision;
+    resetDownstream("confederation");
+    if (!confederation.value) {
+      message("Wähle einen Verband.");
+      return;
+    }
+    message("Mitgliedsverbände werden lokal geladen …");
+    try {
+      const data = await readJson(api.countries + "?confederation=" +
+        encodeURIComponent(confederation.value));
+      if (token !== revision) return;
+      fill(country, data.countries, "Land / Verband wählen …", "code");
+      message(data.countries.length + " Verbände erfasst. " + data.notice);
+    } catch (error) {
+      if (token !== revision) return;
+      message(error.message, true);
+    }
+  }
+
+  confederation.addEventListener("change", loadCountries);
 
   country.addEventListener("change", async () => {
     const token = ++revision;
@@ -266,13 +299,16 @@
       return;
     }
     manualPanel.classList.remove("hidden");
-    message("Vereine werden aus der Datenquelle geladen …");
+    message("Vereine werden aus PostgreSQL geladen …");
     try {
       const params = new URLSearchParams({country: country.value, league: league.value});
       const result = await readJson(api.clubs + "?" + params.toString());
       if (token !== revision) return;
       fill(club, result.clubs, "Verein wählen …", "id");
-      message(result.warning || "Wähle deinen Verein.", Boolean(result.warning));
+      message(result.warning || (result.clubs.length
+        ? "Wähle deinen Verein. Vereinsliste: " + (result.season || "unbekannter Stand")
+        : "Für diese Liga wurde noch keine Vereinsliste importiert."),
+        Boolean(result.warning));
     } catch (error) {
       if (token !== revision) return;
       message(error.message, true);
@@ -295,7 +331,7 @@
       const result = await readJson(api.selection + "?" + params.toString());
       if (token !== revision) return;
       clubName.textContent = result.selection.club;
-      context.textContent = result.selection.league + " · " + result.selection.country;
+      context.textContent = (result.selection.confederation || "") + " · " + result.selection.country + " · " + result.selection.league;
       selection.classList.remove("hidden");
       jobPanel.classList.remove("hidden");
       message("Verein ausgewählt. Du kannst einen M1-Testjob speichern.");
@@ -418,7 +454,7 @@
     }
   });
 
-  loadCountries();
+  loadConfederations();
   loadJobs();
 })();
 </script>
