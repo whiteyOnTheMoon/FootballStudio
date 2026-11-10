@@ -13,8 +13,12 @@ Die Abnahme ist ein **End-to-End-Test**, kein Nachweis allein durch funktioniere
 
 Die M0/M1/M2-Stufen sind unabhängig:
 - **M0:** Anforderungen und Nachweise sind spezifiziert – keine implementierte App wird behauptet.
-- **M1:** HTTPS, Login, Vereinsauswahl und Testjob funktionieren.
-- **M2:** Ein vollständiges englisches Video wird über die App tatsächlich generiert, geprüft und heruntergeladen.
+- **M1:** HTTPS, Login, **Land → Liga → Verein**, Testjob und **Docker-Compose-Betrieb** funktionieren.
+- **M2:** Ein vollständiges englisches Video wird **aus dem Docker-betriebenen Stack** über die App tatsächlich generiert, geprüft und heruntergeladen.
+
+### Verbindliche Produktentscheidung vom 10.11.2026
+
+Bereits der **M1-Prototyp** muss **Land → Liga → Verein** als kaskadierende Auswahl anbieten (keine ausschließlich manuelle Texteingabe und kein fest verdrahteter Pilotclub). Der M1-Prototyp und die M2-Filmproduktion laufen **in Docker**; **Docker Compose** startet die Web-App und die PostgreSQL-Datenbank in getrennten Containern, ab M2 zusätzlich den Background-Worker. Die Containerisierung ist ein **MVP-Pflichtkriterium**, nicht nur eine mögliche spätere Deployment-Option.
 
 ## 2. Messbare Abnahmekriterien
 
@@ -24,7 +28,7 @@ Die Kennungen `AC-XX` dienen als Abnahme-Checkliste. Ein Punkt gilt erst als **b
 | --- | --- | --- | --- |
 | AC-01 | Die Web-App ist unter **https://studio2.ap-pixels.com** erreichbar. | HTTPS-Aufruf und Zertifikatsprüfung dokumentiert; kein erzwungenes unsicheres HTTP. | M1 · FS-012 |
 | AC-02 | Nur angemeldete Nutzer erreichen Produktionsfunktionen. | Test: unautorisierter Aufruf wird geblockt; korrekter E-Mail-/Passwort-Login ermöglicht Zugriff; Logout beendet Zugriff. | M1 · FS-009 |
-| AC-03 | **Land → Liga → Verein** ist kaskadierend nutzbar. Ziel: mindestens zwei höchste Ligen je unterstütztem Land, dritte wenn verfügbar. | Zwei passende Ligen und Vereinslisten für das Pilotland nachweisen; Quelle/Abdeckungsgrenzen dokumentieren. | M1 · FS-011a |
+| AC-03 | **Bereits im M1-Prototyp:** **Land → Liga → Verein** als kaskadierende Dropdowns; mindestens zwei höchste Ligen je unterstütztem Land, dritte wenn verfügbar. Keine fest codierte Clubauswahl als einziger Weg. | Land wählen → passende Ligen → passende Vereine; bei Land-/Ligawechsel abhängige Auswahl zurücksetzen; Pilotverein direkt auswählen und im Testjob nachweisen. | M1 · FS-011a/011c |
 | AC-04 | Ein Verein ist **auch manuell** anlegbar und für einen Job nutzbar. | Verein außerhalb der API-Auswahl anlegen und im Formular auswählen. | M1 · FS-011b |
 | AC-05 | Titelwahl funktioniert über **drei KI-Vorschläge** oder **manuellen Titel**. | Beide Pfade durchspielen; gewählter Titel erscheint im Job. | M2 · FS-015 |
 | AC-06 | Ein Nutzer startet eine Produktion über die Web-App; der Job ist eindeutig erkennbar. | Job-ID, zugeordneter Verein, Titel, Sprache und Startstatus prüfen. | M1/M2 · FS-010/011/020 |
@@ -40,13 +44,15 @@ Die Kennungen `AC-XX` dienen als Abnahme-Checkliste. Ein Punkt gilt erst als **b
 | AC-16 | **Drehbuch und Quellen** können eingesehen und als Begleitdaten exportiert werden. | Heruntergeladene Dateien einem Job zuordnen und Inhalt öffnen; Medienmetadaten sind zuordenbar. | M2 · FS-021 |
 | AC-17 | Der vollständige Job läuft **ohne manuelle Dateimontage** und erzeugt einen für das Pilotteam verständlichen Film. | Ein End-to-End-Lauf direkt aus der App; Prüfer bestätigt verständlichen Erzählfluss und dokumentiert Mängel. | M2 · FS-022 |
 
+| AC-18 | **Docker-Pflicht ab M1 und M2:** Django-Web-App läuft in eigenem Container; PostgreSQL in separatem Compose-Service mit persistentem Volume; M2-Worker ebenfalls containerisiert. | `docker compose up -d --build` auf Testhost/VPS ausführen; Healthchecks/Logs prüfen; DB-Daten nach Neustart erhalten; Login, Auswahl und Testjob aus dem Stack demonstrieren; M2-Render im Worker-Container nachweisen. | M1 · FS-007b/008a; M2 · FS-020a/022b |
+
 **Präzisierung:** „Reproduzierbar“ bezeichnet einen **erneut startbaren und nachvollziehbaren Prozess** mit gespeicherten Zwischenständen. Wegen externer Quellen, LLM und TTS wird **keine bitgenaue identische MP4-Datei** bei Wiederholung versprochen.
 
 ## 3. Minimaler Testlauf zur M2-Abnahme
 
 **Vorbereitung:** Pilotverein wird in [FS-001c / #3](https://github.com/whiteyOnTheMoon/FootballStudio/issues/3) gewählt. VPS-Ressourcen, API und TTS-Kostenlimits werden in [#6–#9](https://github.com/whiteyOnTheMoon/FootballStudio/issues/6) konkretisiert. Testkonto mit angemeldeter Sitzung bereitstellen.
 
-**Durchführung und Nachweise:**
+**Durchführung und Nachweise:** Vor Beginn den Docker-Compose-Stack starten und Web-/DB-/Worker-Status dokumentieren; direkte Host-Python-Ausführung zählt nicht als Nachweis.
 
 1. HTTPS/Login prüfen und Pilotland, Liga und Verein auswählen; für die manuelle Anlage separaten Testfall durchführen.
 2. Drei Titelvorschläge abrufen; einen Titel wählen. Zusätzlich die manuelle Titeloption prüfen.
@@ -98,6 +104,7 @@ Diese Funktionen werden nicht als M2-Muss-Kriterien bewertet:
 - [x] MVP-Nicht-Ziele und 16:9 / 1920×1080-Ziel sowie 720p-Testausnahme dokumentiert.
 - [x] M0-Spezifikation klar von späteren M1/M2-Tests getrennt.
 - [x] Noch offene Produktentscheidungen sind nicht stillschweigend getroffen.
+- [x] Produktentscheidung vom 10.11.2026: M1-Vereinsauswahl und Docker-Betrieb sowie M2-Worker als explizite Abnahme-Gates aufgenommen.
 
 **Wichtig:** Die Kontrollkästchen in Abschnitt 7 bestätigen ausschließlich, dass die **Spezifikation** erstellt wurde. Die Gates `AC-01` bis `AC-17` wurden **noch nicht ausgeführt**.
 
