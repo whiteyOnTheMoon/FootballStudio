@@ -1,0 +1,1 @@
+"""FootballStudio Django applications."""

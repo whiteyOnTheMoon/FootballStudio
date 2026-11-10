@@ -1,0 +1,16 @@
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+*.sqlite3
+db.sqlite3
+.venv/
+venv/
+staticfiles/
+media/
+production-data/
+.coverage
+.pytest_cache/
+.idea/
+.DS_Store
