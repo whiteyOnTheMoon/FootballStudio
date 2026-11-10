@@ -23,7 +23,7 @@ def countries(request):
     if not available:
         return _error(
             "No two-tier country catalog is currently available. "
-            "Please try again later; manual club entry follows in M1.",
+            "Please try again later. Manual clubs require a supported country and league.",
             status=503,
         )
     return JsonResponse({
