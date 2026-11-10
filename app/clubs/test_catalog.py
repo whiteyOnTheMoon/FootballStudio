@@ -56,7 +56,7 @@ class GlobalOfflineCatalogTests(TestCase):
 
     def test_snapshot_contains_real_clubs_only_for_sourced_leagues(self):
         self.assertEqual(
-            League.objects.filter(coverage_status="snapshot").count(), 105
+            League.objects.filter(coverage_status="snapshot").count(), 118
         )
         rows = [
             ("GB", 1, 20), ("GB", 2, 24), ("DE", 1, 18),
@@ -77,7 +77,7 @@ class GlobalOfflineCatalogTests(TestCase):
         )
 
     def test_third_tier_including_parallel_groups_is_correct(self):
-        self.assertEqual(League.objects.count(), 231)
+        self.assertEqual(League.objects.count(), 256)
         expected = {
             "ES": 2, "SE": 2, "AT": 4, "IT": 3,
             "FR": 1, "GB": 1, "JP": 1,
@@ -140,14 +140,14 @@ class GlobalOfflineCatalogTests(TestCase):
                 })
                 self.assertEqual(response.status_code, 200)
                 self.assertIn(season, response.json()["warning"])
-        self.assertEqual(Club.objects.filter(is_manual=False).count(), 1682)
+        self.assertEqual(Club.objects.filter(is_manual=False).count(), 1854)
 
 
     def test_new_world_club_snapshot_coverage_and_small_leagues(self):
         self.assertEqual(League.objects.filter(coverage_status="partial").count(), 1)
         self.assertEqual(
             League.objects.filter(coverage_status__in=("snapshot", "partial")).count(),
-            106,
+            119,
         )
         examples = [
             ("AL", "Kategoria Superiore", 10, "2024-25"),
@@ -188,6 +188,66 @@ class GlobalOfflineCatalogTests(TestCase):
         self.assertNotIn("N.N.", [
             club["name"] for club in response.json()["clubs"]
         ])
+
+    def test_official_third_tier_group_snapshots_and_references(self):
+        expected = {
+            "RO": (8, 96), "TR": (2, 35),
+            "FI": (1, 12), "IS": (1, 12), "AT": (4, 17),
+        }
+        for country, (group_count, team_count) in expected.items():
+            with self.subTest(country=country):
+                leagues = League.objects.filter(country__code=country, tier=3)
+                self.assertEqual(leagues.count(), group_count)
+                self.assertEqual(
+                    sum(league.clubs.count() for league in leagues), team_count
+                )
+        for group in range(1, 9):
+            with self.subTest(romanian_group=group):
+                league = League.objects.get(
+                    country__code="RO", name=f"Liga III – Seria {group}"
+                )
+                self.assertEqual(league.coverage_status, "snapshot")
+                self.assertEqual(league.catalog_season, "2026-27")
+                self.assertEqual(league.clubs.count(), 12)
+                self.assertIn("frf.ro", league.source_url)
+                response = self.client.get(
+                    reverse("clubs:clubs"), {"country": "RO", "league": league.pk}
+                )
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(len(response.json()["clubs"]), 12)
+        austrian = League.objects.get(
+            country__code="AT", name="Regionalliga Ost"
+        )
+        self.assertEqual(austrian.catalog_season, "2025-26")
+        self.assertEqual(austrian.clubs.count(), 17)
+        response = self.client.get(
+            reverse("clubs:clubs"), {"country": "AT", "league": austrian.pk}
+        )
+        self.assertIn("2025-26", response.json()["warning"])
+        self.assertEqual(
+            League.objects.filter(country__code="NO", tier=3).count(), 2
+        )
+        self.assertEqual(
+            League.objects.filter(
+                country__code="NO", tier=3, coverage_status="reference"
+            ).count(), 2
+        )
+
+    def test_turkish_third_tier_groups_are_separate(self):
+        white = League.objects.get(
+            country__code="TR", name="TFF 2. Lig – Beyaz Grup"
+        )
+        red = League.objects.get(
+            country__code="TR", name="TFF 2. Lig – Kırmızı Grup"
+        )
+        self.assertEqual(white.clubs.count(), 18)
+        self.assertEqual(red.clubs.count(), 17)
+        self.assertEqual(white.catalog_season, "2026-27")
+        self.assertEqual(red.catalog_season, "2026-27")
+        self.assertFalse(
+            set(white.clubs.values_list("name", flat=True))
+            & set(red.clubs.values_list("name", flat=True))
+        )
 
     def test_no_network_even_when_switching_region_and_fetching_clubs(self):
         with patch("urllib.request.urlopen", side_effect=AssertionError("network forbidden")):

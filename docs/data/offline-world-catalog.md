@@ -15,9 +15,9 @@ Die vier Dropdown-Stufen sind **Konföderation → Nationalverband/Land → Liga
 | FIFA-Kontinentalverbände | 6 | Referenzverzeichnis |
 | UEFA-Mitgliedsverbände | **55 von 55** | nach [UEFA-Verbandsliste](https://www.uefa.com/nationalassociations/) |
 | Verbände weltweit in dieser ersten Ausgabe | **211 von 211** | FIFA-Mitgliedsverbände im Referenzverzeichnis; viele Ligen und Clubs fehlen noch |
-| Nationale Liga-Referenzen weltweit | **231** | +4 belegte afrikanische Erstligen; weiterhin kein vollständiger weltweiter Top-3-Katalog |
+| Nationale Liga-Referenzen weltweit | **256** | +25 Drittligagruppen/Referenzen aus verschiedenen Kontinentalverbänden; weiterhin Lücken |
 | UEFA-Verbände mit zwei als Referenz erfassten Ligastufen | **52** | Liga-Namen **nicht automatisch als Saison 2026/27 verifiziert** |
-| Teilnehmerlisten insgesamt | **106 Ligen / 1.682 Vereinsdatensätze** | 105 datierte Snapshots und 1 ausdrücklich unvollständiger A-League-Teilbestand; viele Saisons 2024/25–2025/26 |
+| Teilnehmerlisten insgesamt | **119 Ligen / 1.854 Vereinsdatensätze** | 118 datierte Snapshots und 1 ausdrücklich unvollständiger A-League-Teilbestand |
 
 Die 16 Club-Snapshots umfassen **England 1. und 2. Liga**, dazu jeweils die 1. Liga von Deutschland, Spanien, Frankreich, Italien, Niederlanden und Portugal. Weitere in der Datenbank gelistete Ligen haben noch **keine belegte vollständige Club-Zuordnung**. Das UI zeigt sie als Referenz und weist darauf hin, statt falsche Vereine zuzuordnen. Ein Verein aus einem fehlenden Bestand kann optional weiterhin manuell angelegt werden, **ist aber nicht Voraussetzung oder Standardweg**.
 
@@ -180,3 +180,38 @@ Saisons aktualisieren, ehemalige Vereine bei Katalogupdates revisionssicher
 historisieren und tatsächliche Rechte aller Quellen vor Veröffentlichung
 prüfen. Eine vollständige aktuelle Klubauswahl aller 211 Mitgliedsverbände
 ist **nicht** erreicht.
+
+## Datenpaket 6: regionale dritte Ligen und zusätzliche Vereinslisten
+
+Weiteres inkrementelles Top-3-Paket, ohne Live-API-Abfragen.
+**Neu:** 25 Liga-Referenzen auf der dritten Ebene (Rumänien acht Gruppen;
+Türkiye zwei, Norwegen zwei, Slowakei drei, dazu Finnland, Island,
+Kroatien, Belarus, Tschechien, USA, Mexiko, Litauen, Zypern und Peru).
+Von insgesamt **256 Ligaeinträgen** besitzen nicht alle aktuelle Clublisten.
+
+**13 neue Liga-Teilnehmerlisten mit 172 Vereinsdatensätzen**:
+Rumänien 8 × 12 aus der [FRF-Gruppenbekanntgabe 2026/27](https://www.frf.ro/recomandate/joi-20-august-tragerea-la-sorti-pentru-programul-superscore-liga-3-editia-2026-2027/),
+Türkiye 18 + 17 aus den offiziellen [Beyaz-](https://www.tff.org/Default.aspx?pageID=976&grupID=3542)
+und [Kırmızı-](https://www.tff.org/Default.aspx?pageID=976&grupID=2782)
+Teilnehmerlisten, Finnland 12 aus der
+[Ykkönen-Übersicht 2026](https://www.national-football-teams.com/de/leagues/66/2026_2/Finland.html),
+Island 12 aus der
+[2.-deild-Übersicht 2026](https://www.national-football-teams.com/de/leagues/85/2026_2/Iceland.html),
+Österreich 17 aus
+[Regionalliga Ost 2025/26](https://github.com/openfootball/austria/blob/master/2025-26/3-regionalliga-ost.txt)
+(CC0). Die Vereinslisten liegen lokal in
+`teams-third-tiers-2026.json`; ältere Saisons werden angezeigt.
+
+**Gesamtabdeckung:** 211 Verbände, 256 Ligareferenzen,
+**119 datierte Liga-Teilnehmerlisten mit 1.854 Vereinsdatensätzen**,
+davon weiterhin einer als `partial` gekennzeichnet.
+Teilnehmerlisten von Verbands-/Websitequellen sind **nicht automatisch
+offen lizenziert**; die Datei enthält Quellen, Lizenzwarnung und Pflicht
+zur Nutzungsrechtsprüfung vor externer Weiterverteilung.
+Die beiden norwegischen Drittligagruppen sind bewusst nur
+Liga-Referenzen; die Verbandsseite hat ausdrückliche Hinweise
+zur Weiterverwendung der Inhalte.
+
+Offen bleiben der weitere Ausbau aller FIFA-Verbände bis zu
+drei tatsächlich existierenden Ligastufen, vollständige Teams,
+aktuelle Saisons und Datenabgleich im nächsten Release.
