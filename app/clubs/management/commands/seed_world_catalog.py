@@ -81,6 +81,7 @@ def validate_data(index, snapshots):
             "https://raw.githubusercontent.com/openfootball/world/master/",
             "https://raw.githubusercontent.com/openfootball/south-america/master/",
             "https://raw.githubusercontent.com/openfootball/austria/master/2026-27/",
+            "https://raw.githubusercontent.com/openfootball/austria/master/2025-26/",
             "https://raw.githubusercontent.com/openfootball/deutschland/master/openliga/2026-27_",
             "https://raw.githubusercontent.com/openfootball/football.json/master/2025-26/",
             "https://raw.githubusercontent.com/openfootball/football.json/master/2025/",
@@ -90,6 +91,10 @@ def validate_data(index, snapshots):
             "https://www.fff.fr/article/17022-le-calendrier-2026-2027-est-servi.html",
             "https://ettanfotboll.se/seriesammansattning-for-ettan-2026/",
             "https://www.jleague.jp/en/j3/standings/2026-27/",
+            "https://www.frf.ro/recomandate/joi-20-august-tragerea-la-sorti-pentru-programul-superscore-liga-3-editia-2026-2027/",
+            "https://www.tff.org/Default.aspx?pageID=976&grupID=",
+            "https://www.national-football-teams.com/de/leagues/66/2026_2/Finland.html",
+            "https://www.national-football-teams.com/de/leagues/85/2026_2/Iceland.html",
         )
         if not item.get("source_url", "").startswith(allowed_sources):
             raise CommandError("Untrusted snapshot source.")
@@ -139,6 +144,7 @@ class Command(BaseCommand):
             "teams-world-africa.json",
             "teams-world-other.json",
             "teams-world-recovered.json",
+            "teams-third-tiers-2026.json",
         ):
             snapshots["leagues"].extend(read_data(filename)["leagues"])
         validate_data(index, snapshots)

@@ -155,6 +155,11 @@
         {
           "tier": 2,
           "name": "Belarusian First League"
+        },
+        {
+          "tier": 3,
+          "name": "Vtoraya Liga",
+          "source_url": "https://raw.githubusercontent.com/openfootball/leagues/master/europe/leagues.txt"
         }
       ],
       "exception": "",
@@ -227,6 +232,11 @@
         {
           "tier": 2,
           "name": "First Football League"
+        },
+        {
+          "tier": 3,
+          "name": "Druga NL",
+          "source_url": "https://hns.family/dokumenti/propozicije-natjecanja-hns-a/"
         }
       ],
       "exception": "",
@@ -244,6 +254,11 @@
         {
           "tier": 2,
           "name": "Cypriot Second Division"
+        },
+        {
+          "tier": 3,
+          "name": "Cypriot Third Division",
+          "source_url": "https://prosoccerplace.com/"
         }
       ],
       "exception": "",
@@ -261,6 +276,11 @@
         {
           "tier": 2,
           "name": "Czech National Football League"
+        },
+        {
+          "tier": 3,
+          "name": "Moravian-Silesian Football League",
+          "source_url": "https://raw.githubusercontent.com/openfootball/leagues/master/europe/leagues.txt"
         }
       ],
       "exception": "",
@@ -356,6 +376,11 @@
         {
           "tier": 2,
           "name": "Ykkösliiga"
+        },
+        {
+          "tier": 3,
+          "name": "Ykkönen",
+          "source_url": "https://www.jpy.fi/en/welcome-to-finland/football-in-finland"
         }
       ],
       "exception": "",
@@ -480,6 +505,11 @@
         {
           "tier": 2,
           "name": "1. deild karla"
+        },
+        {
+          "tier": 3,
+          "name": "2. deild karla",
+          "source_url": "https://www.national-football-teams.com/de/leagues/85/2026_2/Iceland.html"
         }
       ],
       "exception": "",
@@ -605,6 +635,11 @@
         {
           "tier": 2,
           "name": "I Lyga"
+        },
+        {
+          "tier": 3,
+          "name": "II Lyga",
+          "source_url": "https://www.lff.lt/lygos/ii-lyga-a-divizionas-2026/"
         }
       ],
       "exception": "",
@@ -746,6 +781,16 @@
         {
           "tier": 2,
           "name": "Norwegian First Division"
+        },
+        {
+          "tier": 3,
+          "name": "2. divisjon – Avdeling 1",
+          "source_url": "https://www.fotball.no/tema/nff-nyheter/2025/her-er-avdelingene-for-post-nord--og-norsk-tipping-ligaen-2026/"
+        },
+        {
+          "tier": 3,
+          "name": "2. divisjon – Avdeling 2",
+          "source_url": "https://www.fotball.no/tema/nff-nyheter/2025/her-er-avdelingene-for-post-nord--og-norsk-tipping-ligaen-2026/"
         }
       ],
       "exception": "",
@@ -829,6 +874,46 @@
         {
           "tier": 2,
           "name": "Liga II"
+        },
+        {
+          "tier": 3,
+          "name": "Liga III – Seria 1",
+          "source_url": "https://www.frf.ro/recomandate/joi-20-august-tragerea-la-sorti-pentru-programul-superscore-liga-3-editia-2026-2027/"
+        },
+        {
+          "tier": 3,
+          "name": "Liga III – Seria 2",
+          "source_url": "https://www.frf.ro/recomandate/joi-20-august-tragerea-la-sorti-pentru-programul-superscore-liga-3-editia-2026-2027/"
+        },
+        {
+          "tier": 3,
+          "name": "Liga III – Seria 3",
+          "source_url": "https://www.frf.ro/recomandate/joi-20-august-tragerea-la-sorti-pentru-programul-superscore-liga-3-editia-2026-2027/"
+        },
+        {
+          "tier": 3,
+          "name": "Liga III – Seria 4",
+          "source_url": "https://www.frf.ro/recomandate/joi-20-august-tragerea-la-sorti-pentru-programul-superscore-liga-3-editia-2026-2027/"
+        },
+        {
+          "tier": 3,
+          "name": "Liga III – Seria 5",
+          "source_url": "https://www.frf.ro/recomandate/joi-20-august-tragerea-la-sorti-pentru-programul-superscore-liga-3-editia-2026-2027/"
+        },
+        {
+          "tier": 3,
+          "name": "Liga III – Seria 6",
+          "source_url": "https://www.frf.ro/recomandate/joi-20-august-tragerea-la-sorti-pentru-programul-superscore-liga-3-editia-2026-2027/"
+        },
+        {
+          "tier": 3,
+          "name": "Liga III – Seria 7",
+          "source_url": "https://www.frf.ro/recomandate/joi-20-august-tragerea-la-sorti-pentru-programul-superscore-liga-3-editia-2026-2027/"
+        },
+        {
+          "tier": 3,
+          "name": "Liga III – Seria 8",
+          "source_url": "https://www.frf.ro/recomandate/joi-20-august-tragerea-la-sorti-pentru-programul-superscore-liga-3-editia-2026-2027/"
         }
       ],
       "exception": "",
@@ -915,6 +1000,21 @@
         {
           "tier": 2,
           "name": "2. Liga"
+        },
+        {
+          "tier": 3,
+          "name": "III. liga – Stred",
+          "source_url": "https://futbalsfz.sk/iii-liga-stopercentni-liptaci-preveria-najlepsiu-obranu-osmy-tim-vychodu-moze-dorovnat-lidra/"
+        },
+        {
+          "tier": 3,
+          "name": "III. liga – Východ",
+          "source_url": "https://futbalsfz.sk/iii-liga-stopercentni-liptaci-preveria-najlepsiu-obranu-osmy-tim-vychodu-moze-dorovnat-lidra/"
+        },
+        {
+          "tier": 3,
+          "name": "III. liga – Západ",
+          "source_url": "https://futbalsfz.sk/iii-liga-stopercentni-liptaci-preveria-najlepsiu-obranu-osmy-tim-vychodu-moze-dorovnat-lidra/"
         }
       ],
       "exception": "",
@@ -1025,6 +1125,16 @@
         {
           "tier": 2,
           "name": "TFF First League"
+        },
+        {
+          "tier": 3,
+          "name": "TFF 2. Lig – Beyaz Grup",
+          "source_url": "https://www.tff.org/Default.aspx?pageID=976&grupID=3542"
+        },
+        {
+          "tier": 3,
+          "name": "TFF 2. Lig – Kırmızı Grup",
+          "source_url": "https://www.tff.org/Default.aspx?pageID=976&grupID=2782"
         }
       ],
       "exception": "",
@@ -1204,6 +1314,11 @@
         {
           "tier": 2,
           "name": "Liga 2"
+        },
+        {
+          "tier": 3,
+          "name": "Liga 3",
+          "source_url": "https://fpf.org.pe/ano_documentos/2026/"
         }
       ],
       "exception": "",
@@ -1259,6 +1374,11 @@
         },
         {
           "tier": 3,
+          "name": "MLS NEXT Pro",
+          "source_url": "https://raw.githubusercontent.com/openfootball/leagues/master/north-america/leagues.txt"
+        },
+        {
+          "tier": 3,
           "name": "USL League One",
           "source_url": "https://www.uslsoccer.com/our-leagues"
         }
@@ -1291,6 +1411,11 @@
         {
           "tier": 2,
           "name": "Liga de Expansión MX"
+        },
+        {
+          "tier": 3,
+          "name": "Liga Premier Serie A",
+          "source_url": "https://raw.githubusercontent.com/openfootball/leagues/master/north-america/leagues.txt"
         }
       ],
       "exception": "",
