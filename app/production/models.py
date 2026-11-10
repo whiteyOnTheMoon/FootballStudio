@@ -44,7 +44,7 @@ class ProductionJob(models.Model):
     status = models.CharField(
         max_length=16, choices=Status.choices, default=Status.DRAFT,
     )
-    country_code = models.CharField(max_length=2)
+    country_code = models.CharField(max_length=3)
     league_name = models.CharField(max_length=160)
     club_name = models.CharField(max_length=160)
     output_path = models.CharField(max_length=500, blank=True)
