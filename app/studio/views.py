@@ -2,7 +2,7 @@
 from django.contrib.auth.decorators import login_required
 from django.db import connections
 from django.db.utils import DatabaseError
-from django.http import HttpResponse, HttpResponseServerError
+from django.http import HttpResponse
 from django.shortcuts import render
 
 
@@ -17,8 +17,18 @@ def healthz(request):
         with connections["default"].cursor() as cursor:
             cursor.execute("SELECT 1")
             if cursor.fetchone()[0] != 1:
-                return HttpResponseServerError("unavailable", content_type="text/plain")
+                response = HttpResponse(
+                    "unavailable", status=503, content_type="text/plain"
+                )
+                response["Cache-Control"] = "no-store"
+                return response
     except DatabaseError:
-        # No internal database error or connection details in HTTP responses.
-        return HttpResponseServerError("unavailable", content_type="text/plain")
-    return HttpResponse("ok", content_type="text/plain")
+        # No internal database details or exception messages in HTTP responses.
+        response = HttpResponse(
+            "unavailable", status=503, content_type="text/plain"
+        )
+        response["Cache-Control"] = "no-store"
+        return response
+    response = HttpResponse("ok", content_type="text/plain")
+    response["Cache-Control"] = "no-store"
+    return response

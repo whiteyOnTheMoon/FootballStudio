@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "app.production",
 ]
 MIDDLEWARE = [
+    "app.config.observability.SafeRequestLoggingMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -165,3 +166,39 @@ if SECURE_HSTS_SECONDS < 0:
     raise ImproperlyConfigured("DJANGO_HSTS_SECONDS must be nonnegative.")
 if SECURE_HSTS_SECONDS and not force_https:
     raise ImproperlyConfigured("Enable HTTPS before enabling HSTS.")
+
+# Structured, data-minimized error logs on stderr. This handles both our own
+# HTTP status events and Django framework/security error records, including
+# those containing an exception or untrusted Host. The formatter MUST NOT
+# interpolate the original message or exception.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "safe_json": {"()": "app.config.safe_logging.SafeJsonFormatter"},
+    },
+    "handlers": {
+        "safe_stderr": {
+            "class": "logging.StreamHandler",
+            "stream": "ext://sys.stderr",
+            "formatter": "safe_json",
+        },
+    },
+    "loggers": {
+        "footballstudio.http": {
+            "handlers": ["safe_stderr"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        "django.request": {
+            "handlers": ["safe_stderr"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        "django.security": {
+            "handlers": ["safe_stderr"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+    },
+}

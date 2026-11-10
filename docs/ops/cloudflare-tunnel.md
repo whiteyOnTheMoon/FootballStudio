@@ -150,6 +150,9 @@ aktivieren. Änderung durch erneutes `up -d` ausrollen.
    mit tatsächlich verfügbarem Speicher und gesicherter Offsite-Ablage
    überprüfen. Erst dann Zielbetrieb freigeben.
 
+Zum Healthcheck, datensparsamen JSON-Logging und begrenzten Docker-Logs siehe
+[Healthcheck und Logging](health-and-logging.md).
+
 **Offene Abnahmepunkte:** echte Domain-/DNS- und Tunnel-Route (#27),
 gültiges öffentliches Zertifikat und HTTP→HTTPS (#28), realer
 VPS-Secret-/Rollback-Nachweis (#29). Ein erfolgreicher CI-Lauf ist
