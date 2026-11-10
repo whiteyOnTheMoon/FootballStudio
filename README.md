@@ -6,7 +6,7 @@
 
 ## Projektstatus
 
-**M1 – technische Grundlage im Aufbau.** Django, Docker Compose, PostgreSQL und E-Mail-Authentifizierung sind als Code umgesetzt. Das bedeutet **noch keine produktive VPS-Bereitstellung**, **noch keine fertige Vereinsauswahl** und **noch keine Videopipeline**. Diese werden in weiteren M1-/M2-Issues umgesetzt.
+**M1 – technische Grundlage im Aufbau.** Django, Docker Compose, PostgreSQL und E-Mail-Authentifizierung sind umgesetzt. Die kaskadierende **Land → Liga → Verein**-Auswahl ist als M1-Weboberfläche mit öffentlichen Katalogadaptern implementiert. **Noch keine produktive VPS-Bereitstellung, manuelle Vereinserfassung im Dashboard, Jobstart oder Videopipeline.** Diese werden in weiteren M1-/M2-Issues umgesetzt.
 
 ## Architektur in Kürze
 
@@ -49,7 +49,7 @@ curl -f http://127.0.0.1:8000/healthz/
 docker compose exec web python manage.py test app.studio
 ```
 
-**Wichtig:** Standardmäßig ist die Web-App nur über die lokale Loopback-Adresse erreichbar; keine öffentliche VPS-Bereitstellung. Die Anmeldung ist implementiert; die Vereins- und Job-Oberflächen sind noch nicht implementiert. [Vollständige Anleitung](docs/development/docker-local.md).
+**Wichtig:** Standardmäßig ist die Web-App nur über die lokale Loopback-Adresse erreichbar; keine öffentliche VPS-Bereitstellung. Die Anmeldung und die dynamische Vereinsauswahl sind implementiert; die manuelle Vereinsanlage und Job-Oberflächen folgen noch. [Vollständige Anleitung](docs/development/docker-local.md).
 
 ## GitHub-Arbeitsprozess
 
