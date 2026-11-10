@@ -27,6 +27,7 @@
 | [ADR-0001](docs/architecture/ADR-0001-mvp-stack.md) | Stack, Container-Topologie und Architekturentscheidungen |
 | [Pipeline-Verträge](docs/architecture/pipeline-contracts.md) | Module, Artefakte, Fehler und Wiederaufnahme |
 | [Fakten und Quellen](docs/data/facts-and-sources.md) | Belegbare Aussagen, Unsicherheit und Quellenverknüpfungen |
+| [Vereinskatalog](docs/data/club-catalog.md) | Datenmodell Land → Liga → Verein, Adapter-Abdeckung und Datenmigrationen |
 | [Medien und Rechte](docs/data/media-and-rights.md) | Lizenzmetadaten, Fallback und Publikationsgrenzen |
 | [VPS-Inventur](docs/ops/vps-inventory.md) | Lesender Prüfplan; tatsächliche Serverwerte noch offen |
 | [Repository-Struktur](docs/development/repository-layout.md) | Geplante Verzeichnisse, lokaler Einstieg und Konventionen |
