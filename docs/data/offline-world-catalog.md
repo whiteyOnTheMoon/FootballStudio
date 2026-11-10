@@ -153,8 +153,8 @@ Django-Import führt keine Netzwerkabfragen aus.
 +954 Vereinsdatensätze; damit **106 erfasste Ligateilnehmerlisten
 und 1.682 Vereinsdatensätze** in **231 Ligaeinträgen** bei 211 Verbänden.
 Die neuen Daten decken 61 Länder/Verbände ab, darunter zahlreiche
-bislang leere kleinere UEFA-Ligen, zwölf zusätzliche europäische
-Zweitliga-Einträge, afrikanische Verbände, Liga 2 Nigeria, AFC,
+bislang leere kleinere UEFA-Ligen, acht zusätzliche europäische
+Zweitliga-Teilnehmerlisten, afrikanische Verbände, Liga 2 Nigeria, AFC,
 CONCACAF und CONMEBOL. Die vier ersten Ligareferenzen für Malawi,
 Ruanda, Senegal und Sambia sind separat mit Quell-URLs dokumentiert.
 
