@@ -2,7 +2,7 @@
 from django.contrib import admin
 from django.contrib.auth.views import LoginView, LogoutView
 from app.accounts.forms import EmailAuthenticationForm
-from django.urls import path
+from django.urls import include, path
 from app.studio import views
 
 urlpatterns = [
@@ -14,5 +14,6 @@ urlpatterns = [
     ), name="login"),
     path("accounts/logout/", LogoutView.as_view(next_page="login"), name="logout"),
     path("healthz/", views.healthz, name="healthz"),
+    path("clubs/api/", include(("app.clubs.urls", "clubs"), namespace="clubs")),
     path("admin/", admin.site.urls),
 ]
