@@ -1,6 +1,6 @@
 # FS-004b – TTS-Anbieter, Stimmtest und Kostenplan
 
-**Stand:** 10.11.2026 · **Status:** Recherche und Kandidatenvorschlag, **kein Anbieter kostenpflichtig aktiviert**, **keine Stimme hörend getestet**, **keine Budgetfreigabe**.  
+**Stand:** 10.11.2026 · **Status:** Recherche und Kandidatenvorschlag, **kein Anbieter kostenpflichtig aktiviert**, **keine Stimme hörend getestet**, **10 USD monatliches API-Gesamtbudget freigegeben; TTS-Anbieter und separate Filmgrenze weiter offen**.  
 **Issue:** [#9](https://github.com/whiteyOnTheMoon/FootballStudio/issues/9) · **Abhängigkeit:** [LLM-/Budgetvorschlag #8](llm-and-budget.md) · **Roadmap:** FS-004b / M0.
 
 ## Produktbedarf
@@ -46,7 +46,7 @@ Google listet für Gemini-TTS **25 Audio-Tokens pro Sekunde**. Daraus folgt bei 
 
 **Wichtig:** Gesprochene Texte müssen **Originalskripte aus dem eigenen Projekt** sein. Keine fremden Stimmen imitieren oder Stimmen realer Personen ohne zulässige Zustimmung replizieren. Keine Sprecheraussage als menschliche Originalaufnahme ausgeben.
 
-## Stimmtest-Plan (erst nach Budgetfreigabe)
+## Stimmtest-Plan (erst nach Providerfreigabe und aktivierter Kostenkontrolle)
 
 1. **Kostenloser lokaler Fixture-Job**: Web-/Worker-/Status-/Dauer-Workflow mit vorher bereitgestelltem Test-Audio oder eindeutig als Demo markierter Platzhalterdatei prüfen – **nicht** als fertigen Film ausgeben.
 2. **Kurze Probe (ca. 20–30 Sekunden)**: eigenes englisches Demo-Skript für Club-Geschichte und Namen, dieselbe Textpassage mit zwei Stimmen; Rückmeldungen zu Verständlichkeit, Aussprache, Tonalität, Tempo, Störgeräuschen.
@@ -70,16 +70,17 @@ Die M1-/M2-Testaufgaben für die Implementierung bleiben in [#41](https://github
 
 `voice_id`, `provider_model`, `tts_provider` und `segment_size` bleiben per Konfiguration austauschbar; beim Providerwechsel wird nur betroffene Audio-/Captions-/Renderausgabe invalidiert, nicht das Faktendossier. Langer Text wird in robust wiederholbare Segmente geteilt (genaue API-Grenzen bei Implementierung verifizieren). Parallelrender mehrerer Videos bleibt außerhalb des MVP.
 
-## Budget und Entscheidung – noch offen
+## Budget und Entscheidung – Monatsbudget genehmigt, Anbieter offen
 
-Aus [FS-004a](llm-and-budget.md) vorgeschlagen: **$0.50 externe LLM-/TTS-API-Kosten pro Film**, **$10/Monat**, **80 % Warnschwelle**, Dry-Run ohne kostenpflichtige API-Aufrufe. Dieser Deckel ist **nur ein Vorschlag**, kein anbieterseitig garantierter Hard-Cap und **noch nicht** durch Product Owner freigegeben.
+**Am 10.11.2026 bestätigte der Product Owner 10 USD pro Monat** als gemeinsame Obergrenze für kostenpflichtige externe APIs. Die zuvor vorgeschlagenen **$0.50 pro Film sind nicht genehmigt**; auch der konkrete TTS-Anbieter und die Stimme sind noch nicht verbindlich gewählt. **80 % des Monatsbudgets ($8)** ist die technische Warnschwelle; Dry-Run bleibt kostenlos. Die Anwendungskontrolle ist keine garantierte Hard-Cap auf Anbieterrechnungen. Details: [Budgetentscheidung](api-monthly-budget.md).
 
 - [x] Drei TTS-Kandidaten und öffentliche Kostengrundlagen verglichen.
 - [x] Englischer Stimmentest-Kandidat `Charon` und Fallback benannt.
 - [x] Testmodus mit kleinen Audio-Proben vor Vollrender spezifiziert.
 - [x] Datenschutz-, Rechte-, API-Budget- und Docker-Leitplanken dokumentiert.
-- [ ] **Product Owner bestätigt oder ändert Budget und TTS-Erstkandidat.**
+- [x] **10 USD monatliches Gesamtbudget** ausdrücklich freigegeben und dokumentiert.
+- [ ] **Product Owner bestätigt später den konkreten TTS-Erstkandidaten** und gegebenenfalls ein separates Filmkostenlimit.
 - [ ] Echte Stimme und kommerzielle Nutzungsrechte je ausgewähltem Vertrag geprüft, bevor extern veröffentlicht wird.
 - [ ] Kurztest und tatsächlicher API-Verbrauch erst nach Freigabe und Implementierung ausgeführt.
 
-**FS-004b / #9 bleibt bis zur Anbieter-/Budgetfreigabe offen.**
+**FS-004b / #9 bleibt wegen offener Anbieter-/Stimmwahl und ausstehender Nutzungsrechteprüfung offen.**

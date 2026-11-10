@@ -1,6 +1,6 @@
 # FS-004a – LLM-Anbieterbewertung und Kostenleitplanken
 
-**Stand:** 10.11.2026 · **Status:** Recherche/technischer Vorschlag; **Budget und API-Anbieter durch Product Owner noch nicht freigegeben**.  
+**Stand:** 10.11.2026 · **Status:** Recherche/technischer Vorschlag; **10 USD externes API-Monatsbudget durch Product Owner bestätigt**; Anbieter und Filmgrenze noch offen.  
 **Issue:** [#8](https://github.com/whiteyOnTheMoon/FootballStudio/issues/8) · **Roadmap:** M0/FS-004 · **Architektur:** [ADR-0001](../architecture/ADR-0001-mvp-stack.md) und [Pipeline-Verträge](../architecture/pipeline-contracts.md).
 
 ## Kontext
@@ -42,7 +42,7 @@ Alle Preise sind **öffentliche Anbieterangaben, keine ausgeführten API-Messung
 3. **Keine KI als Belegquelle**: Nur Fakten verwenden, die durch `Fact → Evidence → SourceReference` gestützt sind. Fehlende/widersprüchliche Fakten kennzeichnen und betroffene Aussagen auslassen.
 4. **Drei Titelvorschläge** basieren möglichst auf einem vorhandenen Dossier und dürfen übersprungen werden, falls Nutzer manuell einen Titel eingibt.
 5. Anbieter-/Modellwechsel ohne Codeänderung über Konfiguration, inklusive zentralem Token-/Kostenprotokoll.
-6. **Vor der ersten kostenpflichtigen API-Anfrage** Budgetfreigabe durch Product Owner dokumentieren.
+6. Das **Monatsbudget von 10 USD** ist bestätigt. **Vor dem ersten kostenpflichtigen API-Aufruf** außerdem konkreten Provider freigeben und funktionsfähige Budgetkontrolle sowie sichere Anbieterabrechnung prüfen.
 
 ## API-/Datenschutz-Leitplanken
 
@@ -53,19 +53,19 @@ Alle Preise sind **öffentliche Anbieterangaben, keine ausgeführten API-Messung
 - Bei Google Gemini unterscheiden sich freie und kostenpflichtige Tiers beim Datenverwendungs-Hinweis. Vor einem Produktionspilot prüfen, ob der gewählte Tarif für den geplanten Einsatzzweck geeignet ist. Quelle: https://ai.google.dev/gemini-api/docs/pricing
 - Externe Quellen-/Suchdienste können eigene Preise, Quotas und Nutzungsbedingungen haben. Keine kostenpflichtige Suche stillschweigend aktivieren.
 
-## Budgetschutz: vorgeschlagen, noch **nicht** genehmigt
+## Budgetschutz: **10 USD pro Monat genehmigt**, Filmgrenze offen
 
-**Zur Entscheidung durch Product Owner:** Zwei getrennte Grenzen im Projekt festlegen:
+**Entscheidungsstand:** Die Monatsgrenze wurde am 10.11.2026 bestätigt. Eine eigene Filmgrenze und ein konkreter Anbieter sind noch nicht freigegeben. Details in [verbindlicher Budgetentscheidung](api-monthly-budget.md).
 
 | Größe | Unverbindlicher M0-Vorschlag | Zweck |
 | --- | ---: | --- |
-| Maximale **externe KI-/TTS-API-Kosten pro vollständigem Filmjob** | **$0.50** | Vor API-Call prüfen und beim drohenden Überschreiten stoppen |
-| Maximale **externe API-Kosten pro Kalendermonat** | **$10.00** | Keine neuen kostenpflichtigen Jobs oberhalb des Limits |
-| Warnschwelle | **80 %** je Grenze | Dashboard-/Logwarnung, keine automatische Budgeterhöhung |
+| Maximale **externe KI-/TTS-API-Kosten pro vollständigem Filmjob** | **$0.50 – nur Vorschlag, nicht beschlossen** | Filmbezogene Grenze ist noch offen; nicht als aktive Vorgabe verwenden |
+| Maximale **externe API-Kosten pro Kalendermonat** | **$10.00 – bestätigt** | Gemeinsames Budget über alle kostenpflichtigen externen APIs, nicht je Anbieter; neue Requests bei fehlender Reserve blockieren |
+| Warnschwelle | **80 % des Monatsbudgets = $8.00** | Technische Voreinstellung; Dashboard-/Logwarnung, keine automatische Budgeterhöhung |
 | Max. automatisch kostenwirksame Wiederholungen | **1** pro Schritt nach vorübergehendem Fehler | Endlosschleifen vermeiden; erneute Freigabe bei Mehrkosten |
 | `DRY_RUN` / Fixture-Testmodus | **$0 externe API-Ausgaben** | UI/Jobs/Status/Fehler/Fallback ohne LLM/TTS-Kosten testen |
 
-**Nicht enthalten:** VPS-/Internet-/Storage-/Rendering-Stromkosten und mögliche Gebühren externer Bild-/Suchanbieter. Grenzen sind **geplante Anwendungsgates**, nicht automatisch eine anbieterseitig garantierte harte Rechnungsobergrenze; parallele Calls, Nachberechnung und Provider-Rundung können zu Abweichungen führen. Zusätzlich nach Möglichkeit anbieterseitige Kostenwarnungen und Budgetkontrollen konfigurieren.
+**Nicht enthalten:** VPS-/Internet-/Storage-/Rendering-Stromkosten sowie nicht ausdrücklich freigegebene feste Abogebühren. Kostenpflichtige externe Bild- und Such-APIs **zählen zur bestätigten 10-USD-Gesamtgrenze**, sofern solche Anbieter später ausdrücklich aktiviert werden. Die Grenze ist eine **geplante Anwendungskontrolle**, keine garantierte harte Anbieter-Rechnungsobergrenze; parallele Calls, Nachberechnung und Provider-Rundung können abweichen. Zusätzlich möglichst anbieterseitige Kostenwarnungen und Limits konfigurieren.
 
 **Technische Regeln für Kostenkontrolle (M2-Umsetzung, noch nicht gebaut):**
 - Vor jedem API-Call Budgetreserve anhand Schätzung und bestehenden Ausgaben verlangen (`fail closed`, wenn Budget nicht belastbar kalkulierbar).
@@ -91,8 +91,8 @@ Mit **demselben belegten Faktendossier** und identischen Akzeptanzkriterien mind
 
 - [x] Adapter- und Konfigurationspflicht sowie Quellenbindung dokumentiert.
 - [x] Öffentliche Anbieterpreise samt Rechenbeispiel, Datenschutz- und Qualitätsrisiken verglichen.
-- [x] Budget-/Warnungs-/Dry-Run-Mechanik **als Vorschlag** dokumentiert.
-- [ ] **Product Owner bestätigt oder ändert den LLM-Kandidaten und Budgetobergrenzen.**
+- [x] **10 USD monatliches API-Gesamtbudget** durch Product Owner bestätigt und dokumentiert; Kosten-/Warn-/Dry-Run-Mechanik als Implementierungsplan festgehalten.
+- [ ] **Product Owner bestätigt einen LLM-Kandidaten sowie ggf. eine separate Filmgrenze.** Das 10-USD-Monatsbudget ist bereits entschieden.
 - [ ] Vor bezahlter Nutzung aktuellen Tarif, Zugangsberechtigung und tatsächlich anfallende Gebühren verifizieren.
 
 **Folge-Issues:** TTS und Stimme [#9](https://github.com/whiteyOnTheMoon/FootballStudio/issues/9), Modelladapter [#34](https://github.com/whiteyOnTheMoon/FootballStudio/issues/34), Kostenlogging [#59](https://github.com/whiteyOnTheMoon/FootballStudio/issues/59).
