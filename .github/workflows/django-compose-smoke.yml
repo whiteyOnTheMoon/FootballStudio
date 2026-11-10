@@ -44,7 +44,7 @@ jobs:
       - name: Check pending migrations
         run: python manage.py makemigrations --check --dry-run
       - name: HTTP / readiness tests (SQLite test database)
-        run: python manage.py test app.studio app.accounts --verbosity=2
+        run: python manage.py test app.studio app.accounts app.clubs --verbosity=2
 
   compose:
     runs-on: ubuntu-latest
@@ -80,7 +80,7 @@ jobs:
           docker compose exec -T web python manage.py check
           docker compose exec -T web python manage.py makemigrations --check --dry-run
           docker compose exec -T web python manage.py migrate --noinput
-          docker compose exec -T web python manage.py test app.studio app.accounts --verbosity=1
+          docker compose exec -T web python manage.py test app.studio app.accounts app.clubs --verbosity=1
       - name: Check PostgreSQL data survives database restart
         run: |
           set -euo pipefail

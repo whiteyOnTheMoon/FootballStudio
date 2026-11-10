@@ -54,3 +54,13 @@ Benutzer in einer autorisierten lokalen Compose-Testumgebung erstellen:
 **Login-Drosselung:** `django-axes` 9.0 speichert Fehlversuche in PostgreSQL und sperrt nach fünf Fehlversuchen binnen 15 Minuten. Zunächst wird nur die Socket-IP und nicht ungeprüfter `X-Forwarded-For`-Inhalt verwendet. Reverse-Proxy-IP-Handling ist vor öffentlichem Deployment gesondert zu prüfen.
 
 Django-Tests prüfen E-Mail-Eindeutigkeit, gültige/ungültige Anmeldung, Sessions, CSRF, POST-Logout und wiederholte Fehlversuche. Zusätzliche öffentliche Deploymentkontrollen (TLS, HSTS, Proxy/Firewall) bleiben in eigenen Issues.
+
+## Katalogdatenmodell: Country → League → Club (M1 #22/#18)
+
+Die Django-Modelle `Country`, `League` und `Club` enthalten Beziehungen und Verwaltungsfelder für einen **zur Laufzeit frei wählbaren Verein**. Die Initialmigration liegt in `app/clubs/migrations/0001_initial.py`. Es werden **keine Pilotvereine als Pflichtdaten** vorbefüllt.
+
+Nach `docker compose exec web python manage.py migrate --noinput` können Administratoren Länder, Ligen und Vereine vorläufig über Django Admin bearbeiten. Die späteren kaskadierenden Dropdowns und die **freie Online-Datenquelle** folgen in #24, die direkte manuelle Vereinsanlage in #25. Das Datenmodell allein ist **keine nutzbare Vereinsauswahl**.
+
+Django und PostgreSQL werden auf frischer Datenbank mit `docker compose exec web python manage.py makemigrations --check --dry-run` und `docker compose exec web python manage.py test app.clubs` geprüft. Die Tests prüfen zwei Ligen eines Landes, Vereine pro Liga, manuelle Erstellung/Änderung und Dublettenschutz mit case-insensitiven Datenbank-Constraints.
+
+**Migrationsregel:** Jede Feld- oder Beziehungsänderung erhält eine versionierte Django-Migration. `makemigrations --check --dry-run` muss grün sein, ebenso `migrate --noinput` gegen eine leere Testdatenbank. Produktive Datenbanken und Volumes niemals ungeprüft zurücksetzen.
