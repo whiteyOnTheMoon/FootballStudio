@@ -373,6 +373,10 @@
         {
           "tier": 2,
           "name": "2. Bundesliga"
+        },
+        {
+          "tier": 3,
+          "name": "3. Liga"
         }
       ],
       "exception": "",

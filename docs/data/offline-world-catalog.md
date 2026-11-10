@@ -15,11 +15,11 @@ Die vier Dropdown-Stufen sind **Konföderation → Nationalverband/Land → Liga
 | FIFA-Kontinentalverbände | 6 | Referenzverzeichnis |
 | UEFA-Mitgliedsverbände | **55 von 55** | nach [UEFA-Verbandsliste](https://www.uefa.com/nationalassociations/) |
 | Verbände weltweit in dieser ersten Ausgabe | **106** | nicht 211 von 211; Ausbau noch offen |
-| Nationale Liga-Referenzen weltweit | **201** | Namensverzeichnis; einzelne Wettbewerbsnamen können veraltet sein und müssen überprüft werden |
+| Nationale Liga-Referenzen weltweit | **202** | Namensverzeichnis; einzelne Wettbewerbsnamen können veraltet sein und müssen überprüft werden |
 | UEFA-Verbände mit zwei als Referenz erfassten Ligastufen | **52** | Liga-Namen **nicht automatisch als Saison 2026/27 verifiziert** |
-| Verifizierbare Teilnehmerlisten aus OpenFootball 2026/27 | **8 Ligen / 156 Clubs** | Stand des versionierten OpenFootball-Spielplanauszugs; zu prüfen bei Saisonwechsel |
+| Verifizierbare Teilnehmerlisten aus OpenFootball 2026/27 | **16 Ligen / 278 Clubs** | Stand des versionierten OpenFootball-Spielplanauszugs; zu prüfen bei Saisonwechsel |
 
-Die acht Club-Snapshots umfassen **England 1. und 2. Liga**, dazu jeweils die 1. Liga von Deutschland, Spanien, Frankreich, Italien, Niederlanden und Portugal. Weitere in der Datenbank gelistete Ligen haben noch **keine belegte vollständige Club-Zuordnung**. Das UI zeigt sie als Referenz und weist darauf hin, statt falsche Vereine zuzuordnen. Ein Verein aus einem fehlenden Bestand kann optional weiterhin manuell angelegt werden, **ist aber nicht Voraussetzung oder Standardweg**.
+Die 16 Club-Snapshots umfassen **England 1. und 2. Liga**, dazu jeweils die 1. Liga von Deutschland, Spanien, Frankreich, Italien, Niederlanden und Portugal. Weitere in der Datenbank gelistete Ligen haben noch **keine belegte vollständige Club-Zuordnung**. Das UI zeigt sie als Referenz und weist darauf hin, statt falsche Vereine zuzuordnen. Ein Verein aus einem fehlenden Bestand kann optional weiterhin manuell angelegt werden, **ist aber nicht Voraussetzung oder Standardweg**.
 
 **UEFA-Ausnahmen statt falscher Zweitliganamen:**
 
@@ -34,7 +34,7 @@ Bei **Wales** bestehen zwei regionale zweite Ligen (Cymru North und Cymru South)
 - **UEFA:** Mitgliedschaftsliste: https://www.uefa.com/nationalassociations/
 - **FIFA:** Sechs Konföderationen: https://inside.fifa.com/associations
 - **OpenFootball/leagues:** Freie Wettbewerbsreferenzen (CC0): https://github.com/openfootball/leagues
-- **OpenFootball/football.json:** Acht eingebettete, im Stand 2026/27 verfügbare Teilnehmerlisten (CC0): https://github.com/openfootball/football.json/tree/master/2026-27
+- **OpenFootball/football.json:** 16 eingebettete 2026/27-Teilnehmerlisten aus OpenFootball-Spielplänen bzw. OpenLigaDB-abgeleiteten Dateien (CC0): https://github.com/openfootball/football.json/tree/master/2026-27
 
 Die **Namen der weiteren Wettbewerbe** wurden für das erste Verzeichnis redaktionell ergänzt; ihr Status lautet **reference**, nicht *current verified*. Für neue Ligen und Saisonwechsel müssen Wettbewerb, Saison, Clubzugehörigkeit, Lizenz und Quelle vor Übernahme abgeglichen werden. Logos, Wappen und Clubfotos sind **nicht** durch diese Datensätze lizenziert.
 
@@ -64,3 +64,9 @@ Die **Namen der weiteren Wettbewerbe** wurden für das erste Verzeichnis redakti
 - [ ] Daten-Saisonalität/Lizenzen je Liga dokumentiert abnehmen; UI-Browsertest auf Test/VPS-Host.
 
 **Das Issue #100 darf erst nach der sachlichen Club-/Weltabdeckung geschlossen werden.** Die hier umgesetzte Softwarestruktur ist ein wichtiger, aber noch nicht abschließender Teil.
+
+## Zusätzlich importierte Vereinslisten (UEFA – Datenpaket 2)
+
+Die laufende Saison 2026/27 wurde in den offenen [OpenFootball-Länderdatensätzen](https://github.com/openfootball) anhand der tatsächlichen Spielpaarungen analysiert. Im lokalen Datenpaket sind neu enthalten: **Deutschlands 2. Bundesliga (18 Clubs) und 3. Liga (20)**, **Österreichs Bundesliga (12)**, **Scottish Premiership (12)**, **Swiss Super League (12)**, **Czech First League (16)**, **Super League Greece (14)** und **türkische Süper Lig (18)**. Die Gesamtzahl steigt auf **16 Vereinslisten mit 278 Clubnamen**.
+
+Die deutschen 2./3.-Liga-Dateien stammen aus dem OpenFootball-Export von **OpenLigaDB**; sie sind als **ODbL-abgeleitet** gekennzeichnet und müssen bei einer späteren öffentlichen Weitergabe des gesamten Datenbankpakets hinsichtlich der ODbL-Lizenzpflichten überprüft werden. Diese Datensätze wurden **einmalig für das versionierte Paket** erhoben, nicht für periodische Laufzeitabfragen.

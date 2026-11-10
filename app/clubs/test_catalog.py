@@ -47,12 +47,15 @@ class GlobalOfflineCatalogTests(TestCase):
 
     def test_snapshot_contains_real_clubs_only_for_sourced_leagues(self):
         self.assertEqual(
-            League.objects.filter(coverage_status="snapshot").count(), 8
+            League.objects.filter(coverage_status="snapshot").count(), 16
         )
         rows = [
             ("GB", 1, 20), ("GB", 2, 24), ("DE", 1, 18),
             ("ES", 1, 20), ("FR", 1, 18), ("IT", 1, 20),
             ("NL", 1, 18), ("PT", 1, 18),
+            ("DE", 2, 18), ("DE", 3, 20), ("AT", 1, 12),
+            ("SCO", 1, 12), ("CH", 1, 12), ("CZ", 1, 16),
+            ("GR", 1, 14), ("TR", 1, 18),
         ]
         for code, tier, count in rows:
             with self.subTest(code=code, tier=tier):
@@ -61,7 +64,7 @@ class GlobalOfflineCatalogTests(TestCase):
                 self.assertEqual(league.catalog_season, "2026-27")
                 self.assertIn("openfootball", league.source_url)
         self.assertEqual(
-            League.objects.get(country__code="SCO", tier=1).clubs.count(), 0
+            League.objects.get(country__code="WAL", tier=1).clubs.count(), 0
         )
 
     def test_no_network_even_when_switching_region_and_fetching_clubs(self):
@@ -100,10 +103,10 @@ class GlobalOfflineCatalogTests(TestCase):
         )
 
     def test_empty_league_is_visible_but_never_populated_with_fake_clubs(self):
-        league = League.objects.get(country__code="SCO", tier=1)
+        league = League.objects.get(country__code="WAL", tier=1)
         self.assertEqual(league.coverage_status, "reference")
         response = self.client.get(reverse("clubs:clubs"), {
-            "country": "SCO", "league": league.pk,
+            "country": "WAL", "league": league.pk,
         })
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["clubs"], [])
