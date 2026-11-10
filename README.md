@@ -1,17 +1,17 @@
 # FootballStudio
 
-**Football Stories Studio** – eine geschützte Web-App, mit der sich ein Fußballverein zur Laufzeit über **Land → Liga → Verein** auswählen lässt (oder manuell anlegen lässt) und anschließend eine englischsprachige, etwa **8–10 Minuten lange Vereinsdokumentation** inklusive Quellen, Drehbuch, Untertiteln und MP4 generiert wird. Kein fest vorgegebener Pilotverein.
+**Football Stories Studio** – eine geschützte Web-App, mit der sich ein Fußballverein zur Laufzeit über **Verband → Land → Liga → Verein** auswählen lässt (oder manuell anlegen lässt) und anschließend eine englischsprachige, etwa **8–10 Minuten lange Vereinsdokumentation** inklusive Quellen, Drehbuch, Untertiteln und MP4 generiert wird. Kein fest vorgegebener Pilotverein.
 
 **Ziel-Domain:** `studio2.ap-pixels.com` · **Roadmap:** *Football Stories Studio / Projektroadmap*, v1.0 vom 09.11.2026.
 
 ## Projektstatus
 
-**M1 – technische Grundlage im Aufbau.** Django, Docker Compose, PostgreSQL und E-Mail-Authentifizierung sind umgesetzt. Die kaskadierende **Land → Liga → Verein**-Auswahl ist als M1-Weboberfläche mit öffentlichen Katalogadaptern implementiert. Die **manuelle Vereinsanlage innerhalb einer ausgewählten Liga** ist ebenfalls umgesetzt. Der **M1-Testjob** speichert bereits den zur Laufzeit gewählten Club und einen Titel; er führt **keinen Videorender** aus. **Noch keine produktive VPS-Bereitstellung und keine echte Videopipeline.** Diese werden in weiteren M1-/M2-Issues umgesetzt.
+**M1 – technische Grundlage im Aufbau.** Django, Docker Compose, PostgreSQL und E-Mail-Authentifizierung sind umgesetzt. Die neue **Verband → Land → Liga → Verein**-Auswahl ist als Offline-M1-Weboberfläche mit 6 Konföderationen, allen 55 UEFA-Verbänden und lokalen Vereins-Snapshots implementiert. **Aktuelle Vereinslisten aller UEFA-Ligen oder aller Länder weltweit sind noch nicht vollständig**. Die **manuelle Vereinsanlage innerhalb einer ausgewählten Liga** ist ebenfalls umgesetzt. Der **M1-Testjob** speichert bereits den zur Laufzeit gewählten Club und einen Titel; er führt **keinen Videorender** aus. **Noch keine produktive VPS-Bereitstellung und keine echte Videopipeline.** Diese werden in weiteren M1-/M2-Issues umgesetzt.
 
 ## Architektur in Kürze
 
-- **Web:** Python/Django, Templates, HTMX (kaskadierende Land-/Liga-/Vereins-Auswahl).
-- **Daten:** PostgreSQL mit persistentem Docker-Volume.
+- **Web:** Python/Django, Templates und lokale JavaScript-Dropdowns (Verband → Land → Liga → Verein); kein Frontend-CDN.
+- **Daten:** PostgreSQL mit persistentem Docker-Volume; versionierte Offline-Referenz- und Vereinssnapshots ohne regelmäßige Katalog-API-Aufrufe.
 - **Produktion:** separater Hintergrund-Worker mit Recherche-, LLM-, Medien-, TTS- und FFmpeg-Modulen; Zwischenergebnisse/Retry.
 - **Betrieb:** Docker Compose mit getrennten Services `web`, `db` und ab M2 `worker`; Reverse Proxy + TLS am bestehenden VPS.
 - **Sprache:** `en` zuerst; Architektur für `de`, `fr`, `it`, `es`, `pt`.
@@ -27,7 +27,7 @@
 | [ADR-0001](docs/architecture/ADR-0001-mvp-stack.md) | Stack, Container-Topologie und Architekturentscheidungen |
 | [Pipeline-Verträge](docs/architecture/pipeline-contracts.md) | Module, Artefakte, Fehler und Wiederaufnahme |
 | [Fakten und Quellen](docs/data/facts-and-sources.md) | Belegbare Aussagen, Unsicherheit und Quellenverknüpfungen |
-| [Vereinskatalog](docs/data/club-catalog.md) | Datenmodell Land → Liga → Verein, Adapter-Abdeckung und Datenmigrationen |
+| [Offline-Weltkatalog](docs/data/offline-world-catalog.md) | 6 Verbände, alle UEFA-Verbände, Clublisten-Stand, Ausnahmefälle und Lücken |
 | [Medien und Rechte](docs/data/media-and-rights.md) | Lizenzmetadaten, Fallback und Publikationsgrenzen |
 | [VPS-Inventur](docs/ops/vps-inventory.md) | Lesender Prüfplan; tatsächliche Serverwerte noch offen |
 | [Repository-Struktur](docs/development/repository-layout.md) | Geplante Verzeichnisse, lokaler Einstieg und Konventionen |
