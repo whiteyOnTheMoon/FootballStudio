@@ -11,6 +11,8 @@ on:
       - "compose.yaml"
       - ".env.example"
       - "scripts/smoke_offline_catalog.py"
+      - "scripts/postgres_backup.sh"
+      - "scripts/verify_postgres_backup.sh"
   push:
     branches: [main]
     paths:
@@ -22,6 +24,8 @@ on:
       - "compose.yaml"
       - ".env.example"
       - "scripts/smoke_offline_catalog.py"
+      - "scripts/postgres_backup.sh"
+      - "scripts/verify_postgres_backup.sh"
   workflow_dispatch:
 
 permissions:
@@ -116,6 +120,17 @@ jobs:
             sleep 2
           done
           test "$success" -eq 1
+      - name: Verify PostgreSQL backup and isolated restore (test marker survives)
+        run: |
+          set -euo pipefail
+          bash -n scripts/postgres_backup.sh
+          bash -n scripts/verify_postgres_backup.sh
+          docker compose exec -T db sh -c 'psql -X -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "CREATE TABLE fs_m1_backup_restore_probe (id integer PRIMARY KEY); INSERT INTO fs_m1_backup_restore_probe (id) VALUES (42);"' >/dev/null
+          archive="$(bash scripts/postgres_backup.sh)"
+          test -s "$archive"
+          bash scripts/verify_postgres_backup.sh "$archive" fs_m1_backup_restore_probe 1
+          docker compose exec -T db sh -c 'psql -X -q -A -t -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT id FROM fs_m1_backup_restore_probe;"' | grep -qx 42
+          rm -f -- "$archive"
       - name: Print safe troubleshooting diagnostics on failure
         if: failure()
         run: |
