@@ -21,6 +21,15 @@
     select { width:100%; min-width:0; padding:13px 12px; background:#101c2b; color:var(--text); border:1px solid #688294; border-radius:9px; font:inherit; }
     select:focus-visible, button:focus-visible { outline:3px solid var(--accent); outline-offset:3px; }
     select:disabled { color:#8896a2; opacity:.7; cursor:not-allowed; }
+    .manual { margin-top:19px; border-top:1px solid var(--border); padding-top:22px; }
+    .manual h3 { margin:0 0 7px; }
+    .manual form { display:flex; gap:12px; flex-wrap:wrap; align-items:end; }
+    .manual .field { flex:1 1 210px; }
+    .manual input { width:100%; padding:12px; font:inherit; border:1px solid #688294; border-radius:9px; background:#101c2b; color:var(--text); }
+    .manual button { background:var(--accent); color:#061712; border:0; font-weight:800; }
+    .manual button:disabled { opacity:.55; cursor:not-allowed; }
+    .manual .feedback { color:var(--muted); min-height:1.5rem; margin:10px 0 0; }
+    .manual .feedback.error { color:#ffb9b9; }
     .status { margin-top:20px; padding:12px 15px; background:#101c2b; border-radius:9px; color:var(--muted); }
     .status.error { background:#472831; color:#ffe1e1; }
     .summary { margin-top:18px; padding:18px; border:1px solid #317963; border-radius:10px; background:#103029; }
@@ -68,6 +77,20 @@
       </div>
     </div>
 
+    <section id="manual-panel" class="manual hidden" aria-labelledby="manual-heading">
+      <h3 id="manual-heading">Verein nicht in der Liste?</h3>
+      <p class="muted">Lege den Verein in der ausgewählten Liga selbst an. Er steht anschließend sofort im Vereins-Dropdown.</p>
+      <form id="manual-form" method="post" action="{% url 'clubs:manual' %}">
+        {% csrf_token %}
+        <div class="field">
+          <label for="manual-club-name">Vereinsname</label>
+          <input id="manual-club-name" name="name" type="text" minlength="2" maxlength="160" required autocomplete="off" placeholder="z. B. Mein Heimatverein">
+        </div>
+        <button id="manual-submit" type="submit">Verein hinzufügen</button>
+      </form>
+      <p id="manual-feedback" class="feedback" role="status" aria-live="polite"></p>
+    </section>
+
     <div id="status" class="status" role="status" aria-live="polite">
       Verbinde mit den öffentlichen Vereinsdaten …
     </div>
@@ -83,7 +106,7 @@
   <section class="panel" aria-labelledby="next-heading">
     <h2 id="next-heading">Was ist bereits möglich?</h2>
     <p>Du kannst einen Verein aus einer angebotenen Liga auswählen. Ein bestimmter Pilotverein ist nicht vorgegeben.</p>
-    <p class="muted">Fehlt ein Verein? Die manuelle Anlage wird in Issue #25 ergänzt. Einen Produktions-Testjob mit deinem ausgewählten Verein starten wir danach in Issue #26.</p>
+    <p class="muted">Fehlt ein Verein in einer unterstützten Liga? Du kannst ihn oben manuell hinzufügen. Einen Produktions-Testjob mit deiner Auswahl starten wir im nächsten Schritt (Issue #26).</p>
     <p class="muted">Aktuell werden nur Länder angeboten, für die mindestens die beiden höchsten Ligen im verfügbaren Saisonkatalog nachgewiesen sind. Weitere Länder können später hinzukommen.</p>
   </section>
 
@@ -102,7 +125,8 @@
     countries: "{% url 'clubs:countries' %}",
     leagues: "{% url 'clubs:leagues' %}",
     clubs: "{% url 'clubs:clubs' %}",
-    selection: "{% url 'clubs:selection' %}"
+    selection: "{% url 'clubs:selection' %}",
+    manual: "{% url 'clubs:manual' %}"
   };
   const country = document.getElementById("country");
   const league = document.getElementById("league");
@@ -111,6 +135,11 @@
   const selection = document.getElementById("selection");
   const clubName = document.getElementById("chosen-club");
   const context = document.getElementById("chosen-context");
+  const manualPanel = document.getElementById("manual-panel");
+  const manualForm = document.getElementById("manual-form");
+  const manualName = document.getElementById("manual-club-name");
+  const manualFeedback = document.getElementById("manual-feedback");
+  const manualSubmit = document.getElementById("manual-submit");
   let revision = 0;
 
   function message(value, error = false) {
@@ -130,15 +159,19 @@
   }
   function resetDownstream(start) {
     selection.classList.add("hidden");
+    manualFeedback.textContent = "";
+    manualFeedback.classList.remove("error");
+    manualPanel.classList.add("hidden");
     if (start === "country") {
       clearChoice(league, "Zuerst Land auswählen");
     }
     clearChoice(club, "Zuerst Liga auswählen");
   }
-  async function readJson(url) {
+  async function readJson(url, options = {}) {
     const response = await fetch(url, {
       credentials: "same-origin",
-      headers: {"Accept": "application/json"}
+      ...options,
+      headers: {"Accept": "application/json", ...(options.headers || {})}
     });
     let payload;
     try {
@@ -196,6 +229,7 @@
       message("Wähle eine Liga.");
       return;
     }
+    manualPanel.classList.remove("hidden");
     message("Vereine werden aus der Datenquelle geladen …");
     try {
       const params = new URLSearchParams({country: country.value, league: league.value});
@@ -230,6 +264,47 @@
     } catch (error) {
       if (token !== revision) return;
       message(error.message, true);
+    }
+  });
+
+  manualForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const token = revision;
+    manualFeedback.textContent = "";
+    manualFeedback.classList.remove("error");
+    if (!country.value || !league.value) {
+      manualFeedback.textContent = "Bitte zuerst Land und Liga auswählen.";
+      manualFeedback.classList.add("error");
+      return;
+    }
+    manualSubmit.disabled = true;
+    try {
+      const params = new URLSearchParams({
+        country: country.value, league: league.value, name: manualName.value
+      });
+      const result = await readJson(api.manual, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-CSRFToken": manualForm.querySelector('[name="csrfmiddlewaretoken"]').value
+        },
+        body: params.toString()
+      });
+      if (token !== revision) return;
+      if (!Array.from(club.options).some(option => option.value === String(result.club.id))) {
+        club.add(new Option(result.club.name, String(result.club.id)));
+      }
+      club.disabled = false;
+      club.value = String(result.club.id);
+      manualName.value = "";
+      manualFeedback.textContent = "Verein wurde angelegt und ausgewählt.";
+      club.dispatchEvent(new Event("change"));
+    } catch (error) {
+      if (token !== revision) return;
+      manualFeedback.textContent = error.message;
+      manualFeedback.classList.add("error");
+    } finally {
+      manualSubmit.disabled = false;
     }
   });
 
