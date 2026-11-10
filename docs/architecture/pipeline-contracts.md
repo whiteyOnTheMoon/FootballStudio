@@ -6,7 +6,7 @@
 
 ## 1. Ziel und verbindliche Grenzen
 
-FootballStudio verarbeitet für einen **zur Laufzeit selbst gewählten Verein** englische Dokumentationsprojekte in einer **Django-Web-App**. Die App läuft über **Docker Compose** mit getrenntem `web`-, `db`- und ab M2 `worker`-Service. Der Nutzer wählt das Land, danach die Liga, danach den Verein (oder legt ihn manuell an), wählt einen Titel und startet die Filmproduktion.
+FootballStudio verarbeitet für einen **zur Laufzeit selbst gewählten Verein** englische Dokumentationsprojekte in einer **Django-Web-App**. Die App läuft über **Docker Compose** mit getrenntem `web`-, `db`- und ab M2 `worker`-Service. Der Nutzer wählt **Land → Liga → Verein** (oder legt den Verein manuell an), wählt einen Titel und startet die Filmproduktion.
 
 Jede aufwendige Produktionsstufe:
 - bekommt **strukturierte Eingaben** aus dem vorherigen Stand;
