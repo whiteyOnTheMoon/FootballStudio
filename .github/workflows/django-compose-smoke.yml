@@ -10,6 +10,7 @@ on:
       - "Dockerfile"
       - "compose.yaml"
       - ".env.example"
+      - "scripts/smoke_live_catalog.py"
   push:
     branches: [main]
     paths:
@@ -20,6 +21,7 @@ on:
       - "Dockerfile"
       - "compose.yaml"
       - ".env.example"
+      - "scripts/smoke_live_catalog.py"
   workflow_dispatch:
 
 permissions:
@@ -45,6 +47,23 @@ jobs:
         run: python manage.py makemigrations --check --dry-run
       - name: HTTP / readiness tests (SQLite test database)
         run: python manage.py test app.studio app.accounts app.clubs --verbosity=2
+
+  live_catalog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    env:
+      DJANGO_DEBUG: "1"
+      DJANGO_ALLOW_SQLITE: "1"
+      DJANGO_SECRET_KEY: "ci-only-live-catalog-test-not-for-deployment"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install application dependencies
+        run: python -m pip install -r requirements.txt
+      - name: "Verify live no-key catalog: top two leagues in England and Germany"
+        run: python scripts/smoke_live_catalog.py
 
   compose:
     runs-on: ubuntu-latest

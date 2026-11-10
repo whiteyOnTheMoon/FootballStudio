@@ -64,3 +64,17 @@ Nach `docker compose exec web python manage.py migrate --noinput` können Admini
 Django und PostgreSQL werden auf frischer Datenbank mit `docker compose exec web python manage.py makemigrations --check --dry-run` und `docker compose exec web python manage.py test app.clubs` geprüft. Die Tests prüfen zwei Ligen eines Landes, Vereine pro Liga, manuelle Erstellung/Änderung und Dublettenschutz mit case-insensitiven Datenbank-Constraints.
 
 **Migrationsregel:** Jede Feld- oder Beziehungsänderung erhält eine versionierte Django-Migration. `makemigrations --check --dry-run` muss grün sein, ebenso `migrate --noinput` gegen eine leere Testdatenbank. Produktive Datenbanken und Volumes niemals ungeprüft zurücksetzen.
+
+## Dynamische Vereinsauswahl (#24)
+
+Nach Login unter `http://127.0.0.1:8000/` lädt die Seite **Land → Liga → Verein** über vier angemeldete JSON-Endpunkte. Anbieter und derzeitiger Geltungsbereich stehen in [Vereinskatalog und Datenquellen](../data/club-catalog.md).
+
+- Zur Saison **2026/27** stammen die verfügbaren englischen Top-2-Ligen aus dem öffentlichen **OpenFootball**-JSON-Katalog. Die Vereine werden aus den Saisonspielplänen ermittelt, nicht hart codiert.
+- Deutschlands Bundesliga und 2. Bundesliga (ggf. dritte Liga) werden über **OpenLigaDB** abgefragt. Die frei verfügbare API verlangt keinen Schlüssel.
+- Nur Länder mit **nachgewiesenen** ersten beiden Ligen werden angezeigt. Datenquellenfehler erzeugen eine Warnung oder HTTP 503, keinen erfundenen Verein.
+- Ein Quellenabruf erfolgt serverseitig mit Timeout und Antwortgrößenlimit. Im Container ist ausgehendes HTTPS zu den öffentlichen Anbieterhosts notwendig; zusätzliche Docker-Dienste oder bezahlte API-Keys werden **nicht** verwendet.
+- Bei einer Auswahländerung werden abhängige Dropdowns im Browser geleert, und die endgültige Verein/Liga/Land-Zuordnung wird auf dem Server nochmals geprüft.
+- Katalog-/Saisonfelder und Synchronisationszeitstempel werden durch `clubs.0002_league_catalog_cache` migriert. Nach einem Codeupdate `docker compose exec web python manage.py migrate --noinput` ausführen.
+- **Nicht enthalten:** manuelles Hinzufügen im Benutzer-Dashboard (#25), dauerhafter Testjob (#26), Video-/KI-Pipeline (M2). Diese Funktionen dürfen nicht als bereits fertig behauptet werden.
+
+**Testhinweis:** Die normalen Django-Tests arbeiten mit Mock-JSON-Daten und erzeugen keine externen API-Aufrufe. Liveprüfung der tatsächlichen Anbieterabdeckung erfolgt separat und kann aufgrund von Ausfällen eingeschränkt sein. Eine CI-Probe ist keine Prüfung des tatsächlichen VPS.
