@@ -62,7 +62,7 @@ jobs:
           python-version: "3.12"
       - name: Install application dependencies
         run: python -m pip install -r requirements.txt
-      - name: Verify live no-key catalog: top two leagues in England and Germany
+      - name: "Verify live no-key catalog: top two leagues in England and Germany"
         run: python scripts/smoke_live_catalog.py
 
   compose:
