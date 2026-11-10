@@ -124,7 +124,7 @@ class ManualClubTests(TestCase):
 
     def test_no_external_api_or_fixed_club_is_needed(self):
         from unittest.mock import patch
-        with patch("app.clubs.catalog.fetch_json") as remote:
+        with patch("urllib.request.urlopen") as remote:
             response = self.client.post(self.url, self.payload(name="Hometown 2026"))
             self.assertEqual(response.status_code, 201)
             remote.assert_not_called()
