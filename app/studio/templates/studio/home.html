@@ -30,6 +30,14 @@
     .manual button:disabled { opacity:.55; cursor:not-allowed; }
     .manual .feedback { color:var(--muted); min-height:1.5rem; margin:10px 0 0; }
     .manual .feedback.error { color:#ffb9b9; }
+    .jobs { margin-top:24px; padding-top:20px; border-top:1px solid var(--border); }
+    .jobs input { display:block; width:100%; padding:12px; margin-top:8px; background:#101c2b; color:var(--text); border:1px solid #688294; border-radius:9px; font:inherit; }
+    .jobs button { margin-top:12px; border:0; color:#061712; background:var(--accent); font-weight:800; }
+    .jobs button:disabled { opacity:.55; cursor:not-allowed; }
+    .jobs .feedback.error { color:#ffb9b9; }
+    .job-list { padding-left:1.4rem; }
+    .job-list li { padding:9px 0; border-bottom:1px solid var(--border); }
+
     .status { margin-top:20px; padding:12px 15px; background:#101c2b; border-radius:9px; color:var(--muted); }
     .status.error { background:#472831; color:#ffe1e1; }
     .summary { margin-top:18px; padding:18px; border:1px solid #317963; border-radius:10px; background:#103029; }
@@ -99,14 +107,32 @@
       <span class="eyebrow">Deine Auswahl</span>
       <p><strong id="chosen-club"></strong></p>
       <p id="chosen-context" class="muted"></p>
-      <p class="muted">Die Auswahl wurde vom Server geprüft. Titel und Testjob folgen im nächsten M1-Schritt.</p>
+      <p class="muted">Die Auswahl wurde vom Server geprüft. Du kannst sie jetzt in einem M1-Testjob speichern.</p>
     </div>
+
+    <section id="job-panel" class="jobs hidden" aria-labelledby="job-heading">
+      <h3 id="job-heading">M1-Testjob anlegen</h3>
+      <p class="muted">Vergib einen Arbeitstitel. Wir speichern deine Vereinsauswahl und den Teststatus in PostgreSQL – es wird **noch kein Video produziert**.</p>
+      <form id="job-form" method="post" action="{% url 'production:create-test' %}">
+        {% csrf_token %}
+        <label for="job-title">Arbeitstitel</label>
+        <input id="job-title" type="text" name="title" minlength="4" maxlength="180" required placeholder="Die Geschichte dieses Vereins">
+        <button type="submit" id="job-submit">Testjob speichern</button>
+      </form>
+      <p id="job-feedback" class="feedback" role="status" aria-live="polite"></p>
+    </section>
+  </section>
+
+  <section class="panel" aria-labelledby="saved-jobs-heading">
+    <h2 id="saved-jobs-heading">Meine letzten Testjobs</h2>
+    <ol id="job-list" class="job-list" aria-live="polite"><li>Gespeicherte Jobs werden geladen …</li></ol>
+    <p class="muted">Status „queued“ bedeutet vorerst nur: Auswahl gespeichert. Die echte Hintergrundproduktion kommt in M2.</p>
   </section>
 
   <section class="panel" aria-labelledby="next-heading">
     <h2 id="next-heading">Was ist bereits möglich?</h2>
     <p>Du kannst einen Verein aus einer angebotenen Liga auswählen. Ein bestimmter Pilotverein ist nicht vorgegeben.</p>
-    <p class="muted">Fehlt ein Verein in einer unterstützten Liga? Du kannst ihn oben manuell hinzufügen. Einen Produktions-Testjob mit deiner Auswahl starten wir im nächsten Schritt (Issue #26).</p>
+    <p class="muted">Fehlt ein Verein in einer unterstützten Liga? Du kannst ihn oben manuell hinzufügen. Den M1-Testjob kannst du jetzt speichern. Die Filmproduktion mit KI, TTS und FFmpeg wird später im M2-Worker aktiviert.</p>
     <p class="muted">Aktuell werden nur Länder angeboten, für die mindestens die beiden höchsten Ligen im verfügbaren Saisonkatalog nachgewiesen sind. Weitere Länder können später hinzukommen.</p>
   </section>
 
@@ -126,7 +152,9 @@
     leagues: "{% url 'clubs:leagues' %}",
     clubs: "{% url 'clubs:clubs' %}",
     selection: "{% url 'clubs:selection' %}",
-    manual: "{% url 'clubs:manual' %}"
+    manual: "{% url 'clubs:manual' %}",
+    createJob: "{% url 'production:create-test' %}",
+    listJobs: "{% url 'production:list' %}"
   };
   const country = document.getElementById("country");
   const league = document.getElementById("league");
@@ -140,6 +168,12 @@
   const manualName = document.getElementById("manual-club-name");
   const manualFeedback = document.getElementById("manual-feedback");
   const manualSubmit = document.getElementById("manual-submit");
+  const jobPanel = document.getElementById("job-panel");
+  const jobForm = document.getElementById("job-form");
+  const jobTitle = document.getElementById("job-title");
+  const jobSubmit = document.getElementById("job-submit");
+  const jobFeedback = document.getElementById("job-feedback");
+  const jobList = document.getElementById("job-list");
   let revision = 0;
 
   function message(value, error = false) {
@@ -159,6 +193,8 @@
   }
   function resetDownstream(start) {
     selection.classList.add("hidden");
+    jobPanel.classList.add("hidden");
+    jobFeedback.textContent = "";
     manualFeedback.textContent = "";
     manualFeedback.classList.remove("error");
     manualPanel.classList.add("hidden");
@@ -246,6 +282,7 @@
   club.addEventListener("change", async () => {
     const token = ++revision;
     selection.classList.add("hidden");
+    jobPanel.classList.add("hidden");
     if (!club.value) {
       message("Wähle deinen Verein.");
       return;
@@ -260,7 +297,8 @@
       clubName.textContent = result.selection.club;
       context.textContent = result.selection.league + " · " + result.selection.country;
       selection.classList.remove("hidden");
-      message("Verein ausgewählt. Die Job-Funktion folgt in Issue #26.");
+      jobPanel.classList.remove("hidden");
+      message("Verein ausgewählt. Du kannst einen M1-Testjob speichern.");
     } catch (error) {
       if (token !== revision) return;
       message(error.message, true);
@@ -308,7 +346,80 @@
     }
   });
 
+  async function loadJobs() {
+    try {
+      const result = await readJson(api.listJobs);
+      jobList.replaceChildren();
+      if (result.jobs.length === 0) {
+        const empty = document.createElement("li");
+        empty.textContent = "Noch keine Testjobs vorhanden.";
+        jobList.appendChild(empty);
+        return;
+      }
+      const statusLabels = {
+        draft: "Entwurf",
+        queued: "Gespeichert (noch keine Render-Pipeline)",
+        running: "In Bearbeitung",
+        completed: "Abgeschlossen",
+        failed: "Fehler"
+      };
+      for (const job of result.jobs) {
+        const item = document.createElement("li");
+        const subtitle = job.league + " · " + job.country_code;
+        item.textContent = "#" + job.id + ": " + job.club + " — " + job.title +
+          " (" + subtitle + ") · " + (statusLabels[job.status] || job.status);
+        if (job.error) item.textContent += " · " + job.error;
+        jobList.appendChild(item);
+      }
+    } catch {
+      jobList.replaceChildren();
+      const item = document.createElement("li");
+      item.textContent = "Testjobs konnten nicht geladen werden.";
+      jobList.appendChild(item);
+    }
+  }
+
+  jobForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const token = revision;
+    jobFeedback.textContent = "";
+    jobFeedback.classList.remove("error");
+    if (!country.value || !league.value || !club.value) {
+      jobFeedback.textContent = "Wähle bitte zuerst einen Verein.";
+      jobFeedback.classList.add("error");
+      return;
+    }
+    jobSubmit.disabled = true;
+    try {
+      const params = new URLSearchParams({
+        country: country.value, league: league.value, club: club.value,
+        title: jobTitle.value
+      });
+      const result = await readJson(api.createJob, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-CSRFToken": jobForm.querySelector('[name="csrfmiddlewaretoken"]').value
+        },
+        body: params.toString()
+      });
+      if (token === revision) {
+        jobFeedback.textContent = "Testjob #" + result.job.id +
+          " gespeichert. Noch keine Videoerstellung.";
+      }
+      await loadJobs();
+    } catch (error) {
+      if (token === revision) {
+        jobFeedback.textContent = error.message;
+        jobFeedback.classList.add("error");
+      }
+    } finally {
+      jobSubmit.disabled = false;
+    }
+  });
+
   loadCountries();
+  loadJobs();
 })();
 </script>
 </body>
