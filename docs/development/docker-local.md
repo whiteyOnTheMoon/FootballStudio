@@ -75,6 +75,6 @@ Nach Login unter `http://127.0.0.1:8000/` lädt die Seite **Land → Liga → Ve
 - Ein Quellenabruf erfolgt serverseitig mit Timeout und Antwortgrößenlimit. Im Container ist ausgehendes HTTPS zu den öffentlichen Anbieterhosts notwendig; zusätzliche Docker-Dienste oder bezahlte API-Keys werden **nicht** verwendet.
 - Bei einer Auswahländerung werden abhängige Dropdowns im Browser geleert, und die endgültige Verein/Liga/Land-Zuordnung wird auf dem Server nochmals geprüft.
 - Katalog-/Saisonfelder und Synchronisationszeitstempel werden durch `clubs.0002_league_catalog_cache` migriert. Nach einem Codeupdate `docker compose exec web python manage.py migrate --noinput` ausführen.
-- **Nicht enthalten:** manuelles Hinzufügen im Benutzer-Dashboard (#25), dauerhafter Testjob (#26), Video-/KI-Pipeline (M2). Diese Funktionen dürfen nicht als bereits fertig behauptet werden.
+- **Inzwischen implementiert:** Manuelles Hinzufügen eines Vereins im ausgewählten Land und der Liga (#25), einschließlich CSRF, Dublettenschutz und sofortiger Auswahl im Dropdown. **Nicht enthalten:** dauerhafter Testjob (#26), Video-/KI-Pipeline (M2).
 
 **Testhinweis:** Die normalen Django-Tests arbeiten mit Mock-JSON-Daten und erzeugen keine externen API-Aufrufe. Liveprüfung der tatsächlichen Anbieterabdeckung erfolgt separat und kann aufgrund von Ausfällen eingeschränkt sein. Eine CI-Probe ist keine Prüfung des tatsächlichen VPS.
