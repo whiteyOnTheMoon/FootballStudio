@@ -1,11 +1,13 @@
 """Authenticated JSON endpoints for the first dynamic club picker."""
 from django.contrib.auth.decorators import login_required
+from django.db import IntegrityError, transaction
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.cache import never_cache
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
 
 from .catalog import CatalogUnavailable, discover_countries, season_label, season_start, sync_league_teams
+from .forms import ManualClubForm
 from .models import Club, Country, League
 
 
@@ -116,3 +118,48 @@ def selection(request):
         },
         "job_enabled": False,  # FS-011c #26 creates persistent jobs later.
     })
+
+
+@login_required
+@require_POST
+@never_cache
+def create_manual_club(request):
+    """Create a club in the chosen league; no API data may be overwritten.
+
+    CSRF is enforced by Django middleware. The selected country is verified
+    against the league even if a caller forges or edits the HTML form.
+    """
+    form = ManualClubForm(request.POST)
+    if not form.is_valid():
+        return _error("Enter a valid club name, country and league.")
+    code = form.cleaned_data["country"]
+    league_id = form.cleaned_data["league"]
+    name = form.cleaned_data["name"]
+    league = get_object_or_404(
+        League.objects.select_related("country"),
+        pk=league_id,
+        country__code=code, country__is_active=True, is_active=True,
+        catalog_season=season_label(season_start()),
+    )
+    if Club.objects.filter(league=league, name__iexact=name).exists():
+        return _error(
+            "This club already exists in the selected league. Choose it from the list.",
+            409,
+        )
+    try:
+        with transaction.atomic():
+            club = Club.objects.create(
+                league=league, name=name, provider="manual",
+                provider_id="", is_manual=True, is_active=True,
+            )
+    except IntegrityError:
+        # Case-insensitive database constraint prevents concurrent duplicates.
+        return _error(
+            "This club already exists in the selected league. Choose it from the list.",
+            409,
+        )
+    return JsonResponse({
+        "club": {"id": club.pk, "name": club.name, "manual": True},
+        "country": code,
+        "league_id": league.pk,
+    }, status=201)
