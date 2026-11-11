@@ -5,7 +5,7 @@ from app.accounts.forms import EmailAuthenticationForm
 from django.urls import include, path
 from app.studio import views
 from app.production import views as production_views
-from app.production import fact_web_views, source_web_views, evidence_web_views, fact_decision_web_views
+from app.production import fact_web_views, source_web_views, evidence_web_views, fact_decision_web_views, script_preview_views
 
 urlpatterns = [
     path("", views.home, name="home"),
@@ -28,5 +28,7 @@ urlpatterns = [
          evidence_web_views.review_evidence, name="research-review-evidence"),
     path("jobs/<int:job_id>/research/facts/<int:fact_id>/decision/",
          fact_decision_web_views.decide_fact_in_browser, name="research-decide-fact"),
+    path("jobs/<int:job_id>/research/script-preview/",
+         script_preview_views.safe_script_preview, name="research-script-preview"),
     path("admin/", admin.site.urls),
 ]
