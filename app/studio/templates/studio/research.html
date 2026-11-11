@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>Recherchedossier · {{ job.club_name }} · FootballStudio</title>
+  <style>
+    :root { color-scheme:dark; --bg:#0b1320; --panel:#172536; --border:#355064; --text:#f1f7fc; --muted:#a6bdc9; --accent:#63ddbf; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:1rem/1.55 system-ui,-apple-system,sans-serif; }
+    main { max-width:940px; margin:0 auto; padding:28px 18px 70px; }
+    header { display:flex; flex-wrap:wrap; justify-content:space-between; gap:12px; align-items:center; }
+    a { color:var(--accent); overflow-wrap:anywhere; }
+    a:focus-visible, select:focus-visible { outline:3px solid var(--accent); outline-offset:3px; }
+    h1 { font-size:clamp(1.8rem,4.5vw,2.8rem); line-height:1.2; margin:.6rem 0; }
+    h2 { margin:0 0 14px; font-size:1.35rem; }
+    h3 { font-size:1.08rem; margin:0 0 6px; }
+    p { margin:.5rem 0 1rem; }
+    .muted { color:var(--muted); }
+    .eyebrow { color:var(--accent); font-size:.78rem; text-transform:uppercase; letter-spacing:.12em; font-weight:800; }
+    .panel { border:1px solid var(--border); border-radius:14px; background:var(--panel); padding:20px; margin:22px 0; }
+    .row { display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+    .version-links { display:flex; flex-wrap:wrap; gap:9px; margin-top:12px; }
+    .version-links a { padding:6px 10px; border:1px solid #74908c; border-radius:8px; }
+    .version-links a[aria-current="page"] { color:#061712; background:var(--accent); font-weight:800; text-decoration:none; }
+    .item { padding:16px 0; border-top:1px solid var(--border); }
+    .item:first-of-type { border-top:0; }
+    .meta { color:var(--muted); font-size:.9rem; overflow-wrap:anywhere; }
+    .pill { display:inline-block; padding:3px 9px; border-radius:6px; background:#102b35; border:1px solid #548a95; font-size:.86rem; font-weight:700; }
+    .conflict { color:#ffce8d; border-color:#ffce8d; background:#4b3020; }
+    .approved { color:#a9ebd0; border-color:#438869; background:#15392f; }
+    .rejected { color:#f9c0c0; border-color:#b76f75; background:#43272f; }
+    .value { background:#101c2b; padding:10px 12px; border-radius:8px; overflow-wrap:anywhere; }
+    ul.evidence { padding-left:20px; margin:10px 0; }
+    .evidence li { margin:12px 0; }
+    .notice { border-left:4px solid var(--accent); padding:10px 14px; background:#102c2e; }
+    footer { margin-top:30px; font-size:.85rem; color:var(--muted); }
+    @media (max-width:550px) { .panel { padding:14px; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <a href="{% url 'home' %}">← Zur Vereins- und Jobauswahl</a>
+    <span class="eyebrow">FootballStudio · M2 Recherche</span>
+  </header>
+
+  <h1>Recherchedossier: {{ job.club_name }}</h1>
+  <p class="muted">Job #{{ job.pk }} · {{ job.title }} · {{ job.league_name }} · {{ job.country_code }}</p>
+  <p class="notice">Diese Ansicht ist <strong>nur lesend</strong>. Eine gespeicherte Quelle beweist keine Aussage. Nur ausdrücklich geprüfte Fakten können den Status „verifiziert“ besitzen. Es wird weder eine Website abgerufen noch ein Video erzeugt.</p>
+
+  <section class="panel" aria-labelledby="versions-heading">
+    <h2 id="versions-heading">Dossierversionen</h2>
+    {% if snapshot %}
+      <p>Ausgewählt: <strong>Version {{ snapshot.version }}</strong>
+        {% if selected_version == latest_version %}(neuester Stand){% else %}(historischer Stand, nicht editierbar){% endif %}
+      </p>
+      <p class="meta">Snapshot angelegt: {{ snapshot.created_at }}. Frühere Versionen werden nicht überschrieben.</p>
+      <nav aria-label="Recherchestand auswählen" class="version-links">
+        {% for version in versions %}
+          <a href="{% url 'research-job' job.pk %}?version={{ version }}"
+             {% if version == selected_version %}aria-current="page"{% endif %}>Version {{ version }}</a>
+        {% endfor %}
+      </nav>
+      {% if versions|length >= 100 %}
+        <p class="meta">Die Liste zeigt höchstens 100 neuere Versionen. Ältere Versionen sind über ihre Versionsnummer im URL-Parameter erreichbar.</p>
+      {% endif %}
+    {% else %}
+      <p>Für diesen Job liegt noch kein Faktendossier vor. Die Quellenrecherche und manuelle Prüfung sind derzeit noch nicht über die Browseroberfläche startbar.</p>
+      <p class="muted">Du kannst den Job weiterhin als M1-Testprojekt verwenden.</p>
+    {% endif %}
+  </section>
+
+  {% if snapshot %}
+    <section class="panel" aria-labelledby="sources-heading">
+      <h2 id="sources-heading">Quellen ({{ snapshot.sources|length }})</h2>
+      <p class="muted">„Erreichbar“ bezeichnet nur den damaligen technischen Abruf, nicht die inhaltliche Richtigkeit.</p>
+      {% for source in snapshot.sources %}
+        <article class="item">
+          <h3>Quelle #{{ source.id }} · {{ source.title|default:"Ohne Seitentitel" }}</h3>
+          <p class="meta">
+            {% if source.source_kind == "club_official" %}Offizielle Vereinsseite
+            {% elif source.source_kind == "league_official" %}Offizielle Ligaseite
+            {% elif source.source_kind == "wikidata" %}Wikidata
+            {% elif source.source_kind == "wikipedia" %}Wikipedia
+            {% elif source.source_kind == "news" %}Nachrichtenquelle
+            {% else %}Weitere Quelle{% endif %}
+            · Abrufstatus: {{ source.access_state }} · Abgerufen: {{ source.retrieved_at }}
+          </p>
+          <p>
+            {% if source.safe_link %}
+              <a href="{{ source.safe_link }}" target="_blank" rel="noopener noreferrer nofollow">{{ source.url }}</a>
+            {% else %}
+              <span class="muted">Nicht als Link freigegeben: </span>{{ source.url }}
+            {% endif %}
+          </p>
+          {% if source.external_id %}<p class="meta">Externe Quellen-ID: {{ source.external_id }}</p>{% endif %}
+        </article>
+      {% empty %}
+        <p>Für diese Dossierversion sind noch keine Quellen gespeichert.</p>
+      {% endfor %}
+    </section>
+
+    <section class="panel" aria-labelledby="facts-heading">
+      <h2 id="facts-heading">Fakten und Belege ({{ snapshot.facts|length }})</h2>
+      {% for fact in snapshot.facts %}
+        <article class="item">
+          <div class="row">
+            <h3>Fakt #{{ fact.id }} · {{ fact.predicate }}</h3>
+            {% if fact.verification_state == "verified" %}
+              <span class="pill approved">Verifiziert</span>
+            {% elif fact.verification_state == "conflicted" %}
+              <span class="pill conflict">Widersprüchlich</span>
+            {% elif fact.verification_state == "insufficient_sources" %}
+              <span class="pill">Unzureichende Quellen</span>
+            {% elif fact.verification_state == "rejected" %}
+              <span class="pill rejected">Verworfen</span>
+            {% else %}
+              <span class="pill">Ungeprüft</span>
+            {% endif %}
+          </div>
+          <p><strong>Aussage:</strong> {{ fact.assertion_text }}</p>
+          <p class="value"><strong>Strukturierter Wert:</strong> {{ fact.value_display }}</p>
+          <h3>Fundstellen ({{ fact.evidence|length }})</h3>
+          <ul class="evidence">
+            {% for evidence in fact.evidence %}
+              <li>
+                {% if evidence.role == "supports" %}
+                  <span class="pill">Stützender Beleg</span>
+                {% elif evidence.role == "contradicts" %}
+                  <span class="pill conflict">Gegenbeleg / Widerspruch</span>
+                {% elif evidence.role == "context_only" %}
+                  <span class="pill">Nur Hintergrund</span>
+                {% else %}
+                  <span class="pill">Noch nicht geprüft</span>
+                {% endif %}
+                <div><strong>Fundstelle:</strong> {{ evidence.locator|default:"Keine Fundstelle angegeben" }}</div>
+                {% if evidence.summary %}<div><strong>Notiz:</strong> {{ evidence.summary }}</div>{% endif %}
+                {% if evidence.source %}
+                  <div class="meta">Quelle #{{ evidence.source.id }} · {{ evidence.source.title|default:evidence.source.url }}
+                  · Abgerufen: {{ evidence.source.retrieved_at }}</div>
+                  {% if evidence.source.safe_link %}
+                    <a href="{{ evidence.source.safe_link }}" target="_blank" rel="noopener noreferrer nofollow">Originalquelle öffnen</a>
+                  {% else %}
+                    <p class="meta">Quellen-URL nicht als Link freigegeben.</p>
+                  {% endif %}
+                {% else %}
+                  <p class="meta">Quellenverknüpfung derzeit nicht verfügbar.</p>
+                {% endif %}
+              </li>
+            {% empty %}
+              <li>Noch keine zugeordneten Belege. Diese Aussage ist nicht gesichert.</li>
+            {% endfor %}
+          </ul>
+
+          {% if fact.review %}
+            <h3>Dokumentierte menschliche Prüfung</h3>
+            <p class="meta">Prüfer-ID: {{ fact.review.reviewer_id }} · Entscheidung: {{ fact.review.decision }}
+              · Geprüft am: {{ fact.review.reviewed_at }}
+              · Quellenprüfung: {{ fact.review.checked_source|yesno:"ja,nein" }}
+              · Saisonprüfung: {{ fact.review.checked_season|yesno:"ja,nein" }}
+            </p>
+            <p><strong>Begründung:</strong> {{ fact.review.note }}</p>
+          {% else %}
+            <p class="meta">Noch keine ausdrückliche Prüferentscheidung hinterlegt.</p>
+          {% endif %}
+        </article>
+      {% empty %}
+        <p>Für diese Dossierversion sind noch keine atomaren Fakten erfasst.</p>
+      {% endfor %}
+    </section>
+  {% endif %}
+
+  <footer>Private Rechercheansicht · Keine automatische Faktenfreigabe · Keine Filmproduktion</footer>
+</main>
+</body>
+</html>

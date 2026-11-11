@@ -4,6 +4,7 @@ from django.contrib.auth.views import LoginView, LogoutView
 from app.accounts.forms import EmailAuthenticationForm
 from django.urls import include, path
 from app.studio import views
+from app.production import views as production_views
 
 urlpatterns = [
     path("", views.home, name="home"),
@@ -16,5 +17,7 @@ urlpatterns = [
     path("healthz/", views.healthz, name="healthz"),
     path("clubs/api/", include(("app.clubs.urls", "clubs"), namespace="clubs")),
     path("jobs/api/", include(("app.production.urls", "production"), namespace="production")),
+    path("jobs/<int:job_id>/research/", production_views.research_dossier,
+         name="research-job"),
     path("admin/", admin.site.urls),
 ]

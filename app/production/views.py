@@ -4,17 +4,20 @@ No worker is triggered and no external API is called. This deliberately
 tests database persistence and the selected club's parent relationships.
 """
 from decimal import Decimal
+import re
 
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
+from django.http import Http404, JsonResponse
+from django.shortcuts import get_object_or_404, render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_POST
 
 from app.clubs.models import Club
 
+from .dossiers import load_fact_dossier
 from .forms import TestJobForm
-from .models import ProductionJob
+from .models import FactDossier, ProductionJob
+from .safe_official_fetch import WebsiteFetchError, _checked_url
 
 
 def as_public_data(job):
@@ -99,3 +102,79 @@ def create_test_job(request):
         "job": as_public_data(job),
         "notice": "M1 selection test saved. Video generation is not active yet.",
     }, status=201)
+
+
+
+def _safe_source_link(url):
+    """Only show clickable, public-looking HTTPS references.
+
+    The stored source URL is never fetched here. Everything else is displayed
+    as escaped text, not a potentially unsafe hyperlink.
+    """
+    try:
+        canonical, _host = _checked_url(url)
+        return canonical if canonical == url else None
+    except WebsiteFetchError:
+        return None
+
+
+@login_required
+@require_GET
+@never_cache
+def research_dossier(request, job_id):
+    """Read-only HTML overview of owner-scoped research and historical versions.
+
+    Sources and reviews are *not* created by loading this page. It never
+    fetches remote pages, starts workers, or promotes facts to verified.
+    """
+    job = get_object_or_404(ProductionJob, pk=job_id, owner=request.user)
+    versions = list(
+        FactDossier.objects.filter(job=job)
+        .order_by("-version").values_list("version", flat=True)[:100]
+    )
+    raw_version = request.GET.get("version")
+    if raw_version is None:
+        selected_version = versions[0] if versions else None
+    elif isinstance(raw_version, str) and re.fullmatch(r"[1-9][0-9]{0,8}", raw_version):
+        selected_version = int(raw_version)
+    else:
+        raise Http404("No such dossier version.")
+
+    if selected_version is not None and selected_version not in versions:
+        versions.append(selected_version)
+        versions.sort(reverse=True)
+
+    snapshot = None
+    if selected_version is not None:
+        try:
+            snapshot = load_fact_dossier(
+                owner=request.user, job_id=job.pk, version=selected_version,
+            )
+        except FactDossier.DoesNotExist:
+            raise Http404("No such dossier version.") from None
+
+        references = {}
+        for source in snapshot["sources"]:
+            source["safe_link"] = _safe_source_link(source["url"])
+            references[source["id"]] = source
+
+        for fact in snapshot["facts"]:
+            if isinstance(fact["value"], dict):
+                fact["value_display"] = " · ".join(
+                    f"{key}: {value}" for key, value in fact["value"].items()
+                )
+            elif fact["value"] is None:
+                fact["value_display"] = "Keine strukturierte Angabe"
+            else:
+                fact["value_display"] = str(fact["value"])
+
+            for evidence in fact["evidence"]:
+                evidence["source"] = references.get(evidence["source_id"])
+
+    return render(request, "studio/research.html", {
+        "job": job,
+        "versions": versions,
+        "selected_version": selected_version,
+        "latest_version": versions[0] if versions else None,
+        "snapshot": snapshot,
+    })

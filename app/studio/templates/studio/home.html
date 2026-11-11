@@ -164,6 +164,7 @@
 
   <section class="panel" aria-labelledby="saved-jobs-heading">
     <h2 id="saved-jobs-heading">Meine letzten Testjobs</h2>
+    <p class="muted">Über „Recherchedossier ansehen“ kannst du die gespeicherten Quellen, Fakten und früheren Prüfstände eines Jobs ansehen. Für neue Jobs kann das Dossier noch leer sein.</p>
     <ol id="job-list" class="job-list" aria-live="polite"><li>Gespeicherte Jobs werden geladen …</li></ol>
     <p class="muted">Status „queued“ bedeutet vorerst nur: Auswahl gespeichert. Die echte Hintergrundproduktion kommt in M2.</p>
   </section>
@@ -218,6 +219,7 @@
   const jobSubmit = document.getElementById("job-submit");
   const jobFeedback = document.getElementById("job-feedback");
   const jobList = document.getElementById("job-list");
+  const researchUrlTemplate = "{% url 'research-job' 987654321 %}";
   let revision = 0;
 
   function resetMarketValueFields() {
@@ -480,6 +482,12 @@
             link.target = "_blank";
             item.append(" · ", link);
           }
+        }
+        if (Number.isSafeInteger(job.id) && job.id > 0) {
+          const researchLink = document.createElement("a");
+          researchLink.href = researchUrlTemplate.replace("987654321", String(job.id));
+          researchLink.textContent = "Recherchedossier ansehen";
+          item.append(" · ", researchLink);
         }
         jobList.appendChild(item);
       }
