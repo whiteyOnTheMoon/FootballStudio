@@ -102,6 +102,64 @@ abweichender Vorschlag wegen **veralteter Version** abgewiesen.
 Der Dienst ist noch **nicht** über das öffentliche Webformular
 erreichbar.
 
+
+## M2 – Menschlicher Faktenreview und Gegenbelege (#141)
+
+**Nur intern, keine automatisch gestartete Recherche und keine öffentliche
+Web-UI:** Zwei owner-gebundene Funktionen bearbeiten jeweils die **neueste
+Dossierversion** und erfordern die konkrete `fact_id`, die angezeigte
+`expected_version` sowie bei neuen Belegen die `source_id` aus exakt
+derselben Version.
+
+- `append_review_evidence(..., role="supports"|"contradicts"|"context_only",
+  locator=..., summary=..., source_checked=True)` dokumentiert, welche
+  konkrete Fundstelle der Anwender bewusst gegen eine Aussage gelesen hat.
+  Die Quelle muss bereits zum Dossier gehören und erreichbar sein.
+  Als Kontext gekennzeichnete oder unbekannte Belege begründen **keine**
+  Verifikation. Die Quellenzusammenfassung ist kurz und selbst verfasst:
+  **kein** massenhaftes Speichern geschützter Webseiten.
+- `decide_fact_review(..., decision="verified"|"conflicted"|
+  "insufficient_sources"|"rejected", review_note=...,
+  review_confirmed=True, source_checked=..., season_checked=...)`
+  hält eine ausdrücklich bestätigte menschliche Entscheidung fest.
+  Das neue Modell `FactReview` verbindet eine Version eines Fakts mit
+  dem **Eigentümer als Reviewer**, Entscheidung, knapper nachvollziehbarer
+  Begründung, Quelle-/Saisonprüfflags und Review-Zeitstempel.
+
+**Statusregeln:** `verified` erfordert einen konkret lokalisierten,
+zugänglichen stützenden Beleg, eine bestätigte inhaltliche Sichtprüfung
+und **keinen ungeklärten Gegenbeleg**. Bei saisonalen Aussagen muss
+der Reviewer die Saison ausdrücklich bestätigen und jeder stützende
+Fundstellenverweis die behauptete Saison eindeutig nennen. `conflicted`
+erfordert geprüfte stützende **und** widersprechende Fundstellen.
+`insufficient_sources` und `rejected` sind bewusste Entscheidungen
+mit dokumentierter Begründung, kein künstlicher Ersatz für gesicherte
+Fakten. Ein HTTP 200, eine Quellen-URL, ein `supports`-Label oder
+eine reine Zusammenfassung führt **niemals automatisch** zu `verified`.
+Die Software prüft nur Struktur/Referenzen und Reviewerbestätigungen;
+sie kann die semantische Richtigkeit der Aussage **nicht beweisen**.
+
+Jeder Änderungsvorgang erstellt **atomar eine neue vollständige
+Dossierversion**, inklusive der bisheriger Quellen, Evidenzen,
+Status und historischen Review-Entscheidungen. Der Aufruf mit altem
+Versionsstand scheitert. Doppeltes Erfassen identischer Evidenz
+oder identischer Entscheidung in derselben aktuellen Version bleibt
+ohne weitere Version. Wird nach einer Freigabe ein neuer Beleg
+hinzugefügt, wird das **neue** Fact vorsorglich wieder
+`unverified`, der **neue** Stand verliert die alte Review-Freigabe.
+Die vorherige Dossierversion mit ursprünglichem Reviewer/Zeitpunkt
+bleibt als Prüfhistorie erhalten.
+
+`load_fact_dossier` gibt die Review-Metadaten nur für den Job-Eigentümer
+als `fact.review` zurück; wenn noch keine Prüfung erfolgte, ist das
+Feld `null`. Zeitliche/widersprüchliche Angaben müssen weiterhin
+fachlich geprüft werden, insbesondere Gründungs- und Saisondaten sowie
+offizielle Darstellung vs. unabhängige Belege.
+
+**Deployment:** Neue additive Django-Migration
+`production.0006_fact_review`. Vor dem VPS-Update wie üblich
+PostgreSQL-Backup **und verifizierte Testwiederherstellung** ausführen.
+
 ## Grundregeln
 
 1. Der **zur Laufzeit ausgewählte** Verein (Land → Liga → Verein, bei Bedarf manuell angelegt) bestimmt den Recherchekontext. Es gibt keine fest vorgegebene Club-ID.
