@@ -160,6 +160,43 @@ offizielle Darstellung vs. unabhängige Belege.
 `production.0006_fact_review`. Vor dem VPS-Update wie üblich
 PostgreSQL-Backup **und verifizierte Testwiederherstellung** ausführen.
 
+
+## M2 – Erste private Rechercheansicht im Browser (#144)
+
+Die erste reine **Leseansicht** aus UI-Parent #143 ist unter
+\`/jobs/<job_id>/research/\` erreichbar und wird bei jedem gespeicherten
+M1-Testjob als **„Recherchedossier ansehen“** in der bestehenden
+FootballStudio-Jobliste verlinkt. Der Nutzer muss angemeldet und
+**Eigentümer des Jobs** sein, sonst folgt Redirect zum Login bzw. 404
+ohne Rückschlüsse auf fremde Daten. Ein GET ohne \`?version=\` zeigt
+den neuesten Dossiostand, \`?version=N\` eine ältere unveränderliche
+Version. Die letzten 100 Versionen sind direkt verlinkt; eine noch
+ältere bekannte Version kann explizit über den URL-Parameter
+angefordert werden. Ein Job ohne importierte Recherchequellen zeigt
+einen ehrlichen Leerzustand statt erfundener Fakten.
+
+Pro Version zeigt der Server gerenderte, HTML-escaped Django-Templates:
+Quellen-Titel/Typ/Abrufstatus/Original-URL/Zeitpunkt; atomare Aussage,
+strukturierten Wert, Status \`unverified\`, \`verified\`, \`conflicted\`,
+\`insufficient_sources\` oder \`rejected\`; jeweils Quellen-ID, Rolle,
+Fundstelle und kurze Review-Zusammenfassung. Existiert eine explizite
+Review-Entscheidung, sind Prüfer-ID, Zeitpunkt, Quell-/Saisoncheck und
+Begründung sichtbar. Widersprüche werden klar gekennzeichnet.
+Nur als öffentliche HTTPS-Referenz validierte URLs werden überhaupt
+anklickbar; alle anderen URL-Strings bleiben sichtbarer Plaintext.
+Fremde Daten dürfen niemals per \`innerHTML\` in die Jobliste gelangen.
+
+**Wichtige Abgrenzung:** Das ist eine **nur lesende** Sicht auf
+**bereits gespeicherte** Daten. Das Öffnen ruft **keine** Clubseite,
+Wikidata-Daten, Transfermarkt, LLM oder Worker auf, speichert nichts
+und führt keine automatischen Verifikationen aus. Aus einer vorhandenen
+URL entsteht auch in der Anzeige keine bestätigte Aussage.
+Die bewusste Domainprüfung und separate, owner-geschützte
+Schreib-/Faktenreview-Bedienoberfläche folgen im Parent-Issue #143.
+Für diese Änderung sind **keine neuen Datenbankmigrationen** nötig.
+Der VPS muss nur nach erfolgreichem PR-Merge neu gebaut werden, damit
+die zusätzliche Seite sichtbar ist.
+
 ## Grundregeln
 
 1. Der **zur Laufzeit ausgewählte** Verein (Land → Liga → Verein, bei Bedarf manuell angelegt) bestimmt den Recherchekontext. Es gibt keine fest vorgegebene Club-ID.
