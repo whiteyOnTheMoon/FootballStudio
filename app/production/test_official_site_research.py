@@ -203,3 +203,59 @@ class OfficialWebsiteResearchTests(TestCase):
         self.assertEqual(len(result["pages"]), 4)
         self.assertEqual(download.call_count, 5)
         self.assertEqual(sleep.call_count, 4)
+
+    @patch("app.production.official_site_research.time.sleep")
+    @patch("app.production.official_site_research._download_public_https")
+    def test_allow_before_disallow_still_blocks_specific_path(self, download, sleep):
+        # Python 3.12 RobotFileParser uses first-match. We fail closed and
+        # honor every applicable explicit disallow even after a broad Allow.
+        download.side_effect = [
+            "User-agent: *\nAllow: /\nDisallow: /history\n",
+            """<a href="/history">History</a>
+            <a href="/stadium">Stadium</a>""",
+            "<title>Stadium</title>",
+        ]
+        result = self.research()
+        self.assertEqual([p["url"] for p in result["pages"]], [
+            self.HOME, "https://club.example.org/stadium",
+        ])
+        self.assertEqual(download.call_count, 3)
+
+    @patch("app.production.official_site_research.time.sleep")
+    @patch("app.production.official_site_research._download_public_https")
+    def test_duplicate_matching_groups_cannot_undo_other_disallow(self, download, sleep):
+        download.side_effect = [
+            "User-agent: FootballStudioResearchBot\nAllow: /\n"
+            "\nUser-agent: FootballStudioResearchBot\nDisallow: /history\n",
+            '<a href="/history">History</a><a href="/stadium">Stadium</a>',
+            "<h1>Stadium</h1>",
+        ]
+        result = self.research()
+        self.assertEqual(len(result["pages"]), 2)
+        self.assertEqual(result["pages"][1]["url"], "https://club.example.org/stadium")
+        self.assertEqual(download.call_count, 3)
+
+    @patch("app.production.official_site_research.time.sleep")
+    @patch("app.production.official_site_research._download_public_https")
+    def test_other_agents_disallow_does_not_block_our_bot(self, download, sleep):
+        download.side_effect = [
+            "User-agent: OtherBot\nDisallow: /\n\n"
+            "User-agent: FootballStudioResearchBot\nDisallow: /tickets\n",
+            "<title>Home</title><a href='/history'>History</a>",
+            "<h1>History</h1>",
+        ]
+        result = self.research()
+        self.assertEqual(len(result["pages"]), 2)
+        self.assertEqual(result["pages"][1]["url"], "https://club.example.org/history")
+
+    @patch("app.production.official_site_research.time.sleep")
+    @patch("app.production.official_site_research._download_public_https")
+    def test_specific_wildcard_disallow_is_enforced(self, download, sleep):
+        download.side_effect = [
+            "User-agent: *\nAllow: /\nDisallow: /*history\n",
+            "<a href='/en/history'>Club history</a><a href='/stadium'>Stadium</a>",
+            "<h2>Stadium</h2>",
+        ]
+        result = self.research()
+        self.assertEqual(len(result["pages"]), 2)
+        self.assertEqual(result["pages"][1]["url"], "https://club.example.org/stadium")
