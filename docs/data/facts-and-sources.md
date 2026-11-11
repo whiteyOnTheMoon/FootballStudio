@@ -385,6 +385,69 @@ die Migration \`0007_source_confirmation\` aus #148 auf dem VPS
 bereits angewendet ist; andernfalls zuerst Backup/Restore-Test und
 Migration wie in #148 beschrieben.
 
+
+## M2 – Abschließende, explizite menschliche Faktenentscheidung im Browser (#152)
+
+Der interne `decide_fact_review`-Dienst aus #141 ist jetzt über die
+**owner-geschützte Browseroberfläche**
+`/jobs/<job_id>/research/facts/<fact_id>/decision/` erreichbar.
+Jede Faktkarte der **aktuellsten** Dossierversion verlinkt die
+Reviewentscheidung. Historische Versionen und Fakt-IDs sind
+weiterhin nur lesend; GET/POST benötigen Login, Job-Eigentum
+und explizit aktuellen Dossierversionsbezug.
+
+Angezeigt werden die konkrete Behauptung mit Datenwert/Saison,
+alle aktuellen Belegrollen (`supports`, `contradicts`,
+`context_only`, `unknown`), konkrete Fundstellen und eigene
+Zusammenfassungen, zugängliche HTTPS-Originalquellen sowie deren
+manuelle Prüfzeit beziehungsweise Abrufzeit. Bestehende Reviews
+einschließlich Status, Reviewer, Begründung und Prüfzeitpunkt
+bleiben sichtbar. Nicht vertrauenswürdige URLs werden **nicht**
+anklickbar; alle Texte werden im Django-Template maskiert.
+
+Der Nutzer wählt nach eigener Prüfung eine **ausdrückliche**
+Entscheidung: `verified`, `conflicted`,
+`insufficient_sources` oder `rejected`. Pflicht sind eine kurze
+eigene Begründung von 30–500 Zeichen und die gesonderte
+Bestätigung, dass die Entscheidung bewusst getroffen wurde.
+`verified` setzt zusätzlich einen tatsächlichen zugänglichen,
+konkret geprüften unterstützenden Beleg, bestätigtes eigenes
+Quellenlesen und **keinen ungeklärten Gegenbeleg** voraus.
+`conflicted` verlangt sowohl überprüfte stützende als auch
+widersprechende Fundstellen; `insufficient_sources` und
+`rejected` sind nachvollziehbare menschliche Bewertungen.
+Saisonabhängige Fakten benötigen für `verified` außerdem
+eine eigene ausdrückliche Saisonprüfung; die behauptete Saison
+muss in den Fundstellen **aller** stützenden Belege stimmen.
+**Ein „supports“-Label oder HTTP 200 allein verifiziert nichts.**
+Die Software prüft die Belegstruktur und Bestätigungen, nicht die
+inhaltliche Wahrheit. Die entscheidende Person muss das Material
+tatsächlich selbst lesen.
+
+Der POST ist durch Django-CSRF geschützt und kontrolliert
+die Fakt-ID im zugehörigen Dossier sowie den Versionsstand.
+Unter einem serialisierten, DB-gestützten Job-Lock wird bei einer
+neuen Entscheidung **eine vollständige neue Dossierversion**
+mit Quellen, Fact-/Evidence-Verknüpfungen und Review-Historie
+erstellt. Prüfer, UTC-Zeitpunkt und Begründung sind in
+`FactReview` dokumentiert; die ältere Version ist unverändert.
+Exakt identische Entscheidungen in der aktuellen Version
+werden ohne neuen Snapshot zurückgegeben. Ein identischer
+Retry aus der unmittelbar vorherigen Version darf nur dann
+die neueste Version liefern, wenn Fakt und **alle Belege**
+unverändert geklont wurden und die damalige Entscheidung
+dort exakt vorliegt. Unterschiedliche veraltete Änderungen
+liefern HTTP **409**, der DB-Schreibschutz begrenzt auf
+maximal zehn neue Dossierversionen pro Job/Minute (HTTP **429**).
+Keine neue Datenbankmigration erforderlich.
+
+Diese Browseraktion löst weder ein automatisches DNS-/HTTP-Crawling,
+noch LLM, TTS, Video-Rendering oder kostenpflichtige API-Aufrufe aus.
+Die späteren Skript-/Filmprozesse dürfen die Prüfhistorie nicht mit
+einer unabhängigen technischen Beweisgarantie verwechseln. Die
+Prüfung von Quellenrechten und Veröffentlichungsfähigkeit bleibt
+ein gesonderter Arbeitsschritt der M2-Roadmap.
+
 ## Grundregeln
 
 1. Der **zur Laufzeit ausgewählte** Verein (Land → Liga → Verein, bei Bedarf manuell angelegt) bestimmt den Recherchekontext. Es gibt keine fest vorgegebene Club-ID.

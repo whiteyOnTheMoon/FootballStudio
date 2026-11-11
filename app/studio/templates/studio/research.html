@@ -155,7 +155,8 @@
           <p class="value"><strong>Strukturierter Wert:</strong> {{ fact.value_display }}</p>
           {% if selected_version == latest_version %}
             <p><a href="{% url 'research-review-evidence' job.pk fact.id %}">Konkrete Fundstelle prüfen und Belegrolle ergänzen</a></p>
-            <p class="meta">Eine Belegrolle allein verifiziert den Fakt nicht.</p>
+            <p><a href="{% url 'research-decide-fact' job.pk fact.id %}">Fakt bewusst prüfen und Entscheidung dokumentieren</a></p>
+            <p class="meta">Erst die ausdrückliche inhaltliche Reviewentscheidung darf eine Aussage als verifiziert kennzeichnen.</p>
           {% endif %}
           <h3>Fundstellen ({{ fact.evidence|length }})</h3>
           <ul class="evidence">
