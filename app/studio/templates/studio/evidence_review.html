@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>Quellenbeleg prüfen · {{ job.club_name }} · FootballStudio</title>
+  <style>
+    :root { color-scheme:dark; --bg:#0b1320; --panel:#172536; --border:#355064; --text:#f1f7fc; --muted:#a6bdc9; --accent:#63ddbf; }
+    * { box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); margin:0; font:1rem/1.55 system-ui,-apple-system,sans-serif; }
+    main { max-width:820px; margin:0 auto; padding:27px 18px 65px; }
+    a { color:var(--accent); overflow-wrap:anywhere; }
+    a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-visible { outline:3px solid var(--accent); outline-offset:3px; }
+    h1 { font-size:clamp(1.8rem,5vw,2.5rem); line-height:1.2; margin:10px 0; }
+    h2 { font-size:1.3rem; margin:0 0 15px; }
+    h3 { font-size:1.04rem; }
+    .eyebrow { color:var(--accent); text-transform:uppercase; letter-spacing:.12em; font-size:.8rem; font-weight:800; }
+    .panel { background:var(--panel); border:1px solid var(--border); padding:clamp(15px,4vw,25px); margin:22px 0; border-radius:14px; }
+    .muted { color:var(--muted); }
+    .notice { border-left:4px solid var(--accent); background:#102c2e; padding:12px 16px; }
+    .error { border-left:4px solid #feb6b6; background:#442833; padding:12px 16px; color:#ffe1e1; }
+    .field { margin:18px 0; }
+    label { display:block; font-weight:750; margin:0 0 7px; }
+    input:not([type=checkbox]), textarea, select { display:block; width:100%; max-width:100%; padding:12px; font:inherit; color:var(--text); background:#0c1826; border:1px solid #7794a6; border-radius:8px; }
+    .help { color:var(--muted); display:block; margin-top:5px; font-size:.88rem; }
+    .check { display:flex; align-items:flex-start; gap:12px; margin:20px 0; }
+    .check input { margin-top:4px; width:22px; height:22px; flex-shrink:0; accent-color:var(--accent); }
+    .check label { font-weight:550; }
+    .item { border-top:1px solid var(--border); padding:14px 0; }
+    .item:first-of-type { border-top:0; }
+    .tag { border:1px solid #5f9e9b; border-radius:7px; padding:3px 9px; font-size:.9rem; display:inline-block; }
+    ul.errorlist { color:#ffbaba; padding-left:20px; }
+    button { background:var(--accent); color:#071e18; font:inherit; font-weight:800; padding:13px 18px; border:0; border-radius:9px; cursor:pointer; }
+    footer { color:var(--muted); margin-top:26px; font-size:.88rem; }
+  </style>
+</head>
+<body>
+<main>
+  <a href="{% url 'research-job' job.pk %}">← Zum aktuellen Recherchedossier</a>
+  <p class="eyebrow">FootballStudio · M2 · Menschlicher Belegreview</p>
+  <h1>Fundstelle für {{ job.club_name }} bewerten</h1>
+  <p class="muted">Job #{{ job.pk }} · Dossierversion {{ dossier.version }} · Fakt #{{ fact.pk }}</p>
+  <p class="notice">Diese Prüfung ergänzt nur einen <strong>Beleg mit Rolle</strong>. Selbst ein „stützender Beleg“ führt <strong>nicht</strong> automatisch zum Status „verifiziert“. Die endgültige Entscheidung wird später separat mit Begründung erfasst. Keine Website wird automatisch abgerufen.</p>
+
+  {% if error_message %}<p role="alert" class="error">{{ error_message }}</p>{% endif %}
+
+  <section class="panel" aria-labelledby="fact-heading">
+    <h2 id="fact-heading">Welche Aussage wird geprüft?</h2>
+    <p><strong>Faktentyp:</strong> {{ fact.predicate }}</p>
+    <p><strong>Aussage:</strong> {{ fact.assertion_text }}</p>
+    {% if fact.value.season %}
+      <p><strong>Saison:</strong> {{ fact.value.season }}</p>
+    {% endif %}
+    <p class="muted">Status vor der Belegbewertung: {{ fact.get_verification_state_display }}.</p>
+    {% if fact.verification_state == "verified" %}
+      <p>Wird neue Evidenz hinzugefügt, verliert der Fakt im neuen Dossiostand vorsichtshalber die bisherige Freigabe. Die ältere Version bleibt als Prüfhistorie bestehen.</p>
+    {% endif %}
+  </section>
+
+  <section class="panel" aria-labelledby="previous-heading">
+    <h2 id="previous-heading">Bereits erfasste Belege ({{ existing_evidence|length }})</h2>
+    {% for item in existing_evidence %}
+      <article class="item">
+        <p><span class="tag">
+          {% if item.role == "supports" %}Stützend
+          {% elif item.role == "contradicts" %}Widersprechend
+          {% elif item.role == "context_only" %}Kontext
+          {% else %}Noch nicht bewertet{% endif %}
+        </span></p>
+        <p><strong>Fundstelle:</strong> {{ item.locator }}</p>
+        <p><strong>Eigene Notiz:</strong> {{ item.summary|default:"Keine Notiz vorhanden" }}</p>
+        <p class="muted">{{ item.source_title|default:item.source_url }}</p>
+        {% if item.safe_link %}
+          <p><a href="{{ item.safe_link }}" target="_blank" rel="noopener noreferrer nofollow">Quelle selbst öffnen</a></p>
+        {% endif %}
+      </article>
+    {% empty %}
+      <p>Zu dieser Aussage sind noch keine Belege erfasst.</p>
+    {% endfor %}
+  </section>
+
+  <section class="panel" aria-labelledby="review-heading">
+    <h2 id="review-heading">Neue Fundstelle bewusst prüfen</h2>
+    {% if not available_sources %}
+      <p>Für dieses Dossier sind noch keine erreichbaren und sicheren Quellenverweise vorhanden. Bitte zuerst eine offizielle Quelle manuell bestätigen.</p>
+      <p><a href="{% url 'research-new-source' job.pk %}">Quelle hinterlegen</a></p>
+    {% else %}
+      <p class="muted">Die folgenden Quellendaten stammen ausschließlich aus deinem eigenen Dossier. „Manuell geprüft“ beschreibt eine frühere Nutzerbestätigung, keinen Serverabruf oder Wahrheitsnachweis.</p>
+      {% for source in available_sources %}
+        <article class="item">
+          <p><strong>Quelle #{{ source.id }}:</strong> {{ source.title|default:source.url }}
+            · {{ source.source_kind }}</p>
+          <p class="muted">
+            {% if source.manual %}Manuell geprüft, kein Serverabruf
+            {% else %}Zuvor importierte Quelle{% endif %}
+            · {% if source.manual %}Prüfdatum{% else %}Import-/Abrufdatum{% endif %}:
+            {{ source.source_time }}
+          </p>
+          {% if source.safe_link %}
+            <p><a href="{{ source.safe_link }}" target="_blank" rel="noopener noreferrer nofollow">Quellenseite selbst öffnen</a></p>
+          {% endif %}
+        </article>
+      {% endfor %}
+
+      <form method="post" action="{% url 'research-review-evidence' job.pk fact.pk %}">
+        {% csrf_token %}
+        {{ form.expected_version }}
+        {{ form.non_field_errors }}
+
+        <div class="field">
+          <label for="{{ form.source.id_for_label }}">{{ form.source.label }}</label>
+          {{ form.source }}
+          {{ form.source.errors }}
+        </div>
+
+        <div class="field">
+          <label for="{{ form.role.id_for_label }}">{{ form.role.label }}</label>
+          {{ form.role }}
+          {{ form.role.errors }}
+          <span class="help">Ein Widerspruch bleibt als Gegenbeleg sichtbar. Diese Auswahl ändert noch keinen Faktenstatus.</span>
+        </div>
+
+        <div class="field">
+          <label for="{{ form.locator.id_for_label }}">{{ form.locator.label }}</label>
+          {{ form.locator }}
+          {{ form.locator.errors }}
+          <span class="help">{{ form.locator.help_text }}</span>
+        </div>
+
+        <div class="field">
+          <label for="{{ form.summary.id_for_label }}">{{ form.summary.label }}</label>
+          {{ form.summary }}
+          {{ form.summary.errors }}
+          <span class="help">{{ form.summary.help_text }}</span>
+        </div>
+
+        <div class="check">
+          {{ form.source_checked }}
+          <label for="{{ form.source_checked.id_for_label }}">{{ form.source_checked.label }}</label>
+        </div>
+        {{ form.source_checked.errors }}
+
+        <button type="submit">Geprüften Quellenbeleg speichern</button>
+      </form>
+    {% endif %}
+  </section>
+  <footer>Nur für Job-Eigentümer · Keine automatische Quellen-/Faktenfreigabe · Keine Filmproduktion</footer>
+</main>
+</body>
+</html>
