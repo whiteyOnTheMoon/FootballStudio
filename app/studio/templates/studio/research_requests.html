@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>Recherchefreigaben · {{ job.club_name }} · FootballStudio</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0b1320;--panel:#172536;--border:#355064;--text:#f1f7fc;--muted:#a6bdc9;--accent:#63ddbf}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:1rem/1.55 system-ui,-apple-system,sans-serif}
+    main{max-width:850px;margin:0 auto;padding:28px 18px 70px}
+    a{color:var(--accent);overflow-wrap:anywhere}
+    a:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+    h1{font-size:clamp(1.8rem,5vw,2.5rem);line-height:1.2;margin:12px 0}
+    h2{font-size:1.28rem;margin:.4rem 0 1rem}
+    .eyebrow{color:var(--accent);font-weight:800;font-size:.8rem;letter-spacing:.12em;text-transform:uppercase}
+    .muted{color:var(--muted)}.panel{background:var(--panel);border:1px solid var(--border);padding:clamp(16px,4vw,25px);border-radius:14px;margin:22px 0}
+    .notice{background:#102c2e;border-left:4px solid var(--accent);padding:13px 16px}
+    .row{border-top:1px solid var(--border);padding:18px 0}
+    .row:first-of-type{border-top:0}.status{border:1px solid #8caebc;padding:3px 10px;border-radius:7px;font-size:.9rem;display:inline-block}
+    .warn{color:#ffd09a}button{cursor:pointer;background:#eeb6a5;border:0;border-radius:8px;padding:11px 15px;font:inherit;font-weight:750;color:#321516}
+    footer{color:var(--muted);font-size:.88rem;margin-top:28px}
+  </style>
+</head>
+<body>
+<main>
+  <a href="{% url 'research-job' job.pk %}">← Zum aktuellen Recherchedossier</a>
+  <p class="eyebrow">FootballStudio · M2 · Dokumentierte Freigaben</p>
+  <h1>Recherchefreigaben: {{ job.club_name }}</h1>
+  <p class="notice"><strong>Keine Freigabe wurde ausgeführt.</strong> Die Einträge sind nur gespeicherte, befristete Absichtserklärungen. Es gibt noch keinen Worker, keine robots-/Website-Abfragen und keine recherchierten Seitenresultate. Eine Freigabe läuft nach 15 Minuten ab, unabhängig davon, ob ihr Datenbankstatus bereits aktualisiert wurde.</p>
+  <p><a href="{% url 'research-preflight' job.pk %}">Bestätigte Quellen und Recherchegrenzen ansehen</a></p>
+
+  <section class="panel" aria-labelledby="records-heading">
+    <h2 id="records-heading">Letzte Freigaben (maximal 30)</h2>
+    {% for item in records %}
+      <article class="row">
+        <h2>Freigabe #{{ item.pk }} · <span class="status">
+          {% if item.visible_status == "pending_worker" %}Erfasst · nicht ausgeführt
+          {% elif item.visible_status == "cancelled" %}Abgebrochen
+          {% else %}Abgelaufen · nicht ausgeführt{% endif %}
+        </span></h2>
+        <p><strong>Quelle:</strong> {{ item.confirmed_url }}</p>
+        <p><strong>Domain:</strong> {{ item.confirmed_domain }} · <strong>Kontext:</strong> {{ item.context }}</p>
+        <p class="muted">Quelle #{{ item.source_id }} · Dossierversion {{ item.expected_version }} · Prüfer-ID {{ item.requested_by_id }}</p>
+        <p class="muted">Freigegeben: {{ item.consented_at }} · Gültig bis: {{ item.expires_at }}</p>
+        <p class="muted">Netzwerkzugriffe: <strong>0</strong> · maximale spätere Seitenzahl: {{ item.max_pages }} · dokumentierte Versuche: {{ item.attempt_count }}</p>
+        {% if item.visible_status == "pending_worker" %}
+          <form method="post" action="{% url 'research-cancel-request' job.pk item.pk %}">
+            {% csrf_token %}
+            <button type="submit">Diese noch nicht ausgeführte Freigabe abbrechen</button>
+          </form>
+        {% endif %}
+      </article>
+    {% empty %}
+      <p>Für diesen Job wurden noch keine einmaligen Recherchefreigaben gespeichert.</p>
+    {% endfor %}
+  </section>
+  <footer>Private, nur lesbare Statusliste mit ausdrücklich bestätigtem Abbruch · Kein Crawler oder Filmstart</footer>
+</main>
+</body>
+</html>
