@@ -56,6 +56,52 @@ erfolgreichen Abruf, nicht die Korrektheit der Website-Aussagen.
 `production.0005_league_official_source` für den Quellentyp.
 VPS vorher sichern und den Restore in einer Wegwerf-Datenbank prüfen.
 
+
+## M2 – Atomare Faktenvorschläge aus konkreter offizieller Quelle (#139)
+
+Der **interne** Dienst `propose_official_fact(owner=..., job_id=...,
+expected_version=..., source_id=..., predicate=..., value=...,
+assertion_text=..., locator=..., evidence_summary=...)` bietet eine
+erste strukturierte, manuelle **Recherche-Notiz** an. Er verwendet
+ausschließlich eine bereits im *angezeigten neuesten Dossier* erfasste,
+erreichbare offizielle Vereins- oder Ligaquelle. Der source-ID-Bezug ist
+an die Dossierversion gebunden: Quellen anderer Jobs, alte/andere
+Versionen, Wikidata-Einträge und gesperrte URLs sind dafür kein Ersatz.
+
+Unterstützte atomare Aussagen in diesem ersten Teil:
+- `founded_year`: ganzzahliges Gründungsjahr (historische Angabe);
+- `stadium_name`: kurzer Stadionname;
+- `competition_win`: Wettbewerb **und** konkret bezeichnete Saison;
+- `league_membership`: Liga **und** konkrete Saison;
+- `standings_position`: Liga/Wettbewerb, Saison **und** Tabellenplatz.
+
+Hinzu kommen ein kurzer, selbst formulierter Aussagesatz
+(`assertion_text`), eine eindeutige Abschnitts-/Tabellen-Fundstelle
+(`locator`) sowie eine kurze **eigene Zusammenfassung** der dort
+gefundenen Aussage (`evidence_summary`). Das sind menschlich
+eingegebene Vorschläge, keine automatisiert extrahierten Fakten.
+**Keine vollständigen kopierten Artikel und keine ungefragten
+Netzwerkzugriffe.** Der Service prüft Syntax und referenzielle
+Zuordnung, nicht die Wahrheit der zugrundeliegenden Aussage.
+
+Neue Vorschläge erhalten immer
+`Fact.verification_state=unverified` und
+`Evidence.role=unknown`. Selbst bei erreichbarer offizieller Quelle
+gilt: Ein Locator und eine Zusammenfassung beweisen noch nicht,
+dass die angegebene Fundstelle die Aussage trägt. Für eine tatsächliche
+`verified`-Freigabe braucht es eine **spätere bewusste inhaltliche
+Prüfung**, ggf. unabhängige Gegenquellen und Konfliktbehandlung
+(Hauptissue #138, Verifikation #33).
+
+Jeder neue Vorschlag erzeugt atomar eine vollständig geklonte
+Dossierversion einschließlich Quellen/Fakten/Belegen samt neuen
+Foreign Keys. Die Vorgängerversion bleibt unverändert. Identische
+Wiederholungen werden ohne zusätzliche Version erkannt. Wenn zwischen
+Ansicht und Eingabe eine andere Änderung erfolgt ist, wird ein
+abweichender Vorschlag wegen **veralteter Version** abgewiesen.
+Der Dienst ist noch **nicht** über das öffentliche Webformular
+erreichbar.
+
 ## Grundregeln
 
 1. Der **zur Laufzeit ausgewählte** Verein (Land → Liga → Verein, bei Bedarf manuell angelegt) bestimmt den Recherchekontext. Es gibt keine fest vorgegebene Club-ID.
