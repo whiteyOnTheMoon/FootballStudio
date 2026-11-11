@@ -161,7 +161,7 @@ class ReadOnlyResearchPageTests(TestCase):
         self.assertContains(old, "Noch keine ausdrückliche Prüferentscheidung")
         self.assertNotContains(old, "Widersprüchlich")
         self.assertNotContains(old, "Two concrete source sections disagree")
-        self.assertContains(old, 'aria-current="page"', count=1)
+        self.assertContains(old, 'aria-current="page">Version 1', count=1)
         recent = self.client.get(self.url + "?version=2")
         self.assertEqual(recent.status_code, 200)
         self.assertContains(recent, "Widersprüchlich")
@@ -234,6 +234,7 @@ class ReadOnlyResearchPageTests(TestCase):
         client = Client(enforce_csrf_checks=True)
         client.force_login(self.owner)
         self.assertEqual(client.get(self.url).status_code, 200)
-        self.assertEqual(client.post(self.url, {"decision": "verified"}).status_code, 405)
+        # Strict CSRF blocks the request before GET-only method enforcement.
+        self.assertEqual(client.post(self.url, {"decision": "verified"}).status_code, 403)
         client.logout()
         self.assertEqual(client.get(self.url).status_code, 302)
