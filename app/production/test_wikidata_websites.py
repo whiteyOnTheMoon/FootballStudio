@@ -99,7 +99,7 @@ class WikidataOfficialWebsitesTests(SimpleTestCase):
             "https://club.example.org/#anchor",
             "javascript:alert(1)",
             "ftp://club.example.org",
-            "https://club.example.org\@external.example.org",
+            "https://club.example.org\\@external.example.org",
             " https://club.example.org",
             "https://club.example.org/\nmalicious",
         ]
@@ -130,6 +130,16 @@ class WikidataOfficialWebsitesTests(SimpleTestCase):
         self.assertEqual([c["url"] for c in candidates], [
             "https://good.example.org/",
         ])
+
+    @patch("app.production.wikidata.urlopen")
+    def test_statement_locator_from_different_entity_is_not_trusted(self, opener):
+        opener.return_value = response("Q123", {
+            "P856": [statement("https://club.example.org/",
+                               statement_id="Q999$550e8400-e29b-41d4-a716-446655440000")],
+        })
+        candidate = fetch_wikidata_profile("Q123")["official_website_candidates"][0]
+        self.assertIsNone(candidate["statement_id"])
+        self.assertEqual(candidate["verification_state"], "unverified")
 
     @patch("app.production.wikidata.urlopen")
     def test_candidate_list_is_capped_even_with_many_statements(self, opener):
