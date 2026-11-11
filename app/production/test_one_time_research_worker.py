@@ -193,7 +193,7 @@ class OneTimeWorkerTests(TestCase):
         # This exercises the actual robots gate + discovery path with an
         # artificial transport. No DNS, network or real website is contacted.
         download.side_effect = [
-            "User-agent: *\\nDisallow: /tickets\\nCrawl-delay: 2\\n",
+            "User-agent: *\nDisallow: /tickets\nCrawl-delay: 2\n",
             '<title>Sturm Graz History</title><h1>Club History</h1>'
             '<a href="/honours">Honours</a><a href="/tickets">Tickets</a>',
             '<title>Honours</title><h2>Titles</h2>',
@@ -217,7 +217,7 @@ class OneTimeWorkerTests(TestCase):
     def test_existing_robots_disallow_blocks_before_homepage(
         self, download, sleep,
     ):
-        download.return_value = "User-agent: *\\nDisallow: /\\n"
+        download.return_value = "User-agent: *\nDisallow: /\n"
         result = self.execute()
         self.assertEqual(result["status"], "stopped")
         self.assertEqual(result["code"], "robots_disallowed")
