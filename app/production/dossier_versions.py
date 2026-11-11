@@ -5,24 +5,24 @@ ProductionJob. Never edit rows of the preceding research version.
 """
 from copy import deepcopy
 
-from .models import Evidence, Fact, FactDossier, SourceReference
+from .models import Evidence, Fact, FactDossier, FactReview, SourceReference
 
 
-def fork_dossier(*, job, previous):
+def fork_dossier(*, job, previous, return_mappings=False):
     """Copy sources, facts and evidence to a new standalone numbered snapshot.
 
     Mapping all foreign keys is necessary: evidence in a new version must
     reference sources within that SAME version. Verified status (if a prior
     reviewer set it) is only restored AFTER its supporting evidence is copied.
-    This function does not verify or upgrade any fact.
+    This function does not verify or upgrade any fact. Optional return_mappings\n    returns remapped sources and facts, keyed by the previous row IDs.\n    Existing fact review decisions are carried into the new snapshot.
     """
     dossier = FactDossier.objects.create(
         job=job, version=previous.version + 1 if previous else 1,
     )
+    source_map, fact_map = {}, {}
     if previous is None:
-        return dossier
+        return (dossier, source_map, fact_map) if return_mappings else dossier
 
-    source_map = {}
     for old in previous.sources.order_by("pk"):
         new = SourceReference(
             dossier=dossier,
@@ -50,6 +50,7 @@ def fork_dossier(*, job, previous):
             ),
         )
         new.save()
+        fact_map[old.pk] = new
         for link in sorted(old.evidence.all(), key=lambda item: item.pk):
             Evidence(
                 fact=new, source=source_map[link.source_id],
@@ -60,4 +61,16 @@ def fork_dossier(*, job, previous):
             new.verification_state = Fact.Verification.VERIFIED
             new.save(update_fields=["verification_state"])
 
-    return dossier
+        # Review metadata is tied to one fact version. Copy it exactly,
+        # including the original reviewer and date; never backdate new reviews.
+        old_review = FactReview.objects.filter(fact=old).first()
+        if old_review is not None:
+            FactReview.objects.create(
+                fact=new, reviewer=old_review.reviewer,
+                decision=old_review.decision, note=old_review.note,
+                checked_source=old_review.checked_source,
+                checked_season=old_review.checked_season,
+                reviewed_at=old_review.reviewed_at,
+            )
+
+    return (dossier, source_map, fact_map) if return_mappings else dossier
