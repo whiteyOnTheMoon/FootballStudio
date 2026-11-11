@@ -406,6 +406,30 @@ class OneTimeWorkerTests(TestCase):
                 )
 
     @patch("app.production.one_time_research_worker.research_official_website")
+    def test_dossier_version_rate_limit_rejects_atomic_result_commit(self, research):
+        # Prepare a fresh valid consent against the 10th recent dossier,
+        # so the result-write throttle (rather than staleness) is exercised.
+        self.request.delete()
+        current = self.dossier
+        for _ in range(9):
+            current = fork_dossier(job=self.job, previous=current)
+        current_source = current.sources.get(url=self.source.url)
+        self.request, _ = record_one_time_research_consent(
+            owner=self.owner, job_id=self.job.pk,
+            source_id=current_source.pk, expected_version=10,
+            request_key=uuid4(), domain_rechecked=True,
+            terms_rechecked=True, one_time_approved=True,
+        )
+        research.return_value = self.snapshot(1)
+        response = self.execute()
+        self.assertEqual(response["status"], "stopped")
+        self.assertEqual(response["code"], "version_rate_limited")
+        self.request.refresh_from_db()
+        self.assertEqual(self.request.status, "failed")
+        self.assertEqual(FactDossier.objects.filter(job=self.job).count(), 10)
+        self.assertEqual(OfficialResearchPage.objects.count(), 0)
+
+    @patch("app.production.one_time_research_worker.research_official_website")
     def test_failed_upstream_safe_error_does_not_expose_article_or_stack(self, research):
         research.side_effect = RuntimeError("SECRET article body and internal URL")
         result = self.execute()
