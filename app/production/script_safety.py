@@ -103,6 +103,51 @@ def _structured_sentence(predicate, value):
     return None
 
 
+def _assertion_agrees_with_value(predicate, value, assertion):
+    """Require the reviewed statement to name the structured value itself.
+
+    This conservative syntactic cross-check is not semantic fact checking.
+    A missing or ambiguous literal match must never create a new claim.
+    """
+    if not _plain(assertion, max_length=350):
+        return False
+
+    statement = assertion.casefold()
+    if predicate == "founded_year":
+        years = set(re.findall(r"(?<!\d)(?:18|19|20)\d{2}(?!\d)", assertion))
+        return years == {str(value)}
+    if predicate == "stadium_name":
+        return isinstance(value, str) and value.casefold() in statement
+
+    if not isinstance(value, dict):
+        return False
+    season = value.get("season")
+    if not _valid_season(season):
+        return False
+    if not re.search(r"(?<![0-9/])" + re.escape(season) + r"(?![0-9/])", statement):
+        return False
+
+    if predicate == "competition_win":
+        return isinstance(value.get("competition"), str) and (
+            value["competition"].casefold() in statement
+        )
+    if predicate == "league_membership":
+        return isinstance(value.get("league"), str) and (
+            value["league"].casefold() in statement
+        )
+    if predicate == "standings_position":
+        position = value.get("position")
+        return (
+            isinstance(value.get("competition"), str)
+            and value["competition"].casefold() in statement
+            and type(position) is int
+            and re.search(
+                rf"(?<!\d){position}(?:st|nd|rd|th)?(?!\d)", statement
+            ) is not None
+        )
+    return False
+
+
 def _time(value):
     if not isinstance(value, str):
         return None
@@ -241,6 +286,10 @@ def prepare_script_fact(fact, sources_by_id):
     sentence = _structured_sentence(predicate, raw_value)
     if sentence is None:
         reasons.append("invalid_structured_value")
+    elif not _assertion_agrees_with_value(
+        predicate, raw_value, fact.get("assertion_text"),
+    ):
+        reasons.append("assertion_value_mismatch")
     if has_dangling:
         reasons.append("unmatched_source_reference")
     if status == "rejected":
