@@ -121,13 +121,15 @@ class OfficialFactProposalsTests(TestCase):
         ]
         for predicate, value in options:
             with self.subTest(predicate=predicate):
+                current = FactDossier.objects.filter(job=self.job).order_by("-version").first()
+                current_source = current.sources.get(url=self.club_source.url)
                 snapshot = self.submit(
+                    expected_version=current.version, source_id=current_source.pk,
                     predicate=predicate, value=value,
                     assertion_text=f"This club has a researched {predicate} record.",
                 )
                 self.assertEqual(snapshot.facts.last().value, value)
-                # Next iteration starts from fresh original dossier.
-                FactDossier.objects.filter(job=self.job).exclude(pk=self.first.pk).delete()
+                self.assertEqual(snapshot.facts.last().verification_state, "unverified")
 
     def test_stale_dossier_changes_are_rejected_without_db_writes(self):
         self.submit()
