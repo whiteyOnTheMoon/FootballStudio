@@ -35,7 +35,7 @@
     {% for item in records %}
       <article class="row">
         <h2>Freigabe #{{ item.pk }} · <span class="status">
-          {% if item.visible_status == "pending_worker" %}Erfasst · noch nicht ausgeführt
+          {% if item.visible_status == "pending_worker" %}Erfasst · nicht ausgeführt
           {% elif item.visible_status == "running" %}Einmaliger Abruf läuft
           {% elif item.visible_status == "succeeded" %}Abgeschlossen · Seitenmetadaten
           {% elif item.visible_status == "blocked" %}Sicherheits- oder Websiteblockade
@@ -48,6 +48,11 @@
         <p class="muted">Quelle #{{ item.source_id }} · Dossierversion {{ item.expected_version }} · Prüfer-ID {{ item.requested_by_id }}</p>
         <p class="muted">Freigegeben: {{ item.consented_at }} · Gültig bis: {{ item.expires_at }}</p>
         <p class="muted">Maximal erlaubte HTML-Seiten: {{ item.max_pages }} · verbrauchte Einmalversuche: {{ item.attempt_count }} · gespeicherte Seiten: {{ item.result_count }}</p>
+        {% if item.attempt_count == 0 %}
+          <p class="muted">Netzwerkzugriffe: <strong>0</strong></p>
+        {% else %}
+          <p class="muted">Netzwerkzugriffe: nicht einzeln gezählt; höchstens 1 robots.txt + 4 HTML-Anfragen pro Versuch.</p>
+        {% endif %}
         {% if item.started_at %}<p class="muted">Ausführungsbeginn: {{ item.started_at }} · Ende: {{ item.finished_at|default:"noch offen" }}</p>{% endif %}
         {% if item.result_dossier_version %}
           <p><a href="{% url 'research-job' job.pk %}?version={{ item.result_dossier_version }}">Übernommene Dossioversion {{ item.result_dossier_version }} ansehen</a></p>
@@ -64,7 +69,7 @@
         {% if item.visible_status == "pending_worker" or item.visible_status == "running" %}
           <form method="post" action="{% url 'research-cancel-request' job.pk item.pk %}">
             {% csrf_token %}
-            <button type="submit">Freigabe abbrechen / weiteren Abruf stoppen</button>
+            <button type="submit">{% if item.visible_status == "pending_worker" %}Diese noch nicht ausgeführte Freigabe abbrechen{% else %}Weitere Abrufe stoppen (laufenden Versuch abbrechen){% endif %}</button>
           </form>
         {% endif %}
       </article>
