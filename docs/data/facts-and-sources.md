@@ -324,6 +324,67 @@ Die Domainfreigabe für späteres robot-/SSRF-konformes automatisiertes
 Crawling sowie eine inhaltliche Freigabe einzelner Fakten bleiben
 getrennte, explizite Roadmap-Schritte (#125/#143/#138).
 
+
+## M2 – Bewusste Belegrollenprüfung im Browser (#150)
+
+Der bisher interne owner-geschützte Dienst \`append_review_evidence\` aus
+#141 ist jetzt über
+\`/jobs/<job_id>/research/facts/<fact_id>/evidence/new/\` als mobile
+Browseroberfläche für die **neueste** Dossierversion zugänglich. Jede
+Faktkarte im aktuellen Dossier hat den Link „Konkrete Fundstelle
+prüfen und Belegrolle ergänzen“; historische Versionen sind weiterhin
+rein lesend, und ihre alten Fakt-IDs öffnen kein aktuelles Review.
+
+Die Ansicht zeigt die konkrete atomare Aussage, ggf. die Saison und
+bereits vorhandene Belegrollen, Fundstellen und kurze eigene
+Belegnotizen. Auswählbar sind ausschließlich bereits im selben
+Job-Dossier gespeicherte, zugängliche Quellen mit sicher
+validierbaren öffentlichen HTTPS-Referenzen. Zu jeder Quelle wird
+angezeigt, ob sie **manuell geprüft (kein Serverabruf)** oder früher
+über einen vorhandenen Importdienst erfasst wurde; ihr Zeitstempel
+wird entsprechend als manueller Prüf- oder Import-/Abrufzeitpunkt
+dargestellt. Fremde Quellen oder frei eingegebene URLs sind nicht
+möglich. Seiten werden nur durch einen bewussten Klick auf einen
+externen HTTPS-Link im Browser geöffnet, **nie vom FootballStudio-Server
+automatisch**.
+
+Das CSRF-geschützte Formular erfordert eine explizite Bestätigung,
+dass die genaue Fundstelle persönlich gelesen und mit der Aussage
+verglichen wurde. Eine Belegrolle ist genau eine der Optionen
+\`supports\`, \`contradicts\` oder \`context_only\`; die Fundstelle
+und kurze eigene Zusammenfassung sind Pflicht. Der neue Eintrag
+erzeugt eine **vollständige neue Dossierversion**, außer bei
+identischer Wiederholung. Die alte Dossierversion samt Quellen,
+Facts, Evidence und Review-Historie bleibt unverändert. Bei einem
+bereits ausdrücklich freigegebenen Fakt führt ein **neuer** Beleg
+dazu, dass der Fakt in der **neuen** Version vorsichtshalber wieder
+\`unverified\` wird und erneut menschlich geprüft werden muss. Ein
+\`supports\`-Beleg führt niemals automatisch zu \`verified\`.
+
+Das Formular prüft Login/Owner, die Fakt- und Quellen-IDs **im
+übermittelten Dossiostand**, alle Feld- und Textlängen sowie
+\`expected_version\`. Bei abweichendem veraltetem Inhalt folgt
+HTTP **409**. Ein exakt identischer Retry kann den neuesten Dossiostand
+wiederverwenden, wenn der Fakt durch Klonen eindeutig identifizierbar
+ist und der gleiche Beleg dort bereits existiert; alte Dossiers werden
+nicht erneut geändert. Der DB-gestützte Änderungsgrenzwert aus den
+anderen Formularen bleibt: höchstens zehn neue Dossierversionen
+je Job/Minute (HTTP **429**). Nicht CSRF-autorisierte POSTs liefern
+403. Ein HTML-Aufruf löst weder externe HTTP-/DNS-Aufrufe noch
+LLM, TTS, Paid-API oder Rendering aus.
+
+**Wichtig:** Die Form bestätigt allein, dass der Nutzer seine eigene
+inhaltliche Prüfung durchgeführt hat; die Software kann die Richtigkeit
+der Aussage nicht selbst beweisen. Der explizite abschließende
+Entscheidungsdialog (\`verified\`, \`conflicted\`,
+\`insufficient_sources\`, \`rejected\`) sowie Gegenquellen-Konsistenz
+folgen separat in Parent #143. Für diese Ergänzung ist **keine
+zusätzliche Datenbankmigration** erforderlich. Zur Inbetriebnahme
+genügen Git-Pull und der bekannte Docker-Compose-Rebuild – sofern
+die Migration \`0007_source_confirmation\` aus #148 auf dem VPS
+bereits angewendet ist; andernfalls zuerst Backup/Restore-Test und
+Migration wie in #148 beschrieben.
+
 ## Grundregeln
 
 1. Der **zur Laufzeit ausgewählte** Verein (Land → Liga → Verein, bei Bedarf manuell angelegt) bestimmt den Recherchekontext. Es gibt keine fest vorgegebene Club-ID.

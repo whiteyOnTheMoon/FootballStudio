@@ -153,6 +153,10 @@
           </div>
           <p><strong>Aussage:</strong> {{ fact.assertion_text }}</p>
           <p class="value"><strong>Strukturierter Wert:</strong> {{ fact.value_display }}</p>
+          {% if selected_version == latest_version %}
+            <p><a href="{% url 'research-review-evidence' job.pk fact.id %}">Konkrete Fundstelle prüfen und Belegrolle ergänzen</a></p>
+            <p class="meta">Eine Belegrolle allein verifiziert den Fakt nicht.</p>
+          {% endif %}
           <h3>Fundstellen ({{ fact.evidence|length }})</h3>
           <ul class="evidence">
             {% for evidence in fact.evidence %}
