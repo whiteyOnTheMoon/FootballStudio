@@ -24,6 +24,37 @@ auf acht, maximal auf zehn Vorschläge begrenzt.
 Verein gehört. Offizielle Identität wird **niemals** aus zufälliger
 Namensgleichheit abgeleitet.
 
+
+## Wikidata P856: Website-Kandidaten, noch keine bestätigte Domain (#130)
+
+`fetch_wikidata_profile(qid)` liefert nach **einem ausdrücklich ausgelösten
+Wikidata-EntityData-Abruf** zusätzlich das Feld
+`official_website_candidates`. Es analysiert `claims.P856` (official website)
+für den per Q-ID bezeichneten Gegenstand. Deshalb kann die gleiche Funktion
+sowohl für **Vereins- als auch Liga-Einträge** verwendet werden; die korrekte
+Zuordnung des Q-Items zur gewählten Vereinigung oder Liga muss zuerst
+separat bestätigt werden.
+
+- Höchstens fünf deduplizierte Kandidaten mit gültiger HTTPS-Domain und
+  ohne eingebettete Zugangsdaten/Port/Query/Fragment; HTTP-only-Websites
+  werden **nicht** automatisch nach HTTPS umgeschrieben.
+- `preferred` wird vor `normal` priorisiert, `deprecated` oder nicht
+  vorhandene Werte werden verworfen. Auch `preferred` kann einen
+  historischen oder fehlerhaften Stand repräsentieren.
+- Jeder Kandidat trägt `url`, `wikidata_property=P856`,
+  `statement_id` (falls belastbar vorhanden), `rank`,
+  `source_url` (Wikidata-JSON) und den Status `unverified`.
+- Fehlende oder nicht verwendbare P856-Angaben erzeugen **eine leere Liste**,
+  niemals eine geschätzte offizielle Homepage.
+
+**Sicherheitsgrenze:** Dieser Schritt besucht **keine** P856-URL, prüft kein
+DNS, `robots.txt` oder Betreiberzugehörigkeit und trägt die Kandidaten
+nicht automatisch in die Datenbank ein. Vor einem Abruf sind
+Eigentümer-/Identitätsbestätigung, eindeutige Domainvalidierung,
+SSRF-/Redirect-/DNS-Rebinding-Schutz, Lizenz-/Nutzungsbedingungen und
+Robots-Prüfung erforderlich (#125). Fehlendes oder historisches P856
+ist kein Grund, blind beliebige Domains zu crawlen.
+
 ## Vorgaben für die nächste Stufe: begrenzter HTTP-Rechercheadapter
 
 1. **Bewusst bestätigte Domain** statt automatischer Suche nach beliebigen
