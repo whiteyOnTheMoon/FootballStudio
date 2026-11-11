@@ -1,0 +1,25 @@
+# Use only when the EXISTING ap-pixels cloudflared connector runs in Docker.
+# Attach that existing connector to a reviewed, dedicated external bridge
+# network first. No new connector or host port is created by this overlay.
+# docker compose -f compose.yaml -f compose.existing-tunnel.docker.yaml up -d
+services:
+  web:
+    ports: !reset []
+    networks:
+      default: {}
+      existing_tunnel:
+        aliases:
+          - footballstudio-origin
+    environment:
+      DJANGO_ALLOWED_HOSTS: "studio2.ap-pixels.com"
+      DJANGO_DEBUG: "0"
+      DJANGO_LOCAL_HTTP: "0"
+      DJANGO_TRUST_PROXY: "1"
+      DJANGO_FORCE_HTTPS: "1"
+      DJANGO_CSRF_TRUSTED_ORIGINS: "https://studio2.ap-pixels.com"
+      DJANGO_HSTS_SECONDS: "${DJANGO_HSTS_SECONDS:-0}"
+
+networks:
+  existing_tunnel:
+    external: true
+    name: "${CLOUDFLARE_EXISTING_NETWORK:?Specify a reviewed Docker bridge network shared only with the existing connector}"

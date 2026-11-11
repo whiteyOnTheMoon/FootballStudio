@@ -1,0 +1,17 @@
+# Use only when the existing ap-pixels cloudflared connector runs on the VPS
+# host (or shares its network namespace). No new connector is started.
+# docker compose -f compose.yaml -f compose.existing-tunnel.host.yaml up -d
+services:
+  web:
+    # Deliberately replace the local development port (8000) with a
+    # dedicated required port, still bound only to host loopback.
+    ports: !override
+      - "127.0.0.1:${FOOTBALLSTUDIO_ORIGIN_PORT:?Specify a free origin port, e.g. 18080}:8000"
+    environment:
+      DJANGO_ALLOWED_HOSTS: "studio2.ap-pixels.com"
+      DJANGO_DEBUG: "0"
+      DJANGO_LOCAL_HTTP: "0"
+      DJANGO_TRUST_PROXY: "1"
+      DJANGO_FORCE_HTTPS: "1"
+      DJANGO_CSRF_TRUSTED_ORIGINS: "https://studio2.ap-pixels.com"
+      DJANGO_HSTS_SECONDS: "${DJANGO_HSTS_SECONDS:-0}"

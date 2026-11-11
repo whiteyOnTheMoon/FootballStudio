@@ -10,8 +10,12 @@ on:
       - "Dockerfile"
       - "compose.yaml"
       - "compose.tunnel.yaml"
+      - "compose.existing-tunnel.host.yaml"
+      - "compose.existing-tunnel.docker.yaml"
       - ".env.example"
       - "scripts/verify_tunnel_compose.py"
+      - "scripts/verify_existing_tunnel_compose.py"
+      - "scripts/vps_readonly_inventory.sh"
       - "scripts/smoke_offline_catalog.py"
       - "scripts/postgres_backup.sh"
       - "scripts/verify_postgres_backup.sh"
@@ -25,8 +29,12 @@ on:
       - "Dockerfile"
       - "compose.yaml"
       - "compose.tunnel.yaml"
+      - "compose.existing-tunnel.host.yaml"
+      - "compose.existing-tunnel.docker.yaml"
       - ".env.example"
       - "scripts/verify_tunnel_compose.py"
+      - "scripts/verify_existing_tunnel_compose.py"
+      - "scripts/vps_readonly_inventory.sh"
       - "scripts/smoke_offline_catalog.py"
       - "scripts/postgres_backup.sh"
       - "scripts/verify_postgres_backup.sh"
@@ -44,6 +52,8 @@ jobs:
       POSTGRES_PASSWORD: "ci-only-not-secret-db-password"
       DJANGO_SECRET_KEY: "ci-only-not-secret-django-key"
       CLOUDFLARE_TUNNEL_TOKEN: "ci-only-tunnel-placeholder-never-valid"
+      FOOTBALLSTUDIO_ORIGIN_PORT: "18080"
+      CLOUDFLARE_EXISTING_NETWORK: "footballstudio_tunnel"
     steps:
       - uses: actions/checkout@v5
       - name: Compose version and production overlay safety checks
@@ -55,6 +65,22 @@ jobs:
           # The private token is mandatory: no tunnel must start with no credential.
           if env -u CLOUDFLARE_TUNNEL_TOKEN docker compose -f compose.yaml -f compose.tunnel.yaml config --quiet >/dev/null 2>&1; then
             echo "ERROR: tunnel configuration accepted a missing token." >&2
+            exit 1
+          fi
+          # The existing ap-pixels connector needs no new cloudflared service.
+          # Validate BOTH alternatives without a VPS or real Cloudflare account.
+          bash -n scripts/vps_readonly_inventory.sh
+          docker compose -f compose.yaml -f compose.existing-tunnel.host.yaml config --format json |
+            python scripts/verify_existing_tunnel_compose.py host
+          docker compose -f compose.yaml -f compose.existing-tunnel.docker.yaml config --format json |
+            python scripts/verify_existing_tunnel_compose.py docker
+          # Refuse accidental fallback to 8000 or an unspecified external net.
+          if env -u FOOTBALLSTUDIO_ORIGIN_PORT docker compose -f compose.yaml -f compose.existing-tunnel.host.yaml config --quiet >/dev/null 2>&1; then
+            echo "ERROR: host connector overlay accepted unspecified origin port" >&2
+            exit 1
+          fi
+          if env -u CLOUDFLARE_EXISTING_NETWORK docker compose -f compose.yaml -f compose.existing-tunnel.docker.yaml config --quiet >/dev/null 2>&1; then
+            echo "ERROR: docker connector overlay accepted unspecified external bridge" >&2
             exit 1
           fi
           # Validate that we can still start the original local-only stack.

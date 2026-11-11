@@ -1,6 +1,6 @@
 # FS-012: FootballStudio auf dem VPS über Cloudflare Tunnel
 
-**Vorgegebene Architektur:** Docker Compose auf dem bestehenden VPS.
+**Alternative Architektur (NICHT für den bereits vorhandenen Tunnel `ap-pixels` starten):** Docker Compose auf einem VPS.
 Die öffentliche Domain und der HTTPS-Zugang werden über einen
 **remotely-managed Cloudflare Tunnel** geführt. Der bisherige Plan
 für einen eigenen öffentlich erreichbaren Nginx-/Caddy-Reverse-Proxy
@@ -10,6 +10,13 @@ wird für dieses MVP **nicht** benötigt.
 > weder ein echter VPS noch das Cloudflare-Konto wurden aus diesem
 > Repository geprüft oder verändert. Ohne Token und Cloudflare-Route
 > gibt es noch keinen erreichbaren Dienst.
+
+> **Aktualisierung 11.11.2026:** Der VPS hat bereits einen Tunnel `ap-pixels`
+> mit aktiven Webseiten. Für den aktuellen Nutzerfall gilt vorrangig
+> [Bestehenden `ap-pixels`-Tunnel wiederverwenden](existing-ap-pixels-tunnel.md).
+> Die nachfolgenden Schritte starten einen **zusätzlichen Connector**
+> und dürfen nicht ohne bewusste Architekturentscheidung verwendet werden.
+> Die vorhandenen Webprojekte unter `/home/ap/www` bleiben unberührt.
 
 ## Zieltopologie
 
