@@ -11,6 +11,51 @@
 
 Die Modelle/lesende Schnittstelle sind noch nicht an die Web-UI oder die externe Recherche angebunden. Insbesondere erfolgt **kein** automatischer Wikidata-Import, keine automatische Fakten-Verifikation und keine KI/TTS-Ausgabe. M1-Testjobs bleiben unverändert. Die beschriebene Datenstruktur ist eine Grundlage; weitergehende Belegprüfung und Import folgen in #31/#32/#33.
 
+
+## M2 – Offizielle Vereins- und Ligaseiten als Quellensnapshots (#136)
+
+Der interne, **nicht per Weboberfläche aufrufbare** Dienst
+`import_official_site_sources(owner=..., job_id=..., homepage_url=...,
+context="club"|"league", identity_confirmed=True, terms_confirmed=True)`
+nutzt die sichere, explizit ausgelöste Recherche aus #134. Er prüft
+den **Job-Eigentümer vor dem ersten Netzwerkaufruf** und übernimmt
+höchstens vier Seiten-Metadatensätze (Homepage + drei interne Seiten)
+mit HTTPS-URL, kurzen Seitentiteln und UTC-Abrufzeitpunkten. Eine
+Quellenreferenz ist noch kein inhaltlich geprüfter Beleg: neue
+`Fact`- oder `Evidence`-Zeilen werden dabei **nicht** erzeugt,
+und aus einer erfolgreichen HTTP-Antwort entsteht **kein** `verified`.
+Artikeltexte, HTML und Überschriften werden nicht dauerhaft gespeichert.
+
+Die Quellentypen `club_official` und das neu ergänzte
+`league_official` unterscheiden Vereins- von Ligadaten. Ein
+Abruf-Ergebnis muss zu Job, Club, Liga, ausdrücklich bestätigtem
+Website-Kontext und Hostname passen. Alle Einträge werden vor einem
+Schreibzugriff geprüft. Ein fehlerhaftes oder nicht freigegebenes
+Ergebnis erzeugt **keine** neue Dossierversion.
+
+Bei neuer Quelle wird eine **eigene versionierte Kopie des gesamten
+bisherigen Dossiers** erzeugt: vorhandene Quellen, Fakten und
+Belege werden mit neuen FKs derselben Version übernommen. Frühere
+Versionen bleiben unverändert; vorhandene Review-Zustände werden
+nur nach dem Kopieren zugehöriger Belege erhalten, nie durch neue
+Quellen angehoben. Das gilt jetzt auch für weitere Wikidata-Q-IDs.
+Ein zweiter identischer Import derselben offiziellen Homepage verwendet
+die letzte Version ohne erneuten Netzaufruf; ein späteres bewusstes
+Refresh mit eigenem Zeit-/Beleg-Snapshot ist eine separate Funktion.
+
+**Vertrauensgrenze:** `identity_confirmed=True` und
+`terms_confirmed=True` sind nur ausdrückliche Bestätigungen des
+internen Aufrufers. Sie beweisen **nicht automatisch**, dass eine
+Domain offiziell ist oder dass Rechte zur Weiterverwendung bestehen.
+Vor jeder Nutzung muss die Zuordnung samt Nutzungsbedingungen geprüft
+werden. Der Dienst ist noch nicht mit einer Review-Oberfläche verbunden.
+`SourceReference.access_state="accessible"` beschreibt allein einen
+erfolgreichen Abruf, nicht die Korrektheit der Website-Aussagen.
+
+**Deployment:** Neue additive Migration
+`production.0005_league_official_source` für den Quellentyp.
+VPS vorher sichern und den Restore in einer Wegwerf-Datenbank prüfen.
+
 ## Grundregeln
 
 1. Der **zur Laufzeit ausgewählte** Verein (Land → Liga → Verein, bei Bedarf manuell angelegt) bestimmt den Recherchekontext. Es gibt keine fest vorgegebene Club-ID.
