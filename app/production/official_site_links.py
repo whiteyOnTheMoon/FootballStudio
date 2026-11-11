@@ -23,6 +23,14 @@ _CATEGORIES = (
     ("about", 70, {"about", "verein", "club", "clube", "societa", "societe", "institution", "profil", "aboutus"}),
     ("team", 60, {"team", "teams", "squad", "mannschaft", "kader", "equipo", "equipe", "rosa"}),
 )
+_LEAGUE_CATEGORIES = (
+    ("standings", 110, {"standings", "table", "tabelle", "classement", "clasificacion", "classifica", "ranking"}),
+    ("fixtures", 100, {"fixtures", "spielplan", "calendario", "calendrier", "schedule", "spieltag"}),
+    ("results", 90, {"results", "ergebnisse", "resultados", "resultats", "risultati"}),
+    ("competition", 80, {"competition", "format", "regulations", "reglement", "reglamento", "wettbewerb", "modello"}),
+    ("clubs", 70, {"clubs", "teams", "vereine", "equipos", "equipes", "squadre"}),
+    ("statistics", 60, {"statistics", "statistiques", "estadisticas", "statistiche", "statistik", "stats"}),
+)
 _MAX_HTML_CHARS = 300_000
 
 
@@ -84,17 +92,21 @@ def _homepage(homepage_url):
     return urlunsplit(("https", hostname.lower(), url.path or "/", "", "")), hostname.lower()
 
 
-def discover_official_pages(homepage_url, homepage_html, *, limit=8):
+def discover_official_pages(homepage_url, homepage_html, *, limit=8, context="club"):
     """Rank same-host internal links from HTML already obtained elsewhere.
 
     Does NOT prove the hostname belongs to the club, check robots.txt or
-    fetch any page. Returned candidates are proposals for subsequent review.
+    fetch any page. A confirmed league homepage may use context="league".
+    Returned candidates are proposals for subsequent review.
     """
     base_url, hostname = _homepage(homepage_url)
     if not isinstance(homepage_html, str) or len(homepage_html) > _MAX_HTML_CHARS:
         raise ValueError("Expected a bounded HTML string.")
     if type(limit) is not int or not 1 <= limit <= 10:
         raise ValueError("limit must be an integer between 1 and 10")
+    if context not in ("club", "league"):
+        raise ValueError("context must be 'club' or 'league'")
+    categories = _CATEGORIES if context == "club" else _LEAGUE_CATEGORIES
 
     parser = _Links()
     parser.feed(homepage_html)
@@ -124,7 +136,7 @@ def discover_official_pages(homepage_url, homepage_html, *, limit=8):
         if tokens & _BLOCKED:
             continue
         category = next(
-            ((name, score) for name, score, keywords in _CATEGORIES
+            ((name, score) for name, score, keywords in categories
              if tokens & keywords), None,
         )
         if category is None:
