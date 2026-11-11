@@ -64,7 +64,7 @@ class EvidenceReviewWebTests(TestCase):
             retrieved_at=timezone.now(), access_state="restricted",
         )
         self.unsafe = SourceReference.objects.create(
-            dossier=self.original, url="javascript:alert(1)",
+            dossier=self.original, url="http://club.example.org/not-https",
             source_kind="other", title="Not a public HTTPS source",
             retrieved_at=timezone.now(), access_state="accessible",
         )
@@ -128,7 +128,7 @@ class EvidenceReviewWebTests(TestCase):
         self.assertContains(response, 'value="1"')
         self.assertNotContains(response, "Access restricted")
         self.assertNotContains(response, "Not a public HTTPS source")
-        self.assertNotIn(b'href="javascript:', response.content)
+        self.assertNotIn(b'href="http://club.example.org/not-https"', response.content)
         self.assertIn("no-store", response["Cache-Control"])
         self.assertFalse(FactReview.objects.exists())
         self.assertEqual(FactDossier.objects.count(), 1)
