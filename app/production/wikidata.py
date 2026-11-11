@@ -60,7 +60,9 @@ def _official_website_candidates(entity, qid, source_url):
             continue
 
         statement_id = statement.get("id")
-        if not isinstance(statement_id, str) or not _STATEMENT_ID.fullmatch(statement_id):
+        if (not isinstance(statement_id, str)
+                or not _STATEMENT_ID.fullmatch(statement_id)
+                or not statement_id.startswith(f"{qid}$")):
             statement_id = None
         items.append({
             "url": normalized,
