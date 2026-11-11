@@ -111,6 +111,14 @@ def record_one_time_research_consent(
                 "This submission was already used, cancelled or expired."
             )
 
+        active = OfficialResearchRequest.objects.filter(
+            job=job,
+            status=OfficialResearchRequest.Status.PENDING,
+            expires_at__gt=now,
+        )
+        if active.exists():
+            raise ResearchConsentConflict("An unexpired request already exists for this job.")
+
         recent = OfficialResearchRequest.objects.filter(
             requested_by=owner,
             consented_at__gte=now - _RATE_WINDOW,
@@ -119,14 +127,6 @@ def record_one_time_research_consent(
             raise ResearchConsentRateLimited("Daily consent limit reached.")
         if recent.filter(confirmed_domain=plan.domain).exists():
             raise ResearchConsentRateLimited("This domain was approved recently.")
-
-        active = OfficialResearchRequest.objects.filter(
-            job=job,
-            status=OfficialResearchRequest.Status.PENDING,
-            expires_at__gt=now,
-        )
-        if active.exists():
-            raise ResearchConsentConflict("An unexpired request already exists for this job.")
 
         # Only after every failed request has exited without mutation: close
         # naturally expired pending entries before satisfying DB uniqueness.
