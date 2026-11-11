@@ -73,7 +73,7 @@ class OfficialResearchPreflightTests(TestCase):
         self.assertContains(response, "noch kein Recherchedossier")
         self.assertContains(response, "Quelle zuerst selbst prüfen")
         self.assertContains(response, "kein Websiteabruf")
-        self.assertContains(response, "keine Website")
+        self.assertContains(response, "startet keine Recherche")
         self.assertNotContains(response, "<form", html=False)
         self.assertIn("no-store", response["Cache-Control"])
         self.assertFalse(FactDossier.objects.exists())
