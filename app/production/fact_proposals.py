@@ -33,7 +33,7 @@ def _short_text(value, label, *, min_length, max_length):
     if (
         len(normalized) < min_length or len(normalized) > max_length
         or any(ord(char) < 32 or ord(char) == 127 for char in normalized)
-        or "<" in normalized or ">" in normalized
+        or "<" in normalized
     ):
         raise ValueError(f"{label} must be concise plain text.")
     return normalized
@@ -81,10 +81,6 @@ def _value(predicate, value):
                 value[field], field, min_length=2, max_length=160,
             )
     return result
-
-
-def _source_identity(source):
-    return source.url, source.source_kind, source.retrieved_at
 
 
 def _matching_source(dossier, source):
