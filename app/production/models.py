@@ -510,9 +510,11 @@ class OfficialResearchRequest(models.Model):
             not self.consented_at or not self.expires_at
             or timezone.is_naive(self.consented_at)
             or timezone.is_naive(self.expires_at)
-            or not timedelta(seconds=0)
-            < self.expires_at - self.consented_at
-            <= timedelta(minutes=15)
+            or not (
+                timedelta(seconds=0)
+                < self.expires_at - self.consented_at
+                <= timedelta(minutes=15)
+            )
         ):
             raise ValidationError("Consent must expire within fifteen minutes.")
         if self.status == self.Status.PENDING and self.cancelled_at is not None:
