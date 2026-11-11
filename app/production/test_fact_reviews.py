@@ -256,6 +256,21 @@ class HumanFactReviewTests(TestCase):
             locator="League > 2025/26 final table",
             summary="The official league 2025/26 final table lists third place.",
         )
+        # The old 2024/25 reference is STILL present and is still marked
+        # supporting. A new 2025/26 source cannot silently override it.
+        with self.assertRaisesRegex(ValueError, "specific season"):
+            self.decide(predicate="standings_position", season_checked=True)
+        self.assertEqual(self.at("standings_position").verification_state, "unverified")
+
+    def test_matching_season_can_be_verified_after_explicit_cross_check(self):
+        self.cite(
+            predicate="standings_position",
+            source_url=self.league_source.url,
+            locator="League > 2025/26 final table",
+            summary="The official 2025/26 league table shows the club third.",
+        )
+        with self.assertRaisesRegex(ValueError, "season cross-check"):
+            self.decide(predicate="standings_position", season_checked=False)
         new = self.decide(predicate="standings_position", season_checked=True)
         self.assertEqual(self.at("standings_position", dossier=new).verification_state,
                          "verified")
