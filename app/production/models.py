@@ -367,3 +367,159 @@ class FactReview(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()
         return super().save(*args, **kwargs)
+
+
+
+class OfficialResearchRequest(models.Model):
+    """Audited one-time *authorization*, never an executed crawl.
+
+    A future independently reviewed worker must check the still-valid consent,
+    owner, source, domain, version, robots and SSRF rules again before fetching.
+    This table cannot enqueue tasks and has no 'completed' status.
+    """
+
+    class Status(models.TextChoices):
+        PENDING = "pending_worker", "Recorded; no worker available"
+        CANCELLED = "cancelled", "Cancelled by the job owner"
+        EXPIRED = "expired", "Consent expired without execution"
+
+    job = models.ForeignKey(
+        ProductionJob, on_delete=models.CASCADE, related_name="official_research_requests",
+    )
+    source = models.ForeignKey(
+        SourceReference, on_delete=models.CASCADE, related_name="research_requests",
+    )
+    requested_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
+        related_name="football_research_consents",
+    )
+    # Unique per job: retries with exactly this browser form UUID are safe.
+    request_key = models.UUIDField()
+    expected_version = models.PositiveIntegerField()
+    confirmed_url = models.URLField(max_length=750)
+    confirmed_domain = models.CharField(max_length=253)
+    context = models.CharField(
+        max_length=8, choices=[("club", "Club"), ("league", "League")],
+    )
+    # These flags are a *fresh* per-request attestation, not copied from
+    # SourceConfirmation. A malicious form cannot opt-in implicitly.
+    domain_rechecked = models.BooleanField(default=False)
+    terms_rechecked = models.BooleanField(default=False)
+    one_time_approved = models.BooleanField(default=False)
+    consented_at = models.DateTimeField(default=timezone.now)
+    expires_at = models.DateTimeField()
+    status = models.CharField(
+        max_length=16, choices=Status.choices, default=Status.PENDING,
+    )
+    attempt_count = models.PositiveSmallIntegerField(default=0)
+    max_pages = models.PositiveSmallIntegerField(default=4)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=("job", "request_key"), name="production_research_req_key_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=("job",), condition=models.Q(status="pending_worker"),
+                name="production_research_one_pending_job",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(expected_version__gte=1),
+                name="production_research_positive_version",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(attempt_count__lte=1),
+                name="production_research_max_one_attempt",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(max_pages=4),
+                name="production_research_four_pages",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(expires_at__gt=models.F("consented_at")),
+                name="production_research_positive_ttl",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=("requested_by", "confirmed_domain", "consented_at"),
+                name="production_research_owner_host_idx",
+            ),
+            models.Index(
+                fields=("job", "created_at"), name="production_research_job_time_idx",
+            ),
+        ]
+
+    @property
+    def visible_status(self):
+        """Expiry is enforced even if no housekeeping worker runs."""
+        if self.status == self.Status.PENDING and self.expires_at <= timezone.now():
+            return self.Status.EXPIRED
+        return self.status
+
+    def clean(self):
+        super().clean()
+        if self.job_id and self.requested_by_id:
+            if self.job.owner_id != self.requested_by_id:
+                raise ValidationError("Only the job owner can approve this research.")
+        if self.source_id and self.job_id:
+            if (
+                self.source.dossier.job_id != self.job_id
+                or self.source.dossier.version != self.expected_version
+            ):
+                raise ValidationError("The source and research version must belong to the same job.")
+            from .manual_source_import import validate_manual_source_url
+            try:
+                canonical, host = validate_manual_source_url(self.source.url)
+            except ValueError:
+                raise ValidationError("Source URL is not eligible.") from None
+            if canonical != self.confirmed_url or host != self.confirmed_domain:
+                raise ValidationError("The approved domain does not match the source.")
+            match = {
+                SourceReference.Kind.CLUB_OFFICIAL: "club",
+                SourceReference.Kind.LEAGUE_OFFICIAL: "league",
+            }
+            if self.context != match.get(self.source.source_kind):
+                raise ValidationError("The approved source context is invalid.")
+            if self.source.access_state != SourceReference.Access.ACCESSIBLE:
+                raise ValidationError("The approved source is not accessible.")
+            try:
+                confirmed = self.source.manual_confirmation
+            except SourceConfirmation.DoesNotExist:
+                raise ValidationError("A manual source confirmation is required.") from None
+            if (
+                confirmed.reviewer_id != self.requested_by_id
+                or confirmed.confirmed_domain != self.confirmed_domain
+                or not all((
+                    confirmed.identity_confirmed, confirmed.terms_confirmed,
+                    confirmed.access_confirmed,
+                ))
+            ):
+                raise ValidationError("The manual source confirmation does not match.")
+        if (
+            self.domain_rechecked is not True
+            or self.terms_rechecked is not True
+            or self.one_time_approved is not True
+        ):
+            raise ValidationError("Fresh, explicit consent for exactly one research request is required.")
+        if (
+            not self.consented_at or not self.expires_at
+            or timezone.is_naive(self.consented_at)
+            or timezone.is_naive(self.expires_at)
+            or not timezone.timedelta(seconds=0)
+            < self.expires_at - self.consented_at
+            <= timezone.timedelta(minutes=15)
+        ):
+            raise ValidationError("Consent must expire within fifteen minutes.")
+        if self.status == self.Status.PENDING and self.cancelled_at is not None:
+            raise ValidationError("Pending consent cannot have a cancellation date.")
+        if self.status == self.Status.CANCELLED and self.cancelled_at is None:
+            raise ValidationError("Cancellation needs a timestamp.")
+        if self.attempt_count > 1 or self.max_pages != 4:
+            raise ValidationError("This request can never exceed one attempt and four pages.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
