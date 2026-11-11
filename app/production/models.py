@@ -3,6 +3,8 @@
 An M1 'prototype' job records the selected club and title only; it does NOT
 render video or call a paid API. M2 will add a separate worker and artifacts.
 """
+from datetime import timedelta
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -508,9 +510,9 @@ class OfficialResearchRequest(models.Model):
             not self.consented_at or not self.expires_at
             or timezone.is_naive(self.consented_at)
             or timezone.is_naive(self.expires_at)
-            or not timezone.timedelta(seconds=0)
+            or not timedelta(seconds=0)
             < self.expires_at - self.consented_at
-            <= timezone.timedelta(minutes=15)
+            <= timedelta(minutes=15)
         ):
             raise ValidationError("Consent must expire within fifteen minutes.")
         if self.status == self.Status.PENDING and self.cancelled_at is not None:
