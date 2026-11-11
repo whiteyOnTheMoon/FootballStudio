@@ -63,11 +63,11 @@ class Migration(migrations.Migration):
                 "indexes": [
                     models.Index(
                         fields=["requested_by", "confirmed_domain", "consented_at"],
-                        name="production_research_owner_host_idx",
+                        name="prod_res_owner_host_idx",
                     ),
                     models.Index(
                         fields=["job", "created_at"],
-                        name="production_research_job_time_idx",
+                        name="prod_res_job_time_idx",
                     ),
                 ],
                 "constraints": [
