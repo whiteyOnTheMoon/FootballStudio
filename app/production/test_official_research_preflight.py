@@ -77,6 +77,9 @@ class OfficialResearchPreflightTests(TestCase):
         self.assertNotContains(response, "<form", html=False)
         self.assertIn("no-store", response["Cache-Control"])
         self.assertFalse(FactDossier.objects.exists())
+        self.assertEqual(
+            self.client.get(self.url, {"source_id": "1"}).status_code, 404,
+        )
         self.assertContains(
             self.client.get(self.viewer),
             "Offizielle Quellen und Recherchegrenzen vorab prüfen",
