@@ -18,7 +18,7 @@ from django.views.decorators.http import require_http_methods
 
 from .evidence_web_forms import EvidenceReviewForm
 from .fact_reviews import append_review_evidence
-from .models import FactDossier, ProductionJob, SourceReference
+from .models import FactDossier, ProductionJob, SourceConfirmation, SourceReference
 from .views import _safe_source_link
 
 _VALID_VERSION = re.compile(r"[1-9][0-9]{0,8}\Z")
@@ -88,10 +88,7 @@ def _render_form(request, *, job, dossier, fact, form, status=200, error=""):
     for source in available:
         try:
             manual = source.manual_confirmation
-        except Exception as exc:
-            from .models import SourceConfirmation
-            if not isinstance(exc, SourceConfirmation.DoesNotExist):
-                raise
+        except SourceConfirmation.DoesNotExist:
             manual = None
         display_sources.append({
             "id": source.pk,
