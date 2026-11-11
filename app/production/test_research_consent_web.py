@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -360,15 +360,12 @@ class OneTimeResearchConsentWebTests(TestCase):
             self.assertEqual(self.client.get(url).status_code, 404)
             self.assertEqual(self.client.post(url, {}).status_code, 404)
         self.client.force_login(self.owner)
+        old_payload = self.payload()
         fork_dossier(job=self.job, previous=self.dossier)
         self.assertEqual(self.client.get(self.url).status_code, 404)
-        self.assertEqual(self.client.post(self.url, self.payload(
-            url=reverse(
-                "research-approve-source", kwargs={
-                    "job_id": self.job.pk, "source_id": self.dossier.sources.get().pk,
-                },
-            )
-        )).status_code, 404)
+        self.assertEqual(
+            self.client.post(self.url, old_payload).status_code, 404,
+        )
 
     def test_stale_version_blocks_service_even_with_current_source_id(self):
         next_dossier = fork_dossier(job=self.job, previous=self.dossier)
@@ -404,6 +401,7 @@ class OneTimeResearchConsentWebTests(TestCase):
                     url, self.payload(),
                 ).status_code, 404)
         record = self.source.manual_confirmation
+        old_payload = self.payload()
         for update in (
             {"confirmed_domain": "attacker.example.org"},
             {"identity_confirmed": False},
@@ -414,13 +412,9 @@ class OneTimeResearchConsentWebTests(TestCase):
             with self.subTest(update=update):
                 SourceConfirmation.objects.filter(pk=record.pk).update(**update)
                 self.assertEqual(self.client.get(self.url).status_code, 404)
-                self.assertEqual(self.client.post(
-                    self.url, self.payload(
-                        url=reverse("research-approve-source", kwargs={
-                            "job_id": self.job.pk, "source_id": self.source.pk,
-                        }),
-                    ),
-                ).status_code, 404)
+                self.assertEqual(
+                    self.client.post(self.url, old_payload).status_code, 404,
+                )
                 SourceConfirmation.objects.filter(pk=record.pk).update(
                     confirmed_domain="club.example.org",
                     identity_confirmed=True, terms_confirmed=True,
@@ -438,7 +432,7 @@ class OneTimeResearchConsentWebTests(TestCase):
         row.refresh_from_db()
         self.assertEqual(row.attempt_count, 0)
         with self.assertRaises(IntegrityError):
-            with self.captureOnCommitCallbacks(execute=True):
+            with transaction.atomic():
                 OfficialResearchRequest.objects.filter(pk=row.pk).update(
                     attempt_count=2,
                 )
