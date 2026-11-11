@@ -47,6 +47,17 @@ class ProductionJob(models.Model):
     country_code = models.CharField(max_length=3)
     league_name = models.CharField(max_length=160)
     club_name = models.CharField(max_length=160)
+    # Optional user-entered squad market-value estimate, in absolute units.
+    # This is research input only; never an automatically verified film fact.
+    manual_market_value_amount = models.DecimalField(
+        max_digits=16, decimal_places=2, null=True, blank=True,
+    )
+    manual_market_value_currency = models.CharField(
+        max_length=3, choices=[("EUR", "Euro"), ("GBP", "British pound"),
+                               ("USD", "US dollar")], default="EUR",
+    )
+    manual_market_value_as_of = models.DateField(null=True, blank=True)
+    manual_market_value_source_url = models.URLField(max_length=500, blank=True)
     output_path = models.CharField(max_length=500, blank=True)
     error_message = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -56,6 +67,13 @@ class ProductionJob(models.Model):
 
     class Meta:
         ordering = ("-created_at", "-pk")
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(manual_market_value_amount__isnull=True)
+                | models.Q(manual_market_value_amount__gt=0),
+                name="production_job_manual_value_positive",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.pk}: {self.club_name} – {self.title}"
@@ -65,6 +83,31 @@ class ProductionJob(models.Model):
         self.title = " ".join((self.title or "").split())
         if not self.title:
             raise ValidationError({"title": "Enter a film title."})
+        if self.manual_market_value_amount is None:
+            if self.manual_market_value_as_of or self.manual_market_value_source_url:
+                raise ValidationError({
+                    "manual_market_value_amount": "A market value is required when entering its date or source.",
+                })
+        else:
+            if self.manual_market_value_amount <= 0:
+                raise ValidationError({
+                    "manual_market_value_amount": "Market value must be positive.",
+                })
+            if (self.manual_market_value_as_of
+                    and self.manual_market_value_as_of > timezone.localdate()):
+                raise ValidationError({
+                    "manual_market_value_as_of": "The market-value date cannot be in the future.",
+                })
+        if self.manual_market_value_source_url:
+            from .market_values import _source_url
+            try:
+                self.manual_market_value_source_url = _source_url(
+                    self.manual_market_value_source_url
+                )
+            except ValueError as exc:
+                raise ValidationError({
+                    "manual_market_value_source_url": str(exc),
+                }) from None
         if self.kind == self.Kind.PROTOTYPE and self.status in (
             self.Status.RUNNING, self.Status.COMPLETED,
         ):

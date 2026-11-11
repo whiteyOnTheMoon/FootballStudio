@@ -3,6 +3,8 @@
 No worker is triggered and no external API is called. This deliberately
 tests database persistence and the selected club's parent relationships.
 """
+from decimal import Decimal
+
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -26,6 +28,22 @@ def as_public_data(job):
         "league": job.league_name,
         "club": job.club_name,
         "club_id": job.club_id,
+        "manual_market_value": (
+            {
+                "metric": "squad_total",
+                "amount": format(job.manual_market_value_amount, ".2f"),
+                "millions": format(job.manual_market_value_amount / Decimal("1000000"), ".2f"),
+                "currency": job.manual_market_value_currency,
+                "as_of": (
+                    job.manual_market_value_as_of.isoformat()
+                    if job.manual_market_value_as_of else None
+                ),
+                "source_url": job.manual_market_value_source_url or None,
+                "provenance": "user_entered",
+                "verification_state": "unverified",
+            }
+            if job.manual_market_value_amount is not None else None
+        ),
         "error": job.error_message,
         "has_video": bool(job.output_path),
         "created_at": job.created_at.isoformat(),
@@ -47,7 +65,7 @@ def create_test_job(request):
     form = TestJobForm(request.POST)
     if not form.is_valid():
         return JsonResponse({
-            "error": "Select a valid country, league and club, and enter a title of at least four characters."
+            "error": "Check the club, title and optional market value (millions, date and HTTPS source)."
         }, status=400)
     payload = form.cleaned_data
     club = get_object_or_404(
@@ -67,6 +85,13 @@ def create_test_job(request):
         country_code=club.league.country.code,
         league_name=club.league.name,
         club_name=club.name,
+        manual_market_value_amount=(
+            payload["market_value_millions"] * Decimal("1000000")
+            if payload["market_value_millions"] is not None else None
+        ),
+        manual_market_value_currency=payload["market_value_currency"] or "EUR",
+        manual_market_value_as_of=payload["market_value_as_of"],
+        manual_market_value_source_url=payload["market_value_source_url"],
     )
     job.full_clean()
     job.save()

@@ -35,6 +35,12 @@
     .jobs button { margin-top:12px; border:0; color:#061712; background:var(--accent); font-weight:800; }
     .jobs button:disabled { opacity:.55; cursor:not-allowed; }
     .jobs .feedback.error { color:#ffb9b9; }
+    .jobs details { margin-top:18px; padding:14px; border:1px solid var(--border); border-radius:10px; }
+    .jobs summary { cursor:pointer; font-weight:700; }
+    .market-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin-top:15px; }
+    .market-fields select { margin-top:8px; }
+    .jobs .market-note { font-size:.88rem; margin:.5rem 0; }
+    @media (max-width:550px) { .market-fields {grid-template-columns:1fr;} }
     .job-list { padding-left:1.4rem; }
     .job-list li { padding:9px 0; border-bottom:1px solid var(--border); }
 
@@ -123,6 +129,33 @@
         {% csrf_token %}
         <label for="job-title">Arbeitstitel</label>
         <input id="job-title" type="text" name="title" minlength="4" maxlength="180" required placeholder="Die Geschichte dieses Vereins">
+        <details id="market-value-details">
+          <summary>Kader-Marktwert manuell ergänzen (optional)</summary>
+          <p class="muted market-note">Hier kannst du einen selbst recherchierten <strong>geschätzten Kadergesamtmarktwert</strong> eintragen. Das ist kein Kaufpreis des Vereins. Fehlende Werte einfach freilassen.</p>
+          <div class="market-fields">
+            <div>
+              <label for="market-value-millions">Geschätzter Wert (in Millionen)</label>
+              <input id="market-value-millions" name="market_value_millions" type="number" min="0.01" max="999999.99" step="0.01" inputmode="decimal" placeholder="z. B. 125.5">
+            </div>
+            <div>
+              <label for="market-value-currency">Währung</label>
+              <select id="market-value-currency" name="market_value_currency">
+                <option value="EUR">EUR (€)</option>
+                <option value="GBP">GBP (£)</option>
+                <option value="USD">USD ($)</option>
+              </select>
+            </div>
+            <div>
+              <label for="market-value-as-of">Stand der Angabe (optional)</label>
+              <input id="market-value-as-of" name="market_value_as_of" type="date">
+            </div>
+            <div>
+              <label for="market-value-source-url">Quellenlink (optional, HTTPS)</label>
+              <input id="market-value-source-url" name="market_value_source_url" type="url" maxlength="500" placeholder="https://beispiel.de/marktwert">
+            </div>
+          </div>
+          <p class="muted market-note">Als manuelle, ungeprüfte Schätzung gespeichert. Bitte Quellen und Nutzungsrechte vor einer späteren Filmverwendung prüfen. Ohne Wert keine Eingabe nötig.</p>
+        </details>
         <button type="submit" id="job-submit">Testjob speichern</button>
       </form>
       <p id="job-feedback" class="feedback" role="status" aria-live="polite"></p>
@@ -177,10 +210,23 @@
   const jobPanel = document.getElementById("job-panel");
   const jobForm = document.getElementById("job-form");
   const jobTitle = document.getElementById("job-title");
+  const marketValueDetails = document.getElementById("market-value-details");
+  const marketValueMillions = document.getElementById("market-value-millions");
+  const marketValueCurrency = document.getElementById("market-value-currency");
+  const marketValueAsOf = document.getElementById("market-value-as-of");
+  const marketValueSourceUrl = document.getElementById("market-value-source-url");
   const jobSubmit = document.getElementById("job-submit");
   const jobFeedback = document.getElementById("job-feedback");
   const jobList = document.getElementById("job-list");
   let revision = 0;
+
+  function resetMarketValueFields() {
+    marketValueMillions.value = "";
+    marketValueCurrency.value = "EUR";
+    marketValueAsOf.value = "";
+    marketValueSourceUrl.value = "";
+    marketValueDetails.open = false;
+  }
 
   function message(value, error = false) {
     status.textContent = value;
@@ -198,6 +244,7 @@
     select.disabled = data.length === 0;
   }
   function resetDownstream(start) {
+    resetMarketValueFields();
     selection.classList.add("hidden");
     jobPanel.classList.add("hidden");
     jobFeedback.textContent = "";
@@ -328,6 +375,7 @@
 
   club.addEventListener("change", async () => {
     const token = ++revision;
+    resetMarketValueFields();
     selection.classList.add("hidden");
     jobPanel.classList.add("hidden");
     if (!club.value) {
@@ -416,6 +464,23 @@
         item.textContent = "#" + job.id + ": " + job.club + " — " + job.title +
           " (" + subtitle + ") · " + (statusLabels[job.status] || job.status);
         if (job.error) item.textContent += " · " + job.error;
+        if (job.manual_market_value) {
+          const market = job.manual_market_value;
+          const formatted = new Intl.NumberFormat("de-DE", {
+            minimumFractionDigits: 0, maximumFractionDigits: 2
+          }).format(Number(market.millions));
+          item.textContent += " · Kaderwert (manuelle, ungeprüfte Schätzung): ca. " +
+            formatted + " Mio. " + market.currency;
+          if (market.as_of) item.textContent += " · Stand: " + market.as_of;
+          if (market.source_url) {
+            const link = document.createElement("a");
+            link.href = market.source_url;
+            link.textContent = "Quelle";
+            link.rel = "noopener noreferrer";
+            link.target = "_blank";
+            item.append(" · ", link);
+          }
+        }
         jobList.appendChild(item);
       }
     } catch {
@@ -440,7 +505,11 @@
     try {
       const params = new URLSearchParams({
         country: country.value, league: league.value, club: club.value,
-        title: jobTitle.value
+        title: jobTitle.value,
+        market_value_millions: marketValueMillions.value,
+        market_value_currency: marketValueCurrency.value,
+        market_value_as_of: marketValueAsOf.value,
+        market_value_source_url: marketValueSourceUrl.value.trim()
       });
       const result = await readJson(api.createJob, {
         method: "POST",
@@ -452,7 +521,10 @@
       });
       if (token === revision) {
         jobFeedback.textContent = "Testjob #" + result.job.id +
-          " gespeichert. Noch keine Videoerstellung.";
+          " gespeichert." + (result.job.manual_market_value
+            ? " Manueller Kader-Marktwert als ungeprüfte Schätzung übernommen." : "") +
+          " Noch keine Videoerstellung.";
+        resetMarketValueFields();
       }
       await loadJobs();
     } catch (error) {
