@@ -197,6 +197,61 @@ Für diese Änderung sind **keine neuen Datenbankmigrationen** nötig.
 Der VPS muss nur nach erfolgreichem PR-Merge neu gebaut werden, damit
 die zusätzliche Seite sichtbar ist.
 
+
+## M2 – Faktenvorschläge über Browser erfassen (#146)
+
+Die bisher interne, ausdrücklich **ungeprüfte** manuelle Faktenaufnahme
+aus #139 ist jetzt als owner-geschütztes HTML-Formular erreichbar:
+\`/jobs/<job_id>/research/facts/new/\`. Ein Link zur Maske erscheint
+im aktuellen (nicht historischen) Recherchedossier genau dann, wenn
+zuvor bereits mindestens eine **zugängliche offizielle Vereins- oder
+Ligaquelle** für diesen Job importiert wurde. Das Formular zeigt nur
+diese Quellen mit Typ, Titel und bisherigem Abrufdatum. **Eine neue,
+beliebige Webadresse kann über dieses Formular weder eingegeben noch
+abgerufen werden.** Für einen noch leeren Job – z. B. ein frisch
+angelegtes M1-Testprojekt – wird verständlich erklärt, dass zunächst
+die separat zu implementierende bestätigte Quellenaufnahme nötig ist.
+
+Eingabefelder sind nach Faktentyp strukturiert:
+\`founded_year\`, \`stadium_name\`, \`competition_win\`,
+\`league_membership\` und \`standings_position\`. Saisons und
+Tabellenplätze werden serverseitig typisiert und streng validiert;
+alle nicht zur gewählten Faktenart gehörenden Eingaben müssen leer
+bleiben. Hinzu kommen der kurze, selbst formulierte Faktensatz, eine
+präzise Fundstelle, eine eigene kurze Zusammenfassung des Belegs
+und die explizite Bestätigung, dass Quelle und Fundstelle **gelesen**
+wurden. Letzteres ist keine \`verified\`-Entscheidung: Neue
+\`Fact.verification_state\` bleiben \`unverified\`, neue
+\`Evidence.role\` bleiben \`unknown\`.
+
+Der POST verwendet die normale Django-CSRF-Middleware und prüft
+zuerst die Jobzugehörigkeit zum eingeloggten Nutzer. Die Quellenauswahl
+wird dynamisch auf die explizite, zu diesem Job gehörende
+\`expected_version\` und die zwei erlaubten Quellentypen beschränkt.
+Der interne Service sperrt den Job über \`SELECT FOR UPDATE\` und
+erzeugt atomar eine **neue vollständige Dossierversion**. Exakte
+Doppelübermittlungen erzeugen keinen zusätzlichen Versionsstand;
+abweichende Änderungen aus einem veralteten Formular liefern
+HTTP **409** mit dem Hinweis, die aktuelle Ansicht neu zu laden.
+Fehlerhafte Angaben liefern 400; nach Erfolg führt
+**Post/Redirect/Get** direkt zum neuen Dossiostand.
+
+Als server- und workerübergreifendes Limit sind höchstens
+**10 neue Dossierversionen pro Job und Minute** erlaubt, auf Basis
+von PostgreSQL-Datensätzen statt rein lokalem In-Memory-Cache.
+Das schützt die Datenbank vor schnell wiederholten Anfragen;
+es ist **kein** globales Benutzer- oder IP-Request-Limit. Fehlende
+CSRF-Tokens werden vor Verarbeitung abgewiesen. Die Regressionstests
+decken CSRF, Identitäts-/Quellen-/Saisonvalidierung, Quell- und
+Owner-Trennung, Staleness, idempotente Wiederholung und No-Network ab.
+
+**Unverändert:** keine automatischen HTTP-Abrufe, keine KI-, TTS-,
+FFmpeg- oder kostenpflichtigen APIs; das Formular erklärt keinen
+Kandidaten zur offiziellen Website. Die ausdrücklich bestätigte
+Quellenaufnahme sowie spätere stützende/widersprechende Belegreviews
+und \`verified\`-Freigaben bleiben separate Schritte in #143 und #138.
+**Keine neue Datenbankmigration** erforderlich.
+
 ## Grundregeln
 
 1. Der **zur Laufzeit ausgewählte** Verein (Land → Liga → Verein, bei Bedarf manuell angelegt) bestimmt den Recherchekontext. Es gibt keine fest vorgegebene Club-ID.
