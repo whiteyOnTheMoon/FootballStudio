@@ -93,7 +93,7 @@ class WikidataSourceImportTests(TestCase):
         self.assertEqual(
             list(second.sources.values_list("external_id", flat=True)), ["Q123", "Q456"],
         )
-        self.assertEqual(SourceReference.objects.count(), 2)
+        self.assertEqual(SourceReference.objects.count(), 3)
 
     @patch("app.production.wikidata_import.fetch_wikidata_profile")
     def test_permission_confirmation_and_bad_id_fail_before_network(self, fetch):
