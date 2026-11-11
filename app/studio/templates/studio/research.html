@@ -58,6 +58,14 @@
     </section>
   {% endif %}
 
+  {% if not snapshot or selected_version == latest_version %}
+    <section class="panel" aria-labelledby="research-preflight-heading">
+      <h2 id="research-preflight-heading">Sichere Website-Recherche vorbereiten</h2>
+      <p>Prüfe vor einer späteren, ausdrücklich freizugebenden Recherche die bereits bestätigte Vereins- oder Ligadomain und die strengen Grenzen eines möglichen Abrufs. <strong>Der Vorabcheck besucht keine Website und startet keinen Crawler.</strong></p>
+      <p><a href="{% url 'research-preflight' job.pk %}">Offizielle Quellen und Recherchegrenzen vorab prüfen</a></p>
+    </section>
+  {% endif %}
+
   <section class="panel" aria-labelledby="versions-heading">
     <h2 id="versions-heading">Dossierversionen</h2>
     {% if snapshot %}
