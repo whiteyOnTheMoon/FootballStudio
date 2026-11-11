@@ -185,6 +185,47 @@ class OneTimeWorkerTests(TestCase):
         self.assertEqual(FactDossier.objects.count(), 1)
         self.assertFalse(OfficialResearchPage.objects.exists())
 
+    @patch("app.production.official_site_research.time.sleep")
+    @patch("app.production.official_site_research._download_public_https")
+    def test_worker_uses_real_robots_gate_and_safe_page_discovery_offline(
+        self, download, sleep,
+    ):
+        # This exercises the actual robots gate + discovery path with an
+        # artificial transport. No DNS, network or real website is contacted.
+        download.side_effect = [
+            "User-agent: *\\nDisallow: /tickets\\nCrawl-delay: 2\\n",
+            '<title>Sturm Graz History</title><h1>Club History</h1>'
+            '<a href="/honours">Honours</a><a href="/tickets">Tickets</a>',
+            '<title>Honours</title><h2>Titles</h2>',
+        ]
+        result = self.execute()
+        self.assertEqual(result["status"], "succeeded")
+        self.assertEqual(download.call_count, 3)  # robots, homepage, honours
+        self.assertEqual(sleep.call_count, 2)
+        self.assertEqual(OfficialResearchPage.objects.count(), 2)
+        self.assertEqual(
+            OfficialResearchPage.objects.get(position=1).url,
+            "https://club.example.org/honours",
+        )
+        self.assertEqual(
+            OfficialResearchPage.objects.get(position=1).verification_state,
+            "unverified",
+        )
+
+    @patch("app.production.official_site_research.time.sleep")
+    @patch("app.production.official_site_research._download_public_https")
+    def test_existing_robots_disallow_blocks_before_homepage(
+        self, download, sleep,
+    ):
+        download.return_value = "User-agent: *\\nDisallow: /\\n"
+        result = self.execute()
+        self.assertEqual(result["status"], "stopped")
+        self.assertEqual(result["code"], "robots_disallowed")
+        download.assert_called_once()
+        sleep.assert_not_called()
+        self.assertFalse(OfficialResearchPage.objects.exists())
+        self.assertEqual(self.request.pages.count(), 0)
+
     @patch("app.production.one_time_research_worker.research_official_website")
     def test_operator_command_succeeds_without_ever_accepting_a_url(self, research):
         research.return_value = self.snapshot(0)
