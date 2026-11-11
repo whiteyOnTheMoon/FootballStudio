@@ -538,6 +538,69 @@ Belege, XSS, Owner-Zugriff, historical snapshots und
 No-Network sind Bestandteil des PR. **Keine neue Migration**,
 kein Worker-Start und keine zusätzlichen API-Kosten.
 
+
+## M2 – Vorabprüfung für kontrollierte offizielle Website-Recherche (#157)
+
+Die **lesende**, owner-geschützte Ansicht
+\`/jobs/<job_id>/research/preflight/\` ergänzt #148 (manuell
+bestätigte offizielle Quellen), #125 (internes robots-/SSRF-geschütztes
+Rechercheverfahren) und Parent #156. Sie ist aus dem **leeren und
+aktuellen** Recherchedossier erreichbar; für eine noch leere
+Quellenliste bietet sie den Weg zur bewussten manuellen Erfassung.
+
+Die Liste zeigt nur auf die **aktuellste, eigene Dossioversion**
+bezogene \`SourceReference\`-Einträge, wenn alle Gates erfüllt sind:
+\`source_kind=club_official|league_official\`,
+\`access_state=accessible\`, eine echte \`SourceConfirmation\`
+mit demselben prüfenden Job-Eigentümer, allen drei ausdrücklich
+bestätigten Identitäts-/Bedingungs-/Zugangsangaben, brauchbarer eigener
+Zuordnungsbegründung, nicht in der Zukunft liegender Prüfzeit und
+exakt mit der Quelle übereinstimmender kanonischer HTTPS-Domain.
+Die Quelle durchläuft erneut die bestehende syntaktische
+\`validate_manual_source_url\`-Prüfung. Wikidata-P856-Kandidaten,
+unbestätigte/gesperrte Quellen, andere Jobs und historische
+Quellen-IDs werden nicht freigegeben. Bei manipuliertem
+\`source_id\`-Parameter wird ohne Metadatenauskunft HTTP 404
+geliefert; kein Parameter darf eine URL ersetzen.
+
+Nach bewusstem Anklicken einer Quellen-ID
+(\`?source_id=N\`) zeigt der Vorabcheck **nur** die selbst bestätigte
+Ausgangs-URL, ihren Host, die syntaktisch aus dem Host abgeleitete
+\`robots.txt\`-Adresse sowie den originalen Prüfer, Zeitpunkt und
+Zuordnungsgrund. Die Auswahl ist **keine** Bestätigung der
+Server-Identität, kein Lizenznachweis und keine neue Zustimmung
+zu automatischen Abrufen.
+
+Die Übersicht nennt höchstens **eine Ausgangsseite plus drei
+Unterseiten** und die obersten möglichen Recherche-Themen aus dem
+bereits bestehenden Offline-Linkklassifikator. **Es werden weder
+konkrete Unterseiten-URLs geraten noch ihr tatsächliches
+Vorhandensein behauptet.** Welche Seiten erreichbar sind, könnte
+erst ein späterer und gesondert zugelassener Rechercheauftrag mit
+echtem \`robots.txt\`-Check, TLS, Domain-/IP-Prüfung und den
+vorhandenen Content-/Timeout-/Delay-Limits ermitteln.
+
+**Wesentliches Sicherheitsversprechen dieser Phase:** Nur HTTP
+\`GET\` auf der eigenen, \`never_cache\`-geschützten Preflight-Seite;
+\`POST\`, \`PUT\` und \`DELETE\` werden mit 405 verweigert.
+Es gibt **keine** Datenbankmutation, keinen CSRF-pflichtigen
+Schreibvorgang, keine DNS-Auflösung, keinen HTTP-/robots-Abruf,
+keinen Worker, keine Paid-API, keinen unlizenzieren Inhalt und
+keine automatische Verifikation. Der sichtbare Hinweis
+„Recherche noch nicht startbar“ ist bewusst und verhindert,
+dass Nutzer eine bloße früher angeklickte Quellenbestätigung
+als autorisierte Crawling-Freigabe missverstehen.
+
+**Folge-PR nach separater Sicherheitsprüfung:** neuer expliziter
+einmaliger Zustimmungsdialog mit CSRF, Job-Owner-/Source-ID- und
+Versionsschutz, Datenbank-Rate-Limit, zeitlich begrenztem
+Worker-Lauf und dem bereits vorhandenen robots-/SSRF-sicheren
+Adapter. Kein Netzwerkaufruf im normalen Preflight-GET.
+Die gesamte Recherchequelle und alle daraus ggf. abgeleiteten
+Fakten bleiben bis zum bewussten Human-FactReview
+\`unverified\`. Für diesen ersten Preflight ist **keine
+Datenbankmigration** erforderlich.
+
 ## Grundregeln
 
 1. Der **zur Laufzeit ausgewählte** Verein (Land → Liga → Verein, bei Bedarf manuell angelegt) bestimmt den Recherchekontext. Es gibt keine fest vorgegebene Club-ID.
