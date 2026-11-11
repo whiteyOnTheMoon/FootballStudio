@@ -274,7 +274,7 @@ class ManualSourceWebTests(TestCase):
     def test_xss_input_escaped_and_never_echoed_raw(self):
         response = self.register(title="<img src=x onerror=alert(1)>")
         self.assertEqual(response.status_code, 400)
-        self.assertContains(response, "&lt;img src=x onerror=alert(1)&gt;", html=False)
+        self.assertContains(response, "&lt;img src=x onerror=alert(1)&gt;", status_code=400, html=False)
         self.assertNotIn(b"<img src=x", response.content)
 
     def test_ownership_and_authentication_checked_on_get_and_post(self):
