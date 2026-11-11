@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>Offizielle Recherche vorbereiten · {{ job.club_name }} · FootballStudio</title>
+  <style>
+    :root { color-scheme:dark; --bg:#0b1320; --panel:#172536; --border:#355064; --text:#f1f7fc; --muted:#a6bdc9; --accent:#63ddbf; }
+    * { box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); margin:0; font:1rem/1.55 system-ui,-apple-system,sans-serif; }
+    main { max-width:900px; margin:0 auto; padding:28px 18px 70px; }
+    a { color:var(--accent); overflow-wrap:anywhere; }
+    a:focus-visible { outline:3px solid var(--accent); outline-offset:3px; }
+    h1 { font-size:clamp(1.8rem,5vw,2.5rem); line-height:1.2; margin:12px 0; }
+    h2 { font-size:1.32rem; margin:0 0 13px; }
+    h3 { font-size:1.08rem; }
+    .eyebrow { color:var(--accent); text-transform:uppercase; letter-spacing:.12em; font-size:.8rem; font-weight:800; }
+    .muted { color:var(--muted); }
+    .panel { margin:20px 0; border:1px solid var(--border); border-radius:14px; padding:clamp(15px,4vw,26px); background:var(--panel); }
+    .notice { border-left:4px solid var(--accent); background:#102c2e; padding:13px 16px; }
+    .warn { border-left:4px solid #ffd49c; background:#453522; padding:13px 16px; }
+    .choice { border-top:1px solid var(--border); padding:16px 0; }
+    .choice:first-of-type { border-top:0; }
+    .item { border-top:1px solid var(--border); padding:11px 0; }
+    .meta { color:var(--muted); font-size:.9rem; overflow-wrap:anywhere; }
+    code { overflow-wrap:anywhere; }
+    footer { color:var(--muted); margin-top:28px; font-size:.88rem; }
+  </style>
+</head>
+<body>
+<main>
+  <a href="{% url 'research-job' job.pk %}">← Zum aktuellen Recherchedossier</a>
+  <p class="eyebrow">FootballStudio · M2 · Geschützter Recherche-Preflight</p>
+  <h1>Offizielle Website-Recherche vorbereiten</h1>
+  <p class="muted">Job #{{ job.pk }} · Verein: {{ job.club_name }} · Liga: {{ job.league_name }} · {{ job.country_code }}</p>
+  <p class="notice">
+    <strong>Nur Vorabprüfung, kein Websiteabruf:</strong>
+    Diese Ansicht zeigt ausschließlich bereits im eigenen Recherchedossier gespeicherte und
+    persönlich bestätigte Quellen. Sie ruft weder eine offizielle Website noch
+    <code>robots.txt</code> ab, startet keine Recherche und verändert keine Daten.
+    Deine frühere manuelle Bestätigung ersetzt keine spätere, erneute Zustimmung zum
+    konkreten Abruf.
+  </p>
+
+  <section class="panel" aria-labelledby="options-heading">
+    <h2 id="options-heading">Bereits manuell bestätigte Quellen</h2>
+    {% if dossier %}
+      <p class="meta">Aktueller Dossiostand: Version {{ dossier.version }}. Ältere Quellen-IDs werden nicht akzeptiert.</p>
+    {% else %}
+      <p>Für diesen Job gibt es noch kein Recherchedossier.</p>
+    {% endif %}
+
+    {% for choice in choices %}
+      <article class="choice">
+        <h3>{{ choice.source_title|default:choice.source_url }}</h3>
+        <p>Quelle #{{ choice.source_id }} ·
+          {% if choice.context == "club" %}vom Nutzer bestätigte Vereinsquelle
+          {% else %}vom Nutzer bestätigte Ligaquelle{% endif %}
+        </p>
+        <p class="meta">Domain: {{ choice.domain }} · manuell geprüft: {{ choice.confirmation_checked_at }}</p>
+        <p><a href="{% url 'research-preflight' job.pk %}?source_id={{ choice.source_id }}">Vorabprüfung dieser Quelle ansehen</a></p>
+      </article>
+    {% empty %}
+      <p>Noch keine für die Vorabprüfung geeignete und manuell bestätigte offizielle Vereins- oder Ligaquelle vorhanden.</p>
+      <p><a href="{% url 'research-new-source' job.pk %}">Eine offizielle Quelle zuerst selbst prüfen und bestätigen</a></p>
+    {% endfor %}
+    {% if choices|length >= selection_limit %}
+      <p class="meta">Hier werden höchstens {{ selection_limit }} Quellen zur Auswahl gezeigt. Andere gültige Quellen des aktuellen Dossiers bleiben über ihre Quellen-ID erreichbar.</p>
+    {% endif %}
+  </section>
+
+  {% if selected %}
+    <section class="panel" aria-labelledby="details-heading">
+      <h2 id="details-heading">Vorabprüfung: Quelle #{{ selected.source_id }}</h2>
+      <p><strong>Kontext:</strong> {% if selected.context == "club" %}Verein {{ job.club_name }}{% else %}Liga {{ job.league_name }}{% endif %}</p>
+      <p><strong>Manuell bestätigte Domain:</strong> {{ selected.domain }}</p>
+      <p><strong>Gespeicherte Ausgangsseite:</strong> <a href="{{ selected.source_url }}" target="_blank" rel="noopener noreferrer nofollow">{{ selected.source_url }}</a></p>
+      <p><strong>Für späteren robots-Check vorgesehene Adresse:</strong> <code>{{ selected.robots_url }}</code> <span class="meta">(noch nicht angefordert)</span></p>
+      <p><strong>Prüfer-ID:</strong> {{ selected.confirmation_reviewer_id }} · <strong>manueller Prüfzeitpunkt:</strong> {{ selected.confirmation_checked_at }}</p>
+      <p><strong>Eigene Zuordnungsbegründung:</strong> {{ selected.confirmation_basis }}</p>
+      <p class="meta">Die Identität der Website, ihre Nutzungsbedingungen und der manuelle Zugang wurden vom Nutzer bestätigt, nicht unabhängig von FootballStudio ermittelt. Diese Bestätigung gibt keine Freigabe für den automatischen Abruf oder zur Veröffentlichung fremder Inhalte.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="limits-heading">
+      <h2 id="limits-heading">Grenzen eines möglichen späteren Rechercheauftrags</h2>
+      <p><strong>Höchstens {{ selected.max_total_pages }} HTML-Seiten:</strong> die gespeicherte Ausgangsseite und bis zu {{ selected.max_subpages }} relevante, erst auf der Website entdeckte Unterseiten.</p>
+      <p>Die folgenden Bereiche sind <strong>mögliche Themen</strong>, keine bereits gefundenen Seiten oder URL-Vorschläge:</p>
+      <ul>
+        {% for theme in selected.themes %}
+          <li>{{ theme.name }}</li>
+        {% endfor %}
+      </ul>
+      <p>Ein späterer Ablauf muss vor jeder Verbindung die manuelle Domainzuordnung erneut prüfen, die geltenden Website-Bedingungen respektieren und <code>robots.txt</code> erfolgreich einlesen. Nur zulässige HTTPS-Verbindungen mit öffentlicher, geprüfter IP und gültigem TLS-Zertifikat wären erlaubt. Weiterleitungen, 403/429, blockierte Robots-Regeln, CAPTCHA, private IPs und nicht-HTML dürfen nicht umgangen werden.</p>
+      <p>Ergebnisse wären höchstens Seiten-URL, knapper Titel, wenige Überschriften und Abrufzeitpunkt. <strong>Keine</strong> kompletten Artikel, keine automatische Faktenfreigabe und keine Erstellung eines Films.</p>
+      <p class="warn"><strong>Recherche noch nicht startbar:</strong> Für einen tatsächlichen einmaligen Abruf fehlen noch ein gesonderter Zustimmungsdialog mit CSRF-Schutz, serverseitiger Schreib-/Request-Drosselung und ein zeitlich begrenzter Worker. Dieser Preflight erzeugt weder einen Auftrag noch ein Einverständnistoken.</p>
+    </section>
+  {% endif %}
+  <footer>Nur angemeldeter Job-Eigentümer · Lesender Preflight · Keine Datenbankänderung · Kein Netzwerkzugriff</footer>
+</main>
+</body>
+</html>
