@@ -252,6 +252,78 @@ Quellenaufnahme sowie spätere stützende/widersprechende Belegreviews
 und \`verified\`-Freigaben bleiben separate Schritte in #143 und #138.
 **Keine neue Datenbankmigration** erforderlich.
 
+
+## M2 – Offizielle Club-/Ligaquelle manuell im Browser bestätigen (#148)
+
+Der **bewusst manuelle** Einstieg in die Recherche ist jetzt für
+eingeloggte Job-Eigentümer unter
+\`/jobs/<job_id>/research/sources/new/\` verfügbar. Die leere
+und die aktuellste Dossieransicht zeigen einen Link zur Eingabemaske.
+Historische Versionen bleiben lesend. Im Formular werden Job, Verein,
+Liga und Quellenkontext (offizielle Vereins- oder Ligaseite) sichtbar
+angezeigt. Der Nutzer muss eine konkrete Seite **außerhalb der App
+selbst im Browser geprüft haben** und explizit bestätigen:
+
+1. Domain und Inhalt sind wirklich dem ausgewählten Verein / der Liga
+   zugeordnet; die Zuordnung erfolgt **nicht automatisch** durch Wikidata
+   oder eine bloße URL.
+2. Die Website-Bedingungen wurden zur manuellen Quellenreferenz geprüft;
+   die Erklärung begründet **keine** Lizenz für fremde Texte oder Videos.
+3. Die konkrete Seite war für den Nutzer manuell zugänglich; ein
+   öffentliches GET vom FootballStudio-Server wird **nicht** ausgeführt.
+
+Ein kurzer eigener Zuordnungsgrund, URL und Seitentitel sind Pflicht.
+Serverseitig werden nur kanonische DNS-artige HTTPS-Adressen ohne
+Credentials, Port, URL-Fragmente, Query, unzulässige Steuerzeichen oder
+private/reservierte Hostnamen akzeptiert. IP-Literale, interne Testdomains,
+ungeeignete Downloads und Transfermarkt als angebliche Club-/Ligaquelle
+sind ausgeschlossen. **Es gibt weder DNS-Auflösung noch HTTP, robots
+Fetch, Redirect-Follow-up, Artikel-Scraping oder KI/LLM-Aufruf** in
+diesem Eingabepfad.
+
+**Quellenprovenienz und Zeitangaben:** Die additive Migration
+\`production.0007_source_confirmation\` ergänzt das Modell
+\`SourceConfirmation\` mit genau einem Datensatz je ausdrücklich
+manuell geprüfter \`SourceReference\` und Dossierversion. Er enthält
+Prüfer, UTC-Bestätigungszeit, überprüften Hostnamen, bestätigte
+Identitäts-/Bedingungs-/Zugangs-Aussagen und kurze eigene
+Zuordnungsbegründung. Die Quelle bekommt
+\`access_state=accessible\` **nur aufgrund der ausdrücklichen
+manuellen Browserprüfung**, nicht aufgrund eines Serverabrufs. Das
+vorhandene \`retrieved_at\`-Datenfeld erhält technisch den manuellen
+Prüfzeitpunkt; die UI kennzeichnet dies explizit **„Manuell geprüft
+(kein Serverabruf)“**, statt einen Abruf des Servers vorzutäuschen.
+\`load_fact_dossier\` liefert die Provenienz in
+\`source.manual_confirmation\` für den Eigentümer, oder \`null\` für
+historische / anders importierte Quellen. Das bestätigt ausdrücklich
+**nicht** die Faktenwahrheit.
+
+**Transaktion und Limits:** Besitzerprüfung geht dem Schreibzugriff
+voraus, Django-CSRF ist aktiv, alle Eingaben werden serverseitig
+validiert. \`expected_version=0\` ist ausschließlich für einen
+erstmals leeren Job vorgesehen. Das Produkt sperrt den Job vor
+Versionsvergabe via \`SELECT FOR UPDATE\` und erstellt ein neues,
+vollständiges Dossier inklusive bisheriger Quellen, Fakten,
+Beleg-/Review-Historie **und** aller zuvor abgelegten manuellen
+Quellenbestätigungen. Exakt identische Einsendungen sind auch nach
+einem Versionswechsel idempotent; bei abweichenden Daten zur gleichen
+URL folgt **409**, bei veraltetem Stand ebenfalls **409**.
+Das datenbankbasierte Limit umfasst höchstens zehn neue
+Dossierversionen pro Job/Minute und wird vor der Versionierung geprüft;
+eine zusätzliche globale IP-Request-Drosselung ist **nicht** enthalten.
+Es gibt **keine automatische Faktverifikation**, und die
+manuell bestätigten Quellen werden in der Faktvorschlagsmaske
+weiterhin nur für **unverified** Facts und Evidence-Rolle **unknown**
+bereitgestellt.
+
+**Deployment:** Vor \`0007\` das PostgreSQL-Backup erzeugen und die
+Testwiederherstellung in einer Wegwerf-Datenbank erfolgreich prüfen.
+Danach normal \`git pull --ff-only\`, Compose-Rebuild und
+\`showmigrations production\`; produktives Datenvolume niemals löschen.
+Die Domainfreigabe für späteres robot-/SSRF-konformes automatisiertes
+Crawling sowie eine inhaltliche Freigabe einzelner Fakten bleiben
+getrennte, explizite Roadmap-Schritte (#125/#143/#138).
+
 ## Grundregeln
 
 1. Der **zur Laufzeit ausgewählte** Verein (Land → Liga → Verein, bei Bedarf manuell angelegt) bestimmt den Recherchekontext. Es gibt keine fest vorgegebene Club-ID.

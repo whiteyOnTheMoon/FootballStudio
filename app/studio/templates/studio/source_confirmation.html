@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>Offizielle Quelle manuell bestätigen · {{ job.club_name }} · FootballStudio</title>
+  <style>
+    :root { color-scheme:dark; --bg:#0b1320; --panel:#172536; --border:#355064; --text:#f1f7fc; --muted:#a6bdc9; --accent:#63ddbf; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:1rem/1.5 system-ui,-apple-system,sans-serif; }
+    main { max-width:820px; margin:0 auto; padding:30px 18px 70px; }
+    a { color:var(--accent); }
+    a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-visible { outline:3px solid var(--accent); outline-offset:3px; }
+    h1 { font-size:clamp(1.8rem,5vw,2.5rem); margin:12px 0; line-height:1.2; }
+    h2 { font-size:1.25rem; }
+    p { margin:12px 0; }
+    .muted { color:var(--muted); }
+    .eyebrow { color:var(--accent); text-transform:uppercase; letter-spacing:.1em; font-weight:800; font-size:.8rem; }
+    .panel { border:1px solid var(--border); border-radius:14px; background:var(--panel); padding:clamp(15px,4vw,27px); margin:24px 0; }
+    .notice { background:#112d30; border-left:4px solid var(--accent); padding:13px 16px; }
+    .error { background:#4b2830; border-left:4px solid #ffb0b0; padding:13px 16px; color:#ffe1e1; }
+    .field { margin:18px 0; }
+    label { display:block; margin-bottom:7px; font-weight:750; }
+    input:not([type=checkbox]), textarea, select { display:block; width:100%; padding:12px; border:1px solid #7794a6; border-radius:8px; background:#0c1826; color:var(--text); font:inherit; max-width:100%; }
+    .help { display:block; font-size:.88rem; color:var(--muted); margin-top:6px; }
+    .check { display:flex; align-items:flex-start; gap:12px; margin:20px 0; }
+    .check input { width:22px; height:22px; margin:3px 0 0; flex-shrink:0; accent-color:var(--accent); }
+    .check label { margin:0; font-weight:550; }
+    ul.errorlist { color:#ffb9b9; padding-left:20px; margin:6px 0; }
+    button { cursor:pointer; border:0; background:var(--accent); color:#082018; padding:14px 19px; border-radius:9px; font:inherit; font-weight:800; }
+    footer { font-size:.88rem; color:var(--muted); margin-top:28px; }
+  </style>
+</head>
+<body>
+<main>
+  <a href="{% url 'research-job' job.pk %}">← Zum aktuellen Recherchedossier</a>
+  <p class="eyebrow">FootballStudio · M2 · Quellenfreigabe</p>
+  <h1>Offizielle Quelle selbst bestätigen</h1>
+  <p class="muted">
+    Job #{{ job.pk }} · <strong>{{ job.club_name }}</strong>
+    · Liga: {{ job.league_name }} · {{ job.country_code }}
+    · Aktueller Dossiostand: {% if latest_version %}{{ latest_version }}{% else %}noch keiner{% endif %}
+  </p>
+
+  <p class="notice">
+    <strong>Keine automatische Recherche:</strong> Du trägst ausschließlich eine Seite ein,
+    die du bereits selbst im Browser geöffnet und geprüft hast. FootballStudio ruft diese
+    Website weder beim Öffnen noch beim Speichern ab. Die Bestätigung dokumentiert
+    deine eigene Prüfung der Zuordnung und Bedingungen. Sie bestätigt <strong>nicht</strong>
+    die inhaltliche Richtigkeit einzelner Vereinsfakten oder Veröffentlichungsrechte.
+  </p>
+
+  {% if error_message %}
+    <p role="alert" class="error">{{ error_message }}</p>
+  {% endif %}
+
+  <section class="panel" aria-labelledby="source-heading">
+    <h2 id="source-heading">Quelle zu {{ job.club_name }} oder {{ job.league_name }} erfassen</h2>
+    <form method="post" action="{% url 'research-new-source' job.pk %}">
+      {% csrf_token %}
+      {{ form.expected_version }}
+      {{ form.non_field_errors }}
+
+      <div class="field">
+        <label for="{{ form.context.id_for_label }}">{{ form.context.label }}</label>
+        {{ form.context }}
+        {{ form.context.errors }}
+        <span class="help">Bei „Verein“ muss die Seite tatsächlich zu {{ job.club_name }} gehören; bei „Liga“ zur {{ job.league_name }}.</span>
+      </div>
+
+      <div class="field">
+        <label for="{{ form.url.id_for_label }}">{{ form.url.label }}</label>
+        {{ form.url }}
+        {{ form.url.errors }}
+        <span class="help">Nur öffentliche HTTPS-Domains, ohne Anmeldung, Port, Query-Parameter oder Fragment. Bitte die URL vorher eigenständig prüfen.</span>
+      </div>
+
+      <div class="field">
+        <label for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
+        {{ form.title }}
+        {{ form.title.errors }}
+      </div>
+
+      <div class="field">
+        <label for="{{ form.basis.id_for_label }}">{{ form.basis.label }}</label>
+        {{ form.basis }}
+        {{ form.basis.errors }}
+        <span class="help">{{ form.basis.help_text }}</span>
+      </div>
+
+      <div class="check">
+        {{ form.identity_confirmed }}
+        <label for="{{ form.identity_confirmed.id_for_label }}">{{ form.identity_confirmed.label }}</label>
+      </div>
+      {{ form.identity_confirmed.errors }}
+
+      <div class="check">
+        {{ form.terms_confirmed }}
+        <label for="{{ form.terms_confirmed.id_for_label }}">{{ form.terms_confirmed.label }}</label>
+      </div>
+      {{ form.terms_confirmed.errors }}
+
+      <div class="check">
+        {{ form.access_confirmed }}
+        <label for="{{ form.access_confirmed.id_for_label }}">{{ form.access_confirmed.label }}</label>
+      </div>
+      {{ form.access_confirmed.errors }}
+
+      <button type="submit">Manuelle Quellenprüfung dokumentieren</button>
+    </form>
+  </section>
+
+  <footer>Eigentümergeschützt · Nur Quellenmetadaten · Kein Crawler · Keine automatische Faktenfreigabe</footer>
+</main>
+</body>
+</html>
