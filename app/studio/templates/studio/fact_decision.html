@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>Faktenentscheidung · {{ job.club_name }} · FootballStudio</title>
+  <style>
+    :root { color-scheme:dark; --bg:#0b1320; --panel:#172536; --border:#355064; --text:#f1f7fc; --muted:#a6bdc9; --accent:#63ddbf; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:1rem/1.55 system-ui,-apple-system,sans-serif; }
+    main { max-width:840px; margin:0 auto; padding:28px 18px 70px; }
+    a { color:var(--accent); overflow-wrap:anywhere; }
+    a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-visible { outline:3px solid var(--accent); outline-offset:3px; }
+    h1 { font-size:clamp(1.8rem,5vw,2.5rem); line-height:1.2; margin:12px 0; }
+    h2 { font-size:1.3rem; margin:0 0 13px; }
+    h3 { font-size:1.05rem; margin:.3rem 0; }
+    .eyebrow { color:var(--accent); text-transform:uppercase; font-size:.8rem; font-weight:800; letter-spacing:.1em; }
+    .muted { color:var(--muted); }
+    .panel { border:1px solid var(--border); background:var(--panel); border-radius:14px; margin:22px 0; padding:clamp(15px,4vw,26px); }
+    .notice { border-left:4px solid var(--accent); background:#102c2e; padding:12px 15px; }
+    .warning { border-left:4px solid #ffc18a; background:#463021; padding:12px 15px; }
+    .error { border-left:4px solid #ffb1b1; background:#4c2730; color:#ffe1e1; padding:12px 15px; }
+    .item { border-top:1px solid var(--border); padding:16px 0; }
+    .item:first-of-type { border-top:0; }
+    .pill { display:inline-block; border:1px solid #789b9d; border-radius:7px; padding:3px 9px; font-size:.9rem; }
+    .contradiction { border-color:#ffc18a; color:#ffc18a; }
+    .field { margin:18px 0; }
+    label { display:block; font-weight:750; margin-bottom:7px; }
+    select, input:not([type=checkbox]), textarea { display:block; width:100%; max-width:100%; padding:12px; border-radius:8px; background:#0c1826; color:var(--text); border:1px solid #7794a6; font:inherit; }
+    .help { color:var(--muted); display:block; margin-top:6px; font-size:.88rem; }
+    .check { display:flex; align-items:flex-start; gap:12px; margin:20px 0; }
+    .check input { width:22px; height:22px; margin-top:3px; flex-shrink:0; accent-color:var(--accent); }
+    .check label { font-weight:550; margin:0; }
+    ul.errorlist { padding-left:20px; color:#ffbaba; }
+    button { border:0; background:var(--accent); color:#082019; font:inherit; font-weight:800; cursor:pointer; border-radius:9px; padding:14px 20px; }
+    .value { background:#101c2b; border-radius:8px; padding:10px 12px; overflow-wrap:anywhere; }
+    footer { margin-top:28px; color:var(--muted); font-size:.88rem; }
+  </style>
+</head>
+<body>
+<main>
+  <a href="{% url 'research-job' job.pk %}">← Zum aktuellen Recherchedossier</a>
+  <p class="eyebrow">FootballStudio · M2 · Menschlicher Faktenreview</p>
+  <h1>Faktenentscheidung für {{ job.club_name }}</h1>
+  <p class="muted">Job #{{ job.pk }} · Dossierversion {{ dossier.version }} · Fakt #{{ fact.pk }}</p>
+  <p class="notice"><strong>Keine automatische Wahrheitsprüfung:</strong> Du entscheidest nach dem eigenen Lesen konkreter Quellen und Gegenbelege. Eine vorhandene URL oder eine „stützend“-Markierung allein reicht niemals zur Verifikation. Jede neue Entscheidung wird mit Begründung und Prüfdatum dokumentiert.</p>
+
+  {% if error_message %}<p class="error" role="alert">{{ error_message }}</p>{% endif %}
+
+  <section class="panel" aria-labelledby="claim-heading">
+    <h2 id="claim-heading">Zu prüfende Aussage</h2>
+    <p><strong>Faktentyp:</strong> {{ fact.predicate }}</p>
+    <p><strong>Aussage:</strong> {{ fact.assertion_text }}</p>
+    <p class="value"><strong>Strukturierter Wert:</strong> {{ fact.value }}</p>
+    {% if is_seasonal %}<p><strong>Bezugszeit / Saison:</strong> {{ fact.value.season }}</p>{% endif %}
+    <p class="muted">Aktueller Status: {{ fact.get_verification_state_display }}</p>
+    {% if old_review %}
+      <h3>Zuletzt dokumentierte Prüfung dieser Version</h3>
+      <p class="muted">Entscheidung: {{ old_review.get_decision_display }} · Prüfer-ID: {{ old_review.reviewer_id }} · Zeitpunkt: {{ old_review.reviewed_at }}</p>
+      <p>{{ old_review.note }}</p>
+    {% else %}
+      <p class="muted">Für diesen Faktenstand liegt noch keine ausdrückliche Reviewentscheidung vor.</p>
+    {% endif %}
+  </section>
+
+  <section class="panel" aria-labelledby="evidence-heading">
+    <h2 id="evidence-heading">Quellen und konkrete Belege ({{ evidence_items|length }})</h2>
+    {% if has_contradiction %}
+      <p class="warning">Ein widersprechender Beleg wurde erfasst. Solange dieser Widerspruch nicht geklärt ist, darf die Aussage nicht als „verifiziert“ eingestuft werden.</p>
+    {% endif %}
+    {% if not has_support %}
+      <p class="warning">Noch kein stützender Beleg vorhanden. „Verifiziert“ erfordert mindestens eine zugängliche, konkret geprüfte stützende Fundstelle.</p>
+    {% endif %}
+    {% for item in evidence_items %}
+      <article class="item">
+        <p>
+          {% if item.role == "supports" %}<span class="pill">Stützend</span>
+          {% elif item.role == "contradicts" %}<span class="pill contradiction">Widersprechend</span>
+          {% elif item.role == "context_only" %}<span class="pill">Nur Kontext</span>
+          {% else %}<span class="pill">Noch nicht bewertet</span>{% endif %}
+          · Quelle #{{ item.source_id }}
+        </p>
+        <h3>{{ item.source_title|default:item.source_url }}</h3>
+        <p><strong>Fundstelle:</strong> {{ item.locator|default:"Keine genaue Fundstelle" }}</p>
+        <p><strong>Eigene Belegnotiz:</strong> {{ item.summary|default:"Noch keine Belegnotiz" }}</p>
+        <p class="muted">Typ: {{ item.source_kind }} · Zugang: {{ item.access_state }}
+          · {% if item.manual %}Manuell geprüft, kein Serverabruf
+          {% else %}Import-/Abrufdatum{% endif %}
+          : {{ item.time }}
+        </p>
+        {% if item.safe_link %}
+          <p><a href="{{ item.safe_link }}" target="_blank" rel="noopener noreferrer nofollow">Originalquelle selbst ansehen</a></p>
+        {% else %}
+          <p class="muted">Quellen-URL nicht als sicherer HTTPS-Link freigegeben.</p>
+        {% endif %}
+      </article>
+    {% empty %}
+      <p>Dieser Fakt hat noch keine zugeordneten Belege. Du kannst ihn als unzureichend belegt oder verworfen dokumentieren.</p>
+    {% endfor %}
+    <p><a href="{% url 'research-review-evidence' job.pk fact.pk %}">Weitere Quellenfundstelle prüfen und Belegrolle ergänzen</a></p>
+  </section>
+
+  <section class="panel" aria-labelledby="decision-heading">
+    <h2 id="decision-heading">Eigene Reviewentscheidung dokumentieren</h2>
+    <p>„Verifiziert“ verlangt einen erreichbaren stützenden Beleg, eigene Inhaltsprüfung, keinen ungeklärten Gegenbeleg und bei Saisonaussagen die übereinstimmende Saison in <strong>allen</strong> stützenden Fundstellen.</p>
+    <form method="post" action="{% url 'research-decide-fact' job.pk fact.pk %}">
+      {% csrf_token %}
+      {{ form.expected_version }}
+      {{ form.non_field_errors }}
+
+      <div class="field">
+        <label for="{{ form.decision.id_for_label }}">{{ form.decision.label }}</label>
+        {{ form.decision }}
+        {{ form.decision.errors }}
+      </div>
+
+      <div class="field">
+        <label for="{{ form.review_note.id_for_label }}">{{ form.review_note.label }}</label>
+        {{ form.review_note }}
+        {{ form.review_note.errors }}
+        <span class="help">{{ form.review_note.help_text }}</span>
+      </div>
+
+      <div class="check">
+        {{ form.source_checked }}
+        <label for="{{ form.source_checked.id_for_label }}">{{ form.source_checked.label }}</label>
+      </div>
+      {{ form.source_checked.errors }}
+
+      {% if is_seasonal %}
+        <div class="check">
+          {{ form.season_checked }}
+          <label for="{{ form.season_checked.id_for_label }}">{{ form.season_checked.label }}</label>
+        </div>
+        {{ form.season_checked.errors }}
+      {% endif %}
+
+      <div class="check">
+        {{ form.review_confirmed }}
+        <label for="{{ form.review_confirmed.id_for_label }}">{{ form.review_confirmed.label }}</label>
+      </div>
+      {{ form.review_confirmed.errors }}
+
+      <button type="submit">Eigene Reviewentscheidung speichern</button>
+    </form>
+  </section>
+  <footer>Nur Job-Eigentümer · Jede Entscheidung mit Prüfprotokoll · Keine automatische Film-/KI-Produktion</footer>
+</main>
+</body>
+</html>
