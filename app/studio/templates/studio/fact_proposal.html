@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>Faktenvorschlag · {{ job.club_name }} · FootballStudio</title>
+  <style>
+    :root { color-scheme:dark; --bg:#0b1320; --panel:#172536; --border:#355064; --text:#f1f7fc; --muted:#a6bdc9; --accent:#63ddbf; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:1rem/1.5 system-ui,-apple-system,sans-serif; }
+    main { max-width:800px; margin:0 auto; padding:30px 18px 65px; }
+    h1 { font-size:clamp(1.8rem,5vw,2.5rem); margin:.7rem 0; line-height:1.2; }
+    h2 { font-size:1.25rem; margin:0 0 18px; }
+    h3 { font-size:1.1rem; }
+    a { color:var(--accent); }
+    .muted { color:var(--muted); }
+    .eyebrow { color:var(--accent); text-transform:uppercase; letter-spacing:.1em; font-weight:800; font-size:.8rem; }
+    .panel { border:1px solid var(--border); border-radius:15px; background:var(--panel); padding:clamp(15px,4vw,28px); margin:22px 0; }
+    .notice { border-left:4px solid var(--accent); padding:12px 16px; background:#102c2e; }
+    .error { color:#ffe1e1; background:#3b222b; border-left:4px solid #fb9c9c; padding:12px; }
+    .field { margin:16px 0; }
+    .field[hidden] { display:none; }
+    label { display:block; font-weight:700; margin-bottom:7px; }
+    input:not([type=checkbox]), textarea, select {
+      display:block; width:100%; font:inherit; color:var(--text);
+      border:1px solid #7794a6; border-radius:8px; background:#0c1826;
+      padding:11px; max-width:100%;
+    }
+    input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible {
+      outline:3px solid var(--accent); outline-offset:2px;
+    }
+    .help { display:block; margin-top:5px; font-size:.88rem; color:var(--muted); }
+    ul.errorlist { color:#ffbaba; padding-left:21px; margin:8px 0; }
+    .confirm { display:flex; gap:12px; align-items:flex-start; margin:18px 0; }
+    .confirm input { width:20px; height:20px; flex-shrink:0; margin-top:4px; accent-color:var(--accent); }
+    .confirm label { margin:0; }
+    button { cursor:pointer; font:inherit; font-weight:800; padding:12px 18px; border:0; border-radius:9px; background:var(--accent); color:#082018; }
+    button:hover { filter:brightness(.94); }
+    footer { margin-top:26px; font-size:.88rem; color:var(--muted); }
+  </style>
+</head>
+<body>
+<main>
+  <a href="{% url 'research-job' job.pk %}">← Zum aktuellen Recherchedossier</a>
+  <p class="eyebrow">FootballStudio · M2 · Manuelle Recherche</p>
+  <h1>Faktenvorschlag für {{ job.club_name }}</h1>
+  <p class="muted">Job #{{ job.pk }} · {{ job.title }} · {{ job.league_name }}</p>
+  <p class="notice">Die Angaben werden ausschließlich als <strong>ungeprüfter Vorschlag</strong> gespeichert. Eine Quelle oder eine Bestätigung dieser Eingabe verifiziert keine Aussage. Keine Website wird automatisch abgerufen und kein Video produziert.</p>
+
+  {% if error_message %}
+    <p class="error" role="alert">{{ error_message }}</p>
+  {% endif %}
+
+  {% if not has_eligible_sources %}
+    <section class="panel">
+      <h2>Noch keine geeignete offizielle Quelle</h2>
+      <p>Für diesen Job ist noch keine zuvor recherchierte, zugängliche offizielle Vereins- oder Ligaquelle gespeichert. Deshalb ist das Erfassen eines belegten Faktenvorschlags noch gesperrt.</p>
+      <p>Die bestätigungspflichtige Quellenaufnahme ist ein separates Roadmap-Arbeitspaket. Es wird hier keine beliebige Webadresse automatisch als offizielle Quelle übernommen.</p>
+      <a href="{% url 'research-job' job.pk %}">Zurück zum Dossier</a>
+    </section>
+  {% else %}
+    <section class="panel" aria-labelledby="form-heading">
+      <h2 id="form-heading">Aussage und Quellenbeleg manuell erfassen</h2>
+      <p class="muted">Dossierversion {{ current_version }}. Bitte nur eine einzelne Aussage pro Formular eingeben. Andere Eingabefelder bleiben leer.</p>
+      <form method="post" action="{% url 'research-new-fact' job.pk %}">
+        {% csrf_token %}
+        {{ form.expected_version }}
+        {{ form.non_field_errors }}
+
+        <div class="field">
+          <label for="{{ form.source.id_for_label }}">{{ form.source.label }}</label>
+          {{ form.source }}
+          {{ form.source.errors }}
+          <span class="help">Nur bereits importierte offizielle Quellen dieses Projekts. Titel und Abrufzeit dienen der Zuordnung, nicht als Wahrheitsnachweis.</span>
+        </div>
+
+        <div class="field">
+          <label for="{{ form.predicate.id_for_label }}">{{ form.predicate.label }}</label>
+          {{ form.predicate }}
+          {{ form.predicate.errors }}
+        </div>
+
+        <div class="field" data-fact-field="founded_year">
+          <label for="{{ form.founded_year.id_for_label }}">{{ form.founded_year.label }}</label>
+          {{ form.founded_year }}
+          {{ form.founded_year.errors }}
+        </div>
+        <div class="field" data-fact-field="stadium_name">
+          <label for="{{ form.stadium_name.id_for_label }}">{{ form.stadium_name.label }}</label>
+          {{ form.stadium_name }}
+          {{ form.stadium_name.errors }}
+        </div>
+        <div class="field" data-fact-field="competition">
+          <label for="{{ form.competition.id_for_label }}">{{ form.competition.label }}</label>
+          {{ form.competition }}
+          {{ form.competition.errors }}
+        </div>
+        <div class="field" data-fact-field="league_name">
+          <label for="{{ form.league_name.id_for_label }}">{{ form.league_name.label }}</label>
+          {{ form.league_name }}
+          {{ form.league_name.errors }}
+        </div>
+        <div class="field" data-fact-field="season">
+          <label for="{{ form.season.id_for_label }}">{{ form.season.label }}</label>
+          {{ form.season }}
+          {{ form.season.errors }}
+          <span class="help">Einzeljahr oder Saison mit zwei Jahren, z. B. 2025/26.</span>
+        </div>
+        <div class="field" data-fact-field="position">
+          <label for="{{ form.position.id_for_label }}">{{ form.position.label }}</label>
+          {{ form.position }}
+          {{ form.position.errors }}
+        </div>
+
+        <div class="field">
+          <label for="{{ form.assertion_text.id_for_label }}">{{ form.assertion_text.label }}</label>
+          {{ form.assertion_text }}
+          {{ form.assertion_text.errors }}
+          <span class="help">{{ form.assertion_text.help_text }}</span>
+        </div>
+        <div class="field">
+          <label for="{{ form.locator.id_for_label }}">{{ form.locator.label }}</label>
+          {{ form.locator }}
+          {{ form.locator.errors }}
+          <span class="help">{{ form.locator.help_text }}</span>
+        </div>
+        <div class="field">
+          <label for="{{ form.evidence_summary.id_for_label }}">{{ form.evidence_summary.label }}</label>
+          {{ form.evidence_summary }}
+          {{ form.evidence_summary.errors }}
+          <span class="help">Beschreibe in eigenen Worten knapp, was an dieser Stelle tatsächlich steht.</span>
+        </div>
+
+        <div class="confirm">
+          {{ form.source_read_confirmed }}
+          <label for="{{ form.source_read_confirmed.id_for_label }}">{{ form.source_read_confirmed.label }}</label>
+        </div>
+        {{ form.source_read_confirmed.errors }}
+
+        <button type="submit">Ungeprüften Faktenvorschlag speichern</button>
+      </form>
+    </section>
+  {% endif %}
+  <footer>Eigentümergeschützt · Kein automatisches Verifizieren · Keine kostenpflichtigen Aufrufe</footer>
+</main>
+<script>
+  (function () {
+    "use strict";
+    const selector = document.getElementById("id_predicate");
+    if (!selector) return;
+    const names = {
+      founded_year: ["founded_year"],
+      stadium_name: ["stadium_name"],
+      competition_win: ["competition", "season"],
+      league_membership: ["league_name", "season"],
+      standings_position: ["competition", "season", "position"]
+    };
+    function update() {
+      const visible = new Set(names[selector.value] || []);
+      document.querySelectorAll("[data-fact-field]").forEach((group) => {
+        const active = visible.has(group.dataset.factField);
+        group.hidden = !active;
+        const field = group.querySelector("input");
+        if (field) field.disabled = !active;
+      });
+    }
+    selector.addEventListener("change", update);
+    update();
+  })();
+</script>
+</body>
+</html>
