@@ -148,10 +148,12 @@ def decide_fact_review(*, owner, job_id, expected_version, fact_id,
                 if not season_checked:
                     raise ValueError("Seasonal claims require explicit season cross-check.")
                 season = fact.value["season"]
-                if not any(
+                if not all(
                     season in (e.locator + " " + e.summary) for e in support
                 ):
-                    raise ValueError("Supporting evidence must locate the specific season.")
+                    raise ValueError(
+                        "Every supporting locator must identify the specific season."
+                    )
         elif decision == Fact.Verification.CONFLICTED:
             if not source_checked or not support or not contradictions:
                 raise ValueError("Conflicted requires checked supporting AND contradicting evidence.")
