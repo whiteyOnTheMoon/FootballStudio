@@ -102,3 +102,125 @@ class ProductionJob(models.Model):
             self.started_at, self.finished_at = old_started, old_finished
             raise
         self.save()
+
+
+class FactDossier(models.Model):
+    """A numbered research snapshot associated with a runtime-selected job."""
+
+    job = models.ForeignKey(
+        ProductionJob, on_delete=models.CASCADE, related_name="fact_dossiers",
+    )
+    version = models.PositiveIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=("job", "version"), name="production_dossier_job_version_uniq",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(version__gte=1), name="production_dossier_positive_version",
+            ),
+        ]
+
+
+class SourceReference(models.Model):
+    """A reference to an identifiable source, not proof of any particular claim."""
+
+    class Kind(models.TextChoices):
+        WIKIDATA = "wikidata", "Wikidata"
+        WIKIPEDIA = "wikipedia", "Wikipedia"
+        CLUB_OFFICIAL = "club_official", "Official club site"
+        NEWS = "news", "News"
+        OTHER = "other", "Other"
+
+    class Access(models.TextChoices):
+        ACCESSIBLE = "accessible", "Accessible"
+        NOT_FOUND = "not_found", "Not found"
+        UNAVAILABLE = "unavailable", "Unavailable"
+        RESTRICTED = "restricted", "Restricted"
+        ERROR = "error", "Error"
+
+    dossier = models.ForeignKey(
+        FactDossier, on_delete=models.CASCADE, related_name="sources",
+    )
+    url = models.URLField(max_length=750)
+    source_kind = models.CharField(max_length=16, choices=Kind.choices)
+    title = models.CharField(max_length=250, blank=True)
+    external_id = models.CharField(max_length=120, blank=True)
+    retrieved_at = models.DateTimeField()
+    access_state = models.CharField(max_length=16, choices=Access.choices)
+
+
+class Fact(models.Model):
+    """An atomic statement; never treated as verified without supporting evidence."""
+
+    class Verification(models.TextChoices):
+        UNVERIFIED = "unverified", "Unverified"
+        VERIFIED = "verified", "Verified"
+        CONFLICTED = "conflicted", "Conflicted"
+        INSUFFICIENT = "insufficient_sources", "Insufficient sources"
+        REJECTED = "rejected", "Rejected"
+
+    dossier = models.ForeignKey(
+        FactDossier, on_delete=models.CASCADE, related_name="facts",
+    )
+    predicate = models.CharField(max_length=100)
+    value = models.JSONField(null=True, blank=True)
+    assertion_text = models.TextField()
+    verification_state = models.CharField(
+        max_length=24, choices=Verification.choices, default=Verification.UNVERIFIED,
+    )
+
+    def clean(self):
+        super().clean()
+        if self.verification_state == self.Verification.VERIFIED:
+            # A saved, accessible supporting evidence record is a precondition,
+            # NOT itself sufficient proof that the assertion is true. Review of
+            # evidence content is handled in FS-014c, not automatically here.
+            has_support = (
+                self.pk is not None
+                and self.evidence.filter(
+                    role=Evidence.Role.SUPPORTS,
+                    source__access_state=SourceReference.Access.ACCESSIBLE,
+                ).exists()
+            )
+            if not has_support:
+                raise ValidationError({
+                    "verification_state": "A verified fact requires accessible supporting evidence.",
+                })
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+
+class Evidence(models.Model):
+    """A short evidence locator for one fact, tied to a source in its own dossier."""
+
+    class Role(models.TextChoices):
+        SUPPORTS = "supports", "Supports"
+        CONTRADICTS = "contradicts", "Contradicts"
+        CONTEXT_ONLY = "context_only", "Context only"
+        UNKNOWN = "unknown", "Unknown"
+
+    fact = models.ForeignKey(
+        Fact, on_delete=models.CASCADE, related_name="evidence",
+    )
+    source = models.ForeignKey(
+        SourceReference, on_delete=models.PROTECT, related_name="evidence",
+    )
+    locator = models.CharField(max_length=250)
+    summary = models.TextField(blank=True)
+    role = models.CharField(max_length=16, choices=Role.choices, default=Role.UNKNOWN)
+
+    def clean(self):
+        super().clean()
+        if self.fact_id and self.source_id and (
+            self.fact.dossier_id != self.source.dossier_id
+        ):
+            raise ValidationError("Fact and evidence source must belong to the same dossier.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)

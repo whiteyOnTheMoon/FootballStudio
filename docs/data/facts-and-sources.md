@@ -1,9 +1,15 @@
 # FS-005a – Fakten-, Beleg- und Quellenmodell (MVP)
 
-**Status:** M0-Spezifikation, noch keine implementierten Django-Modelle.  
+**Status:** M0-Spezifikation; erste persistente M2-Dossier-Modelle in PR #120 (#119).  
 **Roadmap:** FS-005, M0 / Seite 3 (Fakten belegen, Konflikte kennzeichnen) und M2.  
 **Issue:** [#10](https://github.com/whiteyOnTheMoon/FootballStudio/issues/10).  
 **Abhängigkeiten:** [Pipeline-Verträge](../architecture/pipeline-contracts.md) und [ADR-0001](../architecture/ADR-0001-mvp-stack.md).
+
+## Implementierter M2-Teilumfang (#119)
+
+`FactDossier` ist pro `ProductionJob` und Versionsnummer eindeutig. `SourceReference`, `Fact` und `Evidence` sind relationale Django-Modelle; Belege müssen dieselbe Dossier-Version referenzieren wie ihr Fakt. `load_fact_dossier(owner=..., job_id=..., version=...)` liefert einen JSON-serialisierbaren, nur für den Job-Eigentümer lesbaren Snapshot. Ohne konkret gespeicherten, stützenden Beleg einer erreichbaren Quelle darf `Fact.save()` nicht den Status `verified` erhalten. **Auch ein solcher Beleg ersetzt keine inhaltliche Quellenprüfung.**
+
+Die Modelle/lesende Schnittstelle sind noch nicht an die Web-UI oder die externe Recherche angebunden. Insbesondere erfolgt **kein** automatischer Wikidata-Import, keine automatische Fakten-Verifikation und keine KI/TTS-Ausgabe. M1-Testjobs bleiben unverändert. Die beschriebene Datenstruktur ist eine Grundlage; weitergehende Belegprüfung und Import folgen in #31/#32/#33.
 
 ## Grundregeln
 
