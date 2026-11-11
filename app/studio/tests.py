@@ -1,6 +1,6 @@
 """HTTP and database checks for the protected studio."""
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 
@@ -44,3 +44,30 @@ class HealthTests(TestCase):
         self.assertEqual(response.content, b"unavailable")
         self.assertEqual(response["Cache-Control"], "no-store")
         self.assertNotIn(b"sensitive-database", response.content)
+
+
+@override_settings(
+    ALLOWED_HOSTS=["studio2.ap-pixels.com"],
+    SECURE_SSL_REDIRECT=True,
+    SECURE_REDIRECT_EXEMPT=[r"^healthz/$"],
+    SECURE_PROXY_SSL_HEADER=("HTTP_X_FORWARDED_PROTO", "https"),
+    CSRF_TRUSTED_ORIGINS=["https://studio2.ap-pixels.com"],
+)
+class ProductionTunnelReadinessTests(TestCase):
+    def test_healthcheck_with_explicit_allowed_production_host_returns_200(self):
+        response = self.client.get(
+            reverse("healthz"),
+            HTTP_HOST="studio2.ap-pixels.com",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b"ok")
+
+    def test_regular_plain_http_request_redirects_to_public_https(self):
+        response = self.client.get(
+            reverse("login"),
+            HTTP_HOST="studio2.ap-pixels.com",
+        )
+        self.assertEqual(response.status_code, 301)
+        self.assertEqual(
+            response["Location"], "https://studio2.ap-pixels.com/accounts/login/"
+        )
