@@ -286,18 +286,24 @@ class OfficialResearchPreflightTests(TestCase):
             browser.get(self.url, {"source_id": str(source.pk)}).status_code,
             200,
         )
+        # In production CSRF middleware rejects a token-less write *before*
+        # Django reaches @require_GET. Both layers remain fail-closed.
         self.assertEqual(
             browser.post(
+                self.url, {"source_id": str(source.pk), "allow_crawl": "on"},
+            ).status_code, 403,
+        )
+        self.assertEqual(
+            self.client.post(
                 self.url, {"source_id": str(source.pk), "allow_crawl": "on"},
             ).status_code, 405,
         )
         self.assertEqual(
-            browser.put(self.url, "body", content_type="text/plain").status_code,
-            405,
+            self.client.put(
+                self.url, "body", content_type="text/plain",
+            ).status_code, 405,
         )
-        self.assertEqual(
-            browser.delete(self.url).status_code, 405,
-        )
+        self.assertEqual(self.client.delete(self.url).status_code, 405)
         self.assertEqual(
             count,
             (
