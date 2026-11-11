@@ -7,7 +7,8 @@ No facts are marked verified, no text articles are saved and no paid APIs run.
 from datetime import datetime, timezone
 from html.parser import HTMLParser
 from urllib.robotparser import RobotFileParser
-from urllib.parse import urlsplit
+from urllib.parse import unquote, urlsplit
+import re
 import time
 
 from .models import ProductionJob
@@ -59,6 +60,65 @@ class _PageOutline(HTMLParser):
             self._parts = []
 
 
+class _RobotsGate:
+    """Conservative overlay for Python's first-match robots parser.
+
+    Python 3.12's RobotFileParser uses first matching rule, while RFC 9309
+    specifies longest match and merging matching groups. We additionally
+    honor ALL applicable explicit Disallow patterns, even where an Allow
+    exception exists. This may skip otherwise permitted pages, but can never
+    bypass an explicit Disallow because of ordering or duplicate groups.
+    """
+
+    def __init__(self, parser, text):
+        self.parser = parser
+        self.groups = []
+        agents, rules = [], []
+        for raw in text.splitlines():
+            line = raw.split("#", 1)[0].strip()
+            if not line:
+                if agents and rules:
+                    self.groups.append((agents, rules))
+                    agents, rules = [], []
+                continue
+            name, colon, value = line.partition(":")
+            if not colon:
+                continue
+            name, value = name.strip().lower(), value.strip()
+            if name == "user-agent":
+                if agents and rules:
+                    self.groups.append((agents, rules))
+                    agents, rules = [], []
+                if value:
+                    agents.append(value.lower())
+            elif name in ("allow", "disallow") and agents:
+                rules.append((name, value))
+        if agents:
+            self.groups.append((agents, rules))
+
+    def can_fetch(self, agent, url):
+        if not self.parser.can_fetch(agent, url):
+            return False
+        product = agent.split("/", 1)[0].lower()
+        matching = [g for g in self.groups
+                    if any(a != "*" and a in product for a in g[0])]
+        if not matching:
+            matching = [g for g in self.groups if "*" in g[0]]
+        path = urlsplit(url).path or "/"
+        # Use both encoded and decoded variants to avoid underblocking
+        # when an origin decodes URI path segments before routing.
+        for _, rules in matching:
+            for directive, pattern in rules:
+                if directive != "disallow" or not pattern:
+                    continue
+                end_anchor = pattern.endswith("$")
+                escaped = re.escape(pattern.rstrip("$")).replace(r"\*", ".*")
+                regex = "^" + escaped + ("$" if end_anchor else "")
+                if re.match(regex, path) or re.match(regex, unquote(path)):
+                    return False
+        return True
+
+
 def _robots_policy(homepage_url):
     canonical, host = _checked_url(homepage_url)
     robots_url = f"https://{host}/robots.txt"
@@ -84,7 +144,7 @@ def _robots_policy(homepage_url):
     delay = max(_MIN_DELAY_SECONDS, delay)
     if delay > _MAX_DELAY_SECONDS:
         raise WebsiteFetchError("crawl_delay_too_long")
-    return robots_url, parser, delay
+    return robots_url, _RobotsGate(parser, contents), delay
 
 
 def _outline(url, html):
