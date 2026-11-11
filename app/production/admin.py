@@ -16,6 +16,8 @@ class ProductionJobAdmin(admin.ModelAdmin):
         "owner", "club", "country_code", "league_name", "club_name",
         "kind", "language", "status", "title", "created_at", "updated_at",
         "started_at", "finished_at", "output_path", "error_message",
+        "manual_market_value_amount", "manual_market_value_currency",
+        "manual_market_value_as_of", "manual_market_value_source_url",
     )
     def has_add_permission(self, request):
         return False
