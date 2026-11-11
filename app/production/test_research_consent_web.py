@@ -183,7 +183,7 @@ class OneTimeResearchConsentWebTests(TestCase):
         self.assertEqual(first.url, second.url)
         self.assertEqual(OfficialResearchRequest.objects.count(), 1)
         changed = self.approve(payload=self.payload())
-        self.assertEqual(changed.status_code, 429)
+        self.assertEqual(changed.status_code, 409)
         self.assertEqual(OfficialResearchRequest.objects.count(), 1)
 
     def test_cancel_is_authorized_csrf_post_only_and_idempotent(self):
