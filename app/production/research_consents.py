@@ -11,7 +11,7 @@ owner, robots/TLS/DNS/terms and acquire a bounded single-use execution lock.
 from datetime import timedelta
 from uuid import UUID
 
-from django.db import transaction
+from django.db import models, transaction
 from django.utils import timezone
 
 from .models import (
@@ -111,10 +111,26 @@ def record_one_time_research_consent(
                 "This submission was already used, cancelled or expired."
             )
 
+        # A killed worker's lease is terminal, not eligible for retry.
+        # Clear its active DB uniqueness slot under the same job lock.
+        OfficialResearchRequest.objects.filter(
+            job=job,
+            status=OfficialResearchRequest.Status.RUNNING,
+            lease_expires_at__lte=now,
+        ).update(
+            status=OfficialResearchRequest.Status.FAILED,
+            failure_code="worker_lease_expired",
+            finished_at=now, lease_key=None,
+        )
         active = OfficialResearchRequest.objects.filter(
             job=job,
-            status=OfficialResearchRequest.Status.PENDING,
-            expires_at__gt=now,
+            status__in=(
+                OfficialResearchRequest.Status.PENDING,
+                OfficialResearchRequest.Status.RUNNING,
+            ),
+        ).filter(
+            models.Q(status=OfficialResearchRequest.Status.RUNNING)
+            | models.Q(expires_at__gt=now)
         )
         if active.exists():
             raise ResearchConsentConflict("An unexpired request already exists for this job.")
@@ -166,16 +182,36 @@ def cancel_one_time_research_consent(*, owner, job_id, request_id):
         ).first()
         if row is None:
             raise OfficialResearchRequest.DoesNotExist
-        if row.status != OfficialResearchRequest.Status.PENDING:
+        if row.status not in (
+            OfficialResearchRequest.Status.PENDING,
+            OfficialResearchRequest.Status.RUNNING,
+        ):
             return row, False
         now = timezone.now()
-        if row.expires_at <= now:
+        if (
+            row.status == OfficialResearchRequest.Status.RUNNING
+            and row.lease_expires_at is not None
+            and row.lease_expires_at <= now
+        ):
+            row.status = OfficialResearchRequest.Status.FAILED
+            OfficialResearchRequest.objects.filter(pk=row.pk).update(
+                status=row.status, finished_at=now,
+                failure_code="worker_lease_expired", lease_key=None,
+            )
+        elif (
+            row.status == OfficialResearchRequest.Status.PENDING
+            and row.expires_at <= now
+        ):
             row.status = OfficialResearchRequest.Status.EXPIRED
-            OfficialResearchRequest.objects.filter(pk=row.pk).update(status=row.status)
+            OfficialResearchRequest.objects.filter(pk=row.pk).update(
+                status=row.status, finished_at=now,
+            )
         else:
+            # Cooperative cancellation: an in-flight request can finish,
+            # but no additional fetch or result commit is allowed.
             row.status = OfficialResearchRequest.Status.CANCELLED
             row.cancelled_at = now
             OfficialResearchRequest.objects.filter(pk=row.pk).update(
-                status=row.status, cancelled_at=now,
+                status=row.status, cancelled_at=now, lease_key=None,
             )
         return row, True
