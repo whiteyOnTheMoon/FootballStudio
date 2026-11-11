@@ -81,6 +81,11 @@
   </section>
 
   {% if snapshot %}
+    <section class="panel" aria-labelledby="preview-heading">
+      <h2 id="preview-heading">Sichere englische Skriptvorschau</h2>
+      <p>Vorläufige, rein lesende Formulierungen aus diesem Dossiostand: vollständig manuell geprüfte Fakten, gekennzeichnete Unsicherheit und nachvollziehbar ausgelassene Behauptungen. <strong>Kein</strong> fertiger Film oder KI-generiertes Skript.</p>
+      <p><a href="{% url 'research-script-preview' job.pk %}?version={{ selected_version }}">Englische Textbausteine und Quellenlage ansehen</a></p>
+    </section>
     {% if selected_version == latest_version %}
       <section class="panel" aria-labelledby="proposal-heading">
         <h2 id="proposal-heading">Eigenen Faktenvorschlag erfassen</h2>

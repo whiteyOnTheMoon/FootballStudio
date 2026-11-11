@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>Sichere englische Skriptvorschau · {{ job.club_name }} · FootballStudio</title>
+  <style>
+    :root { color-scheme:dark; --bg:#0b1320; --panel:#172536; --border:#355064; --text:#f1f7fc; --muted:#a6bdc9; --accent:#63ddbf; }
+    * { box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); margin:0; font:1rem/1.55 system-ui,-apple-system,sans-serif; }
+    main { max-width:900px; margin:0 auto; padding:28px 18px 70px; }
+    a { color:var(--accent); overflow-wrap:anywhere; }
+    a:focus-visible { outline:3px solid var(--accent); outline-offset:3px; }
+    h1 { font-size:clamp(1.8rem,5vw,2.5rem); line-height:1.2; margin:12px 0; }
+    h2 { margin:.4rem 0 1rem; font-size:1.4rem; }
+    h3 { margin:12px 0; font-size:1.1rem; }
+    p { margin:10px 0; }
+    .eyebrow { font-size:.82rem; text-transform:uppercase; letter-spacing:.12em; font-weight:800; color:var(--accent); }
+    .muted { color:var(--muted); }
+    .panel { border:1px solid var(--border); border-radius:14px; background:var(--panel); padding:clamp(14px,4vw,24px); margin:20px 0; }
+    .notice { border-left:4px solid var(--accent); background:#102c2e; padding:12px 15px; }
+    .counts { display:flex; gap:10px; flex-wrap:wrap; }
+    .count { border:1px solid #6b8994; border-radius:8px; padding:5px 10px; font-size:.89rem; }
+    .flag { border-radius:6px; padding:4px 10px; display:inline-block; font-size:.88rem; font-weight:800; border:1px solid #7097a8; }
+    .usable { border-color:#4b9981; color:#b8f5d7; }
+    .caution { border-color:#c8a861; color:#ffdfa1; }
+    .conflicted { border-color:#e2a16b; color:#ffd19b; }
+    .omit { border-color:#c77c88; color:#ffc4cd; }
+    .narration { background:#0f2130; border-radius:10px; padding:15px; font-size:1.09rem; }
+    .meta { color:var(--muted); font-size:.89rem; overflow-wrap:anywhere; }
+    .reference { border-top:1px solid var(--border); padding:10px 0; }
+    details { margin:15px 0; }
+    summary { cursor:pointer; font-weight:700; color:var(--accent); }
+    code { overflow-wrap:anywhere; }
+    footer { color:var(--muted); font-size:.88rem; margin-top:30px; }
+  </style>
+</head>
+<body>
+<main>
+  <a href="{% url 'research-job' job.pk %}?version={{ version }}">← Zum ausgewählten Recherchedossier</a>
+  <p class="eyebrow">FootballStudio · M2 · Sprachliche Sicherheit</p>
+  <h1>Englische Skriptvorschau: {{ job.club_name }}</h1>
+  <p class="muted">Job #{{ job.pk }} · Dossierversion {{ version }} {% if version == latest_version %}(aktuell){% else %}(historischer Stand){% endif %}</p>
+
+  <p class="notice"><strong>Nur redaktionelle Vorschau.</strong> Diese Sätze sind kein fertiges Dokumentarskript, keine automatische Quellenprüfung und keine Produktionsfreigabe. Es werden weder Websites abgerufen noch KI, TTS oder Video-Rendering gestartet. Nur ausdrücklich von Menschen geprüfte Fakten mit passenden Belegen können als konkrete Tatsachen erscheinen.</p>
+
+  <section class="panel" aria-labelledby="summary-heading">
+    <h2 id="summary-heading">Sichere Einordnung der Fakten</h2>
+    <div class="counts">
+      <span class="count">Für Entwurf geeignet: {{ counts.usable }}</span>
+      <span class="count">Mit Vorbehalt: {{ counts.caution }}</span>
+      <span class="count">Widersprüchlich: {{ counts.conflicted }}</span>
+      <span class="count">Auslassen: {{ counts.omit }}</span>
+    </div>
+  </section>
+
+  {% for unit in units %}
+    <article class="panel" aria-labelledby="unit-{{ forloop.counter }}">
+      <h2 id="unit-{{ forloop.counter }}">Fakt #{{ unit.fact_id }} · {{ unit.predicate }}</h2>
+      <p>
+        {% if unit.disposition == "usable" %}
+          <span class="flag usable">Menschlich belegt · für Entwurf geeignet</span>
+        {% elif unit.disposition == "conflicted" %}
+          <span class="flag conflicted">Widersprüchlich · keine konkrete Tatsachenbehauptung</span>
+        {% elif unit.disposition == "omit" %}
+          <span class="flag omit">Verworfen · nicht im Skript verwenden</span>
+        {% else %}
+          <span class="flag caution">Quellenlage unzureichend · nur neutraler Übergang</span>
+        {% endif %}
+      </p>
+      {% if unit.narration %}
+        <h3>Englischer Textbaustein</h3>
+        <p lang="en" class="narration">{{ unit.narration }}</p>
+      {% else %}
+        <p class="muted">Kein Sprechertext: Dieser Fakt ist für den Entwurf ausgeschlossen.</p>
+      {% endif %}
+      <p class="meta"><strong>Interner Forschungswert (kein Sprechertext):</strong>
+        {% if unit.reference_value == None %}Nicht angegeben{% else %}{{ unit.reference_value }}{% endif %}
+        {% if unit.reference_season %} · Saison: {{ unit.reference_season }}{% endif %}
+      </p>
+      <p class="meta">Dossierstatus: {{ unit.declared_status }} · Gründe: {% for code in unit.reason_codes %}<code>{{ code }}</code>{% if not forloop.last %}, {% endif %}{% empty %}alle Sicherheitsbedingungen erfüllt{% endfor %}</p>
+
+      <details>
+        <summary>Quellen- und Review-Provenienz ansehen ({{ unit.evidence_refs|length }} Belege)</summary>
+        {% if unit.review %}
+          <p class="meta">Review: {{ unit.review.decision }} · Prüfer-ID: {{ unit.review.reviewer_id }}
+            · geprüft: {{ unit.review.reviewed_at }} · Quellensichtung bestätigt: {{ unit.review.checked_source|yesno:"ja,nein" }}
+            · Saison geprüft: {{ unit.review.checked_season|yesno:"ja,nein" }}
+          </p>
+        {% else %}
+          <p class="meta">Keine formal dokumentierte menschliche Reviewentscheidung.</p>
+        {% endif %}
+        {% for item in unit.evidence_refs %}
+          <div class="reference">
+            <p class="meta">Quelle #{{ item.source_id }} · Rolle: {{ item.role }} · Typ: {{ item.source_kind }}
+              · Zugriff: {{ item.access_state }} · Herkunft: {{ item.provenance }}
+              · Import-/Prüfzeitpunkt: {{ item.retrieved_at }}
+            </p>
+            <p class="meta">Fundstelle: {{ item.locator|default:"Nicht konkret angegeben" }}</p>
+            {% if item.url %}
+              <p><a href="{{ item.url }}" rel="noopener noreferrer nofollow" target="_blank">Originalquelle selbst öffnen</a></p>
+            {% else %}
+              <p class="meta">Keine sicher anklickbare HTTPS-Quelle vorhanden.</p>
+            {% endif %}
+          </div>
+        {% empty %}
+          <p class="meta">Keine verwertbaren Quellenverweise hinterlegt.</p>
+        {% endfor %}
+      </details>
+    </article>
+  {% empty %}
+    <section class="panel">
+      <p>Für diese Dossierversion liegen noch keine atomaren Fakten vor. Eine Skriptvorschau kann keine Angaben erfinden.</p>
+    </section>
+  {% endfor %}
+
+  <footer>Owner-geschützte Leseansicht · Kein Export, kein veröffentlichungsfähiges Skript · Keine kostenpflichtigen Aufrufe</footer>
+</main>
+</body>
+</html>

@@ -448,6 +448,96 @@ einer unabhängigen technischen Beweisgarantie verwechseln. Die
 Prüfung von Quellenrechten und Veröffentlichungsfähigkeit bleibt
 ein gesonderter Arbeitsschritt der M2-Roadmap.
 
+
+## M2 – Sichere Formulierungen für spätere englische Doku-Skripte (#154)
+
+Der **rein deterministische** Baustein
+`app.production.script_safety.prepare_script_fact(fact, sources_by_id)`
+übernimmt einen atomaren Fact aus dem schon serialisierten Dossier.
+`prepare_script_preview(snapshot)` stellt die Fakten in einem
+gleichartigen, **read-only** Preview-Kontext zusammen. Diese Funktionen
+greifen selbst **nicht** auf Django-Modelle, Datenbanken, DNS, HTTP,
+LLM, TTS, Bild-/Video-Tools oder kostenpflichtige APIs zu.
+
+Die gespeicherte `verification_state`-Angabe ist noch **keine**
+automatische Skriptfreigabe. Ein Eintrag wird nur `usable`, wenn
+**alle** folgenden Bedingungen zusammen erfüllt sind:
+
+- Ein in der **aktuellen Snapshot-Version** zugeordneter
+  `FactReview` hat Entscheidung `verified`, eine reale Prüfer-ID,
+  den dokumentierten UTC-Prüfzeitpunkt, eine substanzielle eigene Notiz
+  und die ausdrückliche Bestätigung der Quellensichtung.
+- Es gibt mindestens einen konkreten `supports`-Beleg mit
+  Fundstelle, eigener knapper Zusammenfassung und einer im Dossier
+  vorhandenen, zugänglichen, syntaktisch sicheren HTTPS-Quelle.
+  **Alle** als `supports` markierten Fundstellen müssen diese
+  Anforderungen erfüllen; schon eine unvollständige oder unzugängliche
+  stützende Referenz führt zur vorsichtigen Ausgabe.
+- Der Reviewzeitpunkt liegt **nicht vor** dem Quellen-/Prüfzeitpunkt
+  eines verwendeten Supports. Ein ausgelagerter oder nicht eindeutig
+  verknüpfter Beleg darf nicht als gültiger Nachweis zählen.
+- Es gibt keinen noch ungeklärten `contradicts`-Beleg – selbst eine
+  inzwischen unerreichbare Gegenquelle bleibt als Warnsignal sichtbar.
+- Bei saisonabhängigen Fakten muss `checked_season` ausdrücklich
+  wahr sein, und **jede** stützende Fundstelle muss die **exakte**
+  Saison nennen. Beispielsweise wird die Saison `2025` nicht mit
+  `2025/26` gleichgesetzt; mehrere widersprüchliche Saisonbereiche
+  in einem Beleg führen ebenfalls zur Zurückhaltung.
+- Der gespeicherte Wert entspricht einem unterstützten strukturierten
+  Faktentyp (`founded_year`, `stadium_name`, `competition_win`,
+  `league_membership`, `standings_position`) und erscheint auch
+  im tatsächlich geprüften Faktensatz, damit ein zwar verifiziertes,
+  aber anders kodiertes Zahlen- oder Saisonfeld nicht versehentlich
+  als neue Behauptung ausgegeben wird.
+
+Die Funktion gibt **immer** eine nachvollziehbare Einstufung zurück:
+
+- `usable`: ausschliesslich aus **validierten strukturierten Werten**
+  erzeugte knappe englische Sprecherzeile. Keine Quelle, kein
+  Reviewer-Freitext und kein Original-`assertion_text` wird als
+  Voiceovertext kopiert.
+- `caution`: neutrale englische Platzhalter/Übergänge ohne
+  konkrete, unbelegte Jahreszahl, Stadionname, Saison oder Tabellenrang.
+- `conflicted`: vorsichtige englische Formulierung eines offenen
+  Konflikts, **ohne** angeblich richtige der strittigen Alternativen.
+- `omit`: verworfener Fact liefert einen **leeren** Sprechertext;
+  seine Metadaten bleiben nur für die Auditansicht erhalten.
+
+Ein Faktenstatus kann deshalb höchstens auf `caution` oder
+`conflicted` **herabgestuft**, nie durch einen Textbaustein
+auf `verified` angehoben werden. Die strukturierten Gründe
+(`reason_codes`), Review-Metadaten, ursprünglicher Forschungswert
+und kurze Quellen-/Fundstellen-Referenzen werden getrennt vom
+Sprechertext für Redakteure ausgegeben. Originale Artikeltexte,
+fremde HTML-Fragmente und unkontrollierte Modellprompts gelangen
+**niemals** in die Sprecherzeile.
+
+### Private Browser-Vorschau
+
+Unter `/jobs/<job_id>/research/script-preview/` gibt es für den
+**eingeloggten Job-Eigentümer** eine gegen Schreibmethoden geschützte
+`GET`-Vorschau für den neuesten Stand oder mit
+`?version=N` für eine historische Dossioversion. Die vorhandene
+Rechercheansicht verlinkt die Vorschau pro Version. Django prüft die
+Jobzugehörigkeit **vor** dem Abruf des owner-scoped Dossiers, maskiert
+alle Texte und zeigt nur sichere HTTPS-Referenzen als anklickbare
+Originalquellen. `never_cache` verhindert Browser-/Proxy-Caching.
+Es gibt eine sichtbare Trennung zwischen englischer Sprecherzeile,
+lediglich internem Forschungswert, Prüferprovenienz und unsicheren
+oder verworfenen Fakten. **Das ist noch kein generiertes
+Dokumentarskript, kein Export, kein Film und keine
+Veröffentlichungsfreigabe.**
+
+Der Baustein erhält das bei #152 hinzugefügte Human-FactReview
+und darf in späteren Skript- oder Sprachmodulen **nur als eigenes
+streng geprüftes Eingangs-Gate**, nicht als automatisch akzeptierte
+Quellenwahrheit, dienen. Regressionstests für alle vier Klassen,
+alle unterstützten Faktentypen, boolesche/nicht vorhandene Werte,
+falsche Jahres-/Saisongrenzen, veraltete Reviewer, Cross-Source-
+Belege, XSS, Owner-Zugriff, historical snapshots und
+No-Network sind Bestandteil des PR. **Keine neue Migration**,
+kein Worker-Start und keine zusätzlichen API-Kosten.
+
 ## Grundregeln
 
 1. Der **zur Laufzeit ausgewählte** Verein (Land → Liga → Verein, bei Bedarf manuell angelegt) bestimmt den Recherchekontext. Es gibt keine fest vorgegebene Club-ID.
