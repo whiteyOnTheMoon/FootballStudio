@@ -83,7 +83,6 @@ class ManualFactWebTests(TestCase):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Faktenvorschlag für Example FC")
-        self.assertContains(response, "Offizielle") if False else None
         self.assertContains(response, "Official club history")
         self.assertContains(response, "League standings")
         self.assertNotContains(response, "Wikidata")
