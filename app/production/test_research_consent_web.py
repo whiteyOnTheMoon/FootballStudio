@@ -146,8 +146,10 @@ class OneTimeResearchConsentWebTests(TestCase):
         data = self.payload()
         response = self.approve(payload=data)
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, f"{self.list_url}?request_id=1")
         record = self.only()
+        self.assertEqual(
+            response.url, f"{self.list_url}?request_id={record.pk}",
+        )
         self.assertEqual(record.source_id, self.source.pk)
         self.assertEqual(record.expected_version, 1)
         self.assertEqual(record.requested_by_id, self.owner.pk)
