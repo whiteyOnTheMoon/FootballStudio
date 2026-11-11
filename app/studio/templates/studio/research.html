@@ -50,6 +50,14 @@
   <p class="muted">Job #{{ job.pk }} · {{ job.title }} · {{ job.league_name }} · {{ job.country_code }}</p>
   <p class="notice">Diese Ansicht ist <strong>nur lesend</strong>. Eine gespeicherte Quelle beweist keine Aussage. Nur ausdrücklich geprüfte Fakten können den Status „verifiziert“ besitzen. Es wird weder eine Website abgerufen noch ein Video erzeugt.</p>
 
+  {% if not snapshot or selected_version == latest_version %}
+    <section class="panel" aria-labelledby="add-source-heading">
+      <h2 id="add-source-heading">Offizielle Vereins- oder Ligaquelle hinterlegen</h2>
+      <p>Du kannst eine Website, die du <strong>vorher selbst geöffnet und eindeutig zugeordnet</strong> hast, als manuell geprüften Quellenverweis speichern. Es erfolgt kein automatischer Websiteabruf und keine Faktenfreigabe.</p>
+      <p><a href="{% url 'research-new-source' job.pk %}">Offizielle Quelle manuell bestätigen</a></p>
+    </section>
+  {% endif %}
+
   <section class="panel" aria-labelledby="versions-heading">
     <h2 id="versions-heading">Dossierversionen</h2>
     {% if snapshot %}
@@ -67,7 +75,7 @@
         <p class="meta">Die Liste zeigt höchstens 100 neuere Versionen. Ältere Versionen sind über ihre Versionsnummer im URL-Parameter erreichbar.</p>
       {% endif %}
     {% else %}
-      <p>Für diesen Job liegt noch kein Faktendossier vor. Die Quellenrecherche und manuelle Prüfung sind derzeit noch nicht über die Browseroberfläche startbar.</p>
+      <p>Für diesen Job liegt noch kein Faktendossier vor. Du kannst jetzt eine zuvor selbst geprüfte offizielle Vereins- oder Ligaquelle manuell zuordnen. Eine automatische Quellenrecherche wird noch nicht gestartet.</p>
       <p class="muted">Du kannst den Job weiterhin als M1-Testprojekt verwenden.</p>
     {% endif %}
   </section>
@@ -81,7 +89,7 @@
           <p><a href="{% url 'research-new-fact' job.pk %}">Faktenvorschlag mit Quelle erfassen</a></p>
           <p class="meta">Neue Vorschläge werden nicht automatisch verifiziert. Die inhaltliche Prüfung bleibt ein eigener Schritt.</p>
         {% else %}
-          <p>Noch keine geeignete offizielle Vereins- oder Ligaquelle vorhanden. Die bestätigte Quellenaufnahme wird als separater Roadmap-Schritt ergänzt.</p>
+          <p>Noch keine geeignete offizielle Vereins- oder Ligaquelle vorhanden. Bitte zuerst eine von dir selbst geprüfte offizielle Quelle über die Quellenbestätigung hinterlegen.</p>
         {% endif %}
       </section>
     {% endif %}
@@ -98,8 +106,19 @@
             {% elif source.source_kind == "wikipedia" %}Wikipedia
             {% elif source.source_kind == "news" %}Nachrichtenquelle
             {% else %}Weitere Quelle{% endif %}
-            · Abrufstatus: {{ source.access_state }} · Abgerufen: {{ source.retrieved_at }}
+            · Status: {{ source.access_state }}
+            {% if source.manual_confirmation %}
+              · <strong>Manuell geprüft (kein Serverabruf)</strong>
+              · Prüfzeitpunkt: {{ source.manual_confirmation.checked_at }}
+              · Domain: {{ source.manual_confirmation.confirmed_domain }}
+            {% else %}
+              · Import-/Abrufzeitpunkt: {{ source.retrieved_at }}
+            {% endif %}
           </p>
+          {% if source.manual_confirmation %}
+            <p class="meta">Herkunft: vom Nutzer eingegeben und nach eigener Zugriffs- und Identitätsprüfung bestätigt. Prüfer-ID: {{ source.manual_confirmation.reviewer_id }}. Website-Bedingungen bestätigt: {{ source.manual_confirmation.terms_confirmed|yesno:"ja,nein" }}. Das ist keine Prüfung einzelner Aussagen.</p>
+            <p><strong>Eigene Zuordnungsbegründung:</strong> {{ source.manual_confirmation.basis }}</p>
+          {% endif %>
           <p>
             {% if source.safe_link %}
               <a href="{{ source.safe_link }}" target="_blank" rel="noopener noreferrer nofollow">{{ source.url }}</a>
