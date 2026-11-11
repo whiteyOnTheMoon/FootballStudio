@@ -164,6 +164,7 @@ def prepare_script_fact(fact, sources_by_id):
 
     evidence_refs = []
     qualified_support = []
+    support_total = 0
     has_contradiction = False
     has_dangling = False
     for evidence in fact.get("evidence", []):
@@ -171,6 +172,8 @@ def prepare_script_fact(fact, sources_by_id):
             has_dangling = True
             continue
         role = evidence.get("role")
+        if role == "supports":
+            support_total += 1
         if role == "contradicts":
             has_contradiction = True
         source = sources_by_id.get(evidence.get("source_id"))
@@ -253,6 +256,8 @@ def prepare_script_fact(fact, sources_by_id):
             reasons.append("missing_current_human_review")
         if not qualified_support:
             reasons.append("no_accessible_support")
+        if support_total != len(qualified_support):
+            reasons.append("incomplete_supporting_evidence")
         if has_dangling:
             reasons.append("incomplete_provenance")
         if status == "verified" and isinstance(review, dict) and valid_review:
