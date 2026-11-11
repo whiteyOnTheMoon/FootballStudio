@@ -108,3 +108,51 @@ Fakten niemals nur wegen ihres offiziellen Ursprungs automatisch bestätigt.
 
 Liga-/Saisonangaben (z. B. Tabelle der Saison 2026/27) dürfen niemals mit
 historischen Tabellen oder einer nicht erkennbaren Saison vermischt werden.
+
+
+## Kontrollierter Abruf – interner, bewusst ausgelöster Service (#134)
+
+\`research_official_website(owner=..., job_id=..., homepage_url=...,
+context="club"|"league", identity_confirmed=True,
+terms_confirmed=True)\` stellt die erste **nicht öffentlich ausgelöste**
+Lese-Schnittstelle bereit. Sie ist weder ans M1-Formular noch an einen
+automatischen Worker angeschlossen. Vor dem Aufruf müssen ausgewählter
+Verein bzw. Liga, offizielle Site-Identität und Nutzungsbedingungen
+**extern überprüft und ausdrücklich bestätigt** worden sein.
+Das bloße Setzen der beiden Parameter ersetzt diese Prüfung nicht.
+
+Die Schutzgrenzen:
+- Job gehört dem aufrufenden User. Sonst wird **kein** Netzwerkzugriff
+  gestartet.
+- Ausschließlich öffentlicher HTTPS-Host, DNS-Auflösung muss nur globale
+  öffentliche IPs liefern. Die Socket-Verbindung erfolgt zum **geprüften IP**
+  mit TLS-Zertifikatsvalidierung und SNI gegen den ursprünglichen Host
+  (kein DNS-Rebinding zwischen Prüfung und Verbindung). Keine Proxys,
+  Cookies, Formulare, unautorisierten Unterseiten oder Redirects.
+- \`/robots.txt\` muss als gültiger UTF-8-Text ohne Redirect und mit
+  HTTP 200 abrufbar sein. Fehlen die Regeln, ist der HTTP-Status 404/403/5xx
+  oder gibt es Parsing-Probleme, wird **konservativ nichts gecrawlt**.
+  Das ist absichtlich strenger als die Option der RFC 9309, bestimmte
+  4xx-Zustände als fehlende Restriktion zu interpretieren. Die
+  \`RobotFileParser\`-Prüfung wird um eine konservative zweite
+  Disallow-Prüfung ergänzt, damit Reihenfolge von Allow/Disallow und
+  mehrfach genannte User-Agent-Gruppen keine verbotenen Zugriffe
+  ermöglichen. Dadurch können auch sonst erlaubte Seiten ausgelassen
+  werden. Das ist im MVP beabsichtigt.
+- Nur eine Homepage und höchstens **drei interne, priorisierte HTML-
+  Unterseiten** pro bewusstem Lauf; 5 Sekunden Timeout pro Request,
+  300 KB HTML/512 KiB robots.txt, nur nicht komprimierter UTF-8-
+  Text, Pause mindestens 2 Sekunden, maximal 30 Sekunden gemäß
+  robots Crawl-delay / Request-rate. Keine 3xx, 401, 403 oder 429 umgehen.
+- Ergebnisse sind ausschließlich \`url\`, kurzer \`title\`,
+  höchstens fünf Abschnittsüberschriften und UTC-Abrufzeit. Weder
+  Volltext noch konkrete Vereinsfakten werden dauerhaft übernommen.
+  Rückgabe ist \`source_status=unverified\` und \`stored=False\`.
+  Inhaltsrechte, Aktualität, saisonale Einordnung und Belegqualität
+  müssen vor späterer Datenbank-/Drehbuchverwendung separat geprüft
+  werden.
+
+Der Service führt keine automatisierten Besuche von Transfermarkt durch
+und erweitert nicht den öffentlichen API-/Registrierungsumfang.
+Die Weiterentwicklung des Quellenimportes in \`FactDossier\` und die
+sichtbare Review-/Freigabe-UI bleiben gesonderte M2-Arbeitspakete.
