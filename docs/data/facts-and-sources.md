@@ -601,6 +601,99 @@ Fakten bleiben bis zum bewussten Human-FactReview
 \`unverified\`. Für diesen ersten Preflight ist **keine
 Datenbankmigration** erforderlich.
 
+
+## M2 – Einmalfreigabe für offizielle Quellen als noch nicht ausgeführten Auftrag dokumentieren (#159)
+
+Nach dem **rein lesenden** Preflight #157 kann der Besitzer eines
+konkreten Jobs für genau eine bereits in der **aktuellsten**
+Dossierversion enthaltene, ausdrücklich manuell bestätigte
+\`SourceReference\` einen eigenen Zustimmungsdialog aufrufen:
+\`/jobs/<job_id>/research/requests/source/<source_id>/\`.
+Die Quelle wird wie im Preflight noch einmal auf gültige HTTPS-Adresse,
+identische geprüfte Domain, Vereins-/Ligakontext, erreichbaren Status,
+Prüferidentität sowie alle drei zuvor dokumentierten
+\`SourceConfirmation\`-Bestätigungen geprüft. Bei Fremd- oder
+historischer Quellen-ID erfolgt HTTP 404.
+
+**Neue, unabhängige Zustimmung:** Das mobile, Django-CSRF-geschützte
+Formular zeigt die genaue Ausgangsadresse, den Club-/Liga-Kontext
+und das mögliche spätere Budget von **maximal einer Ausgangsseite plus
+drei HTML-Unterseiten**. Der Eigentümer muss **erneut** unabhängig
+bestätigen: korrekte Club-/Liga-Domain, selbst geprüfte Website-
+Nutzungsbedingungen sowie seine ausdrückliche Einmalfreigabe
+für den jetzt erfassten Vorgang. Bestehende manuelle Checkboxen werden
+nicht als neue Crawl-Erlaubnis übernommen. Die URL wird **niemals**
+aus dem POST gelesen; sie stammt ausschließlich aus dem erneut
+prüfbaren neuesten Dossier.
+
+Ein gültiger POST legt atomar genau eine
+\`OfficialResearchRequest\` in der additiven Migration
+\`production.0008_official_research_request\` an. Dokumentiert werden:
+Job, tatsächlicher Eigentümer, versionsgebundene SourceReference,
+eingefrorene kanonische Ausgangs-URL/Domain/Club-/Ligakontext,
+Dossierversion, eine pro Formular neu erzeugte UUIDv4 als
+Idempotenzschlüssel, drei neue Consent-Flags, UTC-Prüfzeit,
+**Ablaufzeit nach 15 Minuten**, Status \`pending_worker\`,
+\`attempt_count=0\` und \`max_pages=4\`.
+**Es gibt derzeit überhaupt keinen Worker**, keinen automatisch
+ausgeführten Rechercheauftrag, keinen Status \`completed\` und
+keinen externen Website-/robots-/DNS-Aufruf. Der Eintrag ist
+nur eine nachvollziehbare, befristete **Absichtserklärung**,
+keine gestartete Forschung.
+
+**Schreibsicherheit:** Der Dienst sperrt die Produktionsjob-Zeile
+mittels \`transaction.atomic()\` + \`SELECT FOR UPDATE\`,
+prüft aktuelle Dossierversion, URL und Eigentümer erneut und
+erzwingt per Datenbank-Unique-Constraint höchstens einen noch
+ausstehenden \`pending_worker\`-Eintrag pro Job. Identische erneute
+POSTs mit derselben UUIDv4 dürfen einen **noch gültigen**
+Eintrag wiederfinden, ohne einen zweiten zu erstellen.
+Bereits stornierte, abgelaufene oder abweichende UUID-Wiederholungen
+ergeben HTTP **409**, ebenso eine noch aktive zweite
+Freigabe. Beim Versionswechsel wird abweichender oder veralteter
+Stand zurückgewiesen; fehlende Checkboxen ergeben HTTP **400**
+und fehlendes CSRF HTTP **403**. DB-basierte zusätzliche Limits:
+höchstens **drei Freigaben je Eigentümer in 24 Stunden**,
+davon höchstens **eine für denselben Domainhost**; bei Überschreitung
+HTTP **429**. Diese Grenzen zählen auch bereits abgebrochene
+oder abgelaufene Einträge und erlauben kein Fenster durch
+Neustart eines Gunicorn-Workers. Bereits abgelaufene, bislang
+nicht materialisiert als \`expired\` gespeicherte Einträge
+werden im GET anhand der aktuellen UTC-Zeit trotzdem korrekt
+als abgelaufen ausgewiesen.
+
+Unter \`/jobs/<job_id>/research/requests/\` kann **nur der Eigentümer**
+die letzten dreißig Freigaben, ihre gespeicherten Quellen-Fingerprints,
+Prüf- und Ablaufzeit, Versuchszahl und tatsächlichen Status sehen.
+Eine neue CSRF-geschützte \`POST\`-Aktion kann eine gültige Freigabe
+nachvollziehbar **abbrechen**. Derselbe Abbruch ist idempotent;
+abgelaufene Freigaben dürfen niemals reaktiviert werden.
+Diese Seite ist privat und \`never_cache\`-geschützt.
+Abbruch und Freigabe lösen **keine** Netzwerkanfrage aus.
+
+**Folgearbeit / Sicherheitsgrenze:** Das Erzeugen eines Eintrags
+startet kein Hintergrundverfahren, keinen Timer und keine
+Sofort-Recherche. Ein späterer, separat geprüfter Worker muss
+vor **jedem** Zugriff noch einmal Source-Fingerprint,
+Dossier-Version/Job-Owner, Ablaufzeit, Einmaligkeit,
+Nutzungsbedingungen und die unveränderten
+robots-/SSRF-/TLS-/DNS-Pinning-Schutzregeln prüfen.
+Ein abgelaufener Eintrag darf nicht erneut genutzt werden.
+Die spätere Verarbeitung darf höchstens kurze
+**unverified** Seitenmetadaten eintragen; keine Artikeltexte,
+keine automatischen Fakten und keine TTS-/MP4-Pipeline.
+Die Vorkehrungen dieser Phase sind **keine technische
+Beweisgarantie**, dass eine vom Nutzer bestätigte Domain
+tatsächlich berechtigt ist.
+
+**Produktions-Deployment:** Vor dem Upgrade mit neuer
+\`0008\`-Migration ein PostgreSQL-Backup erstellen und den
+Restaurierungstest in einer isolierten Wegwerf-Datenbank
+verifizieren. Danach den bestehenden Compose-Rebuild starten,
+\`showmigrations production\` und den Tunnel-/Web-Healthcheck
+kontrollieren. Das persistente PostgreSQL-Docker-Volume niemals
+löschen.
+
 ## Grundregeln
 
 1. Der **zur Laufzeit ausgewählte** Verein (Land → Liga → Verein, bei Bedarf manuell angelegt) bestimmt den Recherchekontext. Es gibt keine fest vorgegebene Club-ID.

@@ -5,7 +5,7 @@ from app.accounts.forms import EmailAuthenticationForm
 from django.urls import include, path
 from app.studio import views
 from app.production import views as production_views
-from app.production import fact_web_views, source_web_views, evidence_web_views, fact_decision_web_views, script_preview_views, preflight_web_views
+from app.production import fact_web_views, source_web_views, evidence_web_views, fact_decision_web_views, script_preview_views, preflight_web_views, research_consent_web_views
 
 urlpatterns = [
     path("", views.home, name="home"),
@@ -33,5 +33,14 @@ urlpatterns = [
     path("jobs/<int:job_id>/research/preflight/",
          preflight_web_views.official_research_preflight,
          name="research-preflight"),
+    path("jobs/<int:job_id>/research/requests/source/<int:source_id>/",
+         research_consent_web_views.approve_one_time_research,
+         name="research-approve-source"),
+    path("jobs/<int:job_id>/research/requests/",
+         research_consent_web_views.list_research_requests,
+         name="research-requests"),
+    path("jobs/<int:job_id>/research/requests/<int:request_id>/cancel/",
+         research_consent_web_views.cancel_research_request,
+         name="research-cancel-request"),
     path("admin/", admin.site.urls),
 ]
