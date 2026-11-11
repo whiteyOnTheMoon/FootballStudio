@@ -160,7 +160,8 @@ def _outline(url, html):
 
 
 def research_official_website(*, owner, job_id, homepage_url, context,
-                              identity_confirmed=False, terms_confirmed=False):
+                              identity_confirmed=False, terms_confirmed=False,
+                              deadline=None, continue_check=None):
     """Read homepage + <=3 same-host pages after strict, explicit approvals.
 
     This returns unverified page metadata. Nothing is stored in the DB; the
@@ -177,27 +178,42 @@ def research_official_website(*, owner, job_id, homepage_url, context,
         pk=job_id, owner=owner,
     )
 
+    def checkpoint(*, delay_seconds=0):
+        # The CLI sets a hard SIGALRM in addition to these cooperative
+        # checks, so stalled sockets and politeness sleeps cannot run forever.
+        if continue_check is not None:
+            continue_check()
+        if deadline is not None and time.monotonic() + delay_seconds + 5 > deadline:
+            raise WebsiteFetchError("research_deadline")
+
+    checkpoint()
     robots_url, robots, delay = _robots_policy(homepage_url)
     if not robots.can_fetch(_USER_AGENT, homepage_url):
         raise WebsiteFetchError("robots_disallowed")
 
-    # Always observe politeness delay between robots and the homepage too.
+    # Observe the declared politeness gap after robots and before every page.
+    checkpoint(delay_seconds=delay)
     time.sleep(delay)
+    checkpoint()
     html = _download_public_https(homepage_url, kind="html")
+    checkpoint()
     pages = [_outline(homepage_url, html)]
 
-    candidates = discover_official_pages(homepage_url, html, context=context,
-                                         limit=_MAX_SUBPAGES)
+    candidates = discover_official_pages(
+        homepage_url, html, context=context, limit=_MAX_SUBPAGES,
+    )
     for candidate in candidates:
+        checkpoint()
         candidate_url, candidate_host = _checked_url(candidate["url"])
         if candidate_host != original_host:
             raise WebsiteFetchError("unsafe_url")
         if not robots.can_fetch(_USER_AGENT, candidate_url):
-            # Do not attempt disallowed pages and do not substitute other paths
-            # or try to bypass the website's stated preference.
             continue
+        checkpoint(delay_seconds=delay)
         time.sleep(delay)
+        checkpoint()
         body = _download_public_https(candidate_url, kind="html")
+        checkpoint()
         page = _outline(candidate_url, body)
         page["category"] = candidate["category"]
         pages.append(page)
