@@ -11,6 +11,77 @@ from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 _QID = re.compile(r"Q[1-9][0-9]{0,11}\Z")
+
+from .official_site_links import _homepage
+
+_MAX_WEBSITE_CANDIDATES = 5
+_MAX_WEBSITE_STATEMENTS = 100
+_STATEMENT_ID = re.compile(r"Q[1-9][0-9]{0,11}\\$[A-Za-z0-9-]{1,80}\\Z")
+
+
+def _official_website_candidates(entity, qid, source_url):
+    """P856 is an *unverified claim*, never a verified official domain.
+
+    This extracts HTTPS-only URLs for later manual identity confirmation.
+    Candidate URLs are NEVER fetched in this module. No DNS security is
+    implied: a later fetcher must separately enforce robots, DNS and SSRF.
+    """
+    claims = entity.get("claims", {})
+    if not isinstance(claims, dict):
+        raise WikidataLookupError("invalid_response")
+    statements = claims.get("P856", [])
+    if not isinstance(statements, list):
+        raise WikidataLookupError("invalid_response")
+
+    items = []
+    for statement in statements[:_MAX_WEBSITE_STATEMENTS]:
+        if not isinstance(statement, dict):
+            continue
+        rank = statement.get("rank", "normal")
+        if rank not in ("preferred", "normal"):
+            continue
+        snak = statement.get("mainsnak")
+        if not isinstance(snak, dict) or (
+            snak.get("property") != "P856"
+            or snak.get("snaktype") != "value"
+            or snak.get("datatype") != "url"
+        ):
+            continue
+        datavalue = snak.get("datavalue")
+        if not isinstance(datavalue, dict) or datavalue.get("type") != "string":
+            continue
+        url = datavalue.get("value")
+        if (not isinstance(url, str) or len(url) > 500 or not url
+                or any(c.isspace() or ord(c) < 32 or c == "\\\\" for c in url)):
+            continue
+        try:
+            normalized, _ = _homepage(url)
+        except ValueError:
+            continue
+
+        statement_id = statement.get("id")
+        if not isinstance(statement_id, str) or not _STATEMENT_ID.fullmatch(statement_id):
+            statement_id = None
+        items.append({
+            "url": normalized,
+            "wikidata_property": "P856",
+            "statement_id": statement_id,
+            "rank": rank,
+            "source_url": source_url,
+            "verification_state": "unverified",
+        })
+
+    # Prefer higher-ranked statements and deterministically deduplicate URLs.
+    # Even 'preferred' can be historical: callers must inspect provenance.
+    items.sort(key=lambda item: (item["rank"] != "preferred", item["url"]))
+    unique = {}
+    for item in items:
+        unique.setdefault(item["url"], item)
+        if len(unique) == _MAX_WEBSITE_CANDIDATES:
+            break
+    return list(unique.values())
+
+
 _MAX_RESPONSE_BYTES = 1_000_000
 _TIMEOUT_SECONDS = 8
 
@@ -98,5 +169,6 @@ def fetch_wikidata_profile(qid):
         "description_en": _english_value(entity, "descriptions"),
         "source_url": entity_url,
         "wikipedia_url_en": _wikipedia_link(entity),
+        "official_website_candidates": _official_website_candidates(entity, qid, entity_url),
         "fetched_at": datetime.now(timezone.utc).isoformat(),
     }
