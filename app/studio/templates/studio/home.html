@@ -220,6 +220,14 @@
   const jobList = document.getElementById("job-list");
   let revision = 0;
 
+  function resetMarketValueFields() {
+    marketValueMillions.value = "";
+    marketValueCurrency.value = "EUR";
+    marketValueAsOf.value = "";
+    marketValueSourceUrl.value = "";
+    marketValueDetails.open = false;
+  }
+
   function message(value, error = false) {
     status.textContent = value;
     status.classList.toggle("error", error);
@@ -236,6 +244,7 @@
     select.disabled = data.length === 0;
   }
   function resetDownstream(start) {
+    resetMarketValueFields();
     selection.classList.add("hidden");
     jobPanel.classList.add("hidden");
     jobFeedback.textContent = "";
@@ -366,6 +375,7 @@
 
   club.addEventListener("change", async () => {
     const token = ++revision;
+    resetMarketValueFields();
     selection.classList.add("hidden");
     jobPanel.classList.add("hidden");
     if (!club.value) {
@@ -514,11 +524,7 @@
           " gespeichert." + (result.job.manual_market_value
             ? " Manueller Kader-Marktwert als ungeprüfte Schätzung übernommen." : "") +
           " Noch keine Videoerstellung.";
-        marketValueMillions.value = "";
-        marketValueCurrency.value = "EUR";
-        marketValueAsOf.value = "";
-        marketValueSourceUrl.value = "";
-        marketValueDetails.open = false;
+        resetMarketValueFields();
       }
       await loadJobs();
     } catch (error) {
