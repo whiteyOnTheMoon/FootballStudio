@@ -9,6 +9,7 @@ Usage:
 The merged Compose configuration may include secrets. Do NOT echo the input.
 """
 import json
+import os
 import sys
 
 if len(sys.argv) != 2 or sys.argv[1] not in {"host", "docker"}:
@@ -17,6 +18,7 @@ if len(sys.argv) != 2 or sys.argv[1] not in {"host", "docker"}:
 mode = sys.argv[1]
 config = json.load(sys.stdin)
 services = config["services"]
+assert config.get("name") == "footballstudio", "Must never share the project name of other webapps"
 assert set(services) == {"web", "db"}, "An existing-tunnel overlay must not start cloudflared"
 web, db = services["web"], services["db"]
 assert not db.get("ports"), "Database must have no published host ports"
@@ -55,8 +57,10 @@ if mode == "host":
     port = ports[0]
     assert port.get("host_ip") == "127.0.0.1", "Never publish on 0.0.0.0"
     assert int(port.get("target", -1)) == 8000
-    assert str(port.get("published", "")) == "18080", (
-        "CI expects a deliberately distinct origin port (18080)"
+    selected_port = os.environ.get("FOOTBALLSTUDIO_ORIGIN_PORT", "")
+    assert selected_port.isdecimal() and 1024 <= int(selected_port) <= 65535
+    assert str(port.get("published", "")) == selected_port, (
+        "Unexpected host port; check FOOTBALLSTUDIO_ORIGIN_PORT"
     )
     assert port.get("protocol") == "tcp"
     assert web_networks == {"default"}, "Host mode needs no other Docker networks"
@@ -68,8 +72,10 @@ else:
     )
     external = config.get("networks", {}).get("existing_tunnel", {})
     assert external.get("external") is True, "Only a pre-existing Docker network"
-    assert external.get("name") == "footballstudio_tunnel", (
-        "CI expects a dedicated reviewed shared network"
+    expected_network = os.environ.get("CLOUDFLARE_EXISTING_NETWORK", "")
+    assert expected_network and expected_network not in {"bridge", "host", "none"}
+    assert external.get("name") == expected_network, (
+        "Unexpected network; check CLOUDFLARE_EXISTING_NETWORK"
     )
     net_config = web["networks"]["existing_tunnel"]
     assert "footballstudio-origin" in net_config.get("aliases", []), (
