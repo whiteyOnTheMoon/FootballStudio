@@ -101,6 +101,7 @@ def _claim(*, owner_id, job_id, request_id):
                     finished_at=now, failure_code="worker_lease_expired",
                     lease_key=None,
                 )
+                return ("rejected", "already_consumed")
             raise ResearchRunRejected("already_consumed")
         if row.status != OfficialResearchRequest.Status.PENDING or row.attempt_count:
             raise ResearchRunRejected("already_consumed")
@@ -109,13 +110,13 @@ def _claim(*, owner_id, job_id, request_id):
                 status=OfficialResearchRequest.Status.EXPIRED,
                 finished_at=now,
             )
-            raise ResearchRunRejected("consent_expired")
+            return ("rejected", "consent_expired")
         if not _source_matches(row, _latest(job)):
             OfficialResearchRequest.objects.filter(pk=row.pk).update(
                 status=OfficialResearchRequest.Status.BLOCKED,
                 finished_at=now, failure_code="source_changed",
             )
-            raise ResearchRunRejected("source_changed")
+            return ("rejected", "source_changed")
 
         lease_key = uuid4()
         row.status = OfficialResearchRequest.Status.RUNNING
@@ -274,9 +275,13 @@ def execute_one_time_research(*, owner_id, job_id, request_id):
     """Run ONE explicitly selected request; no scheduler or automatic retry."""
     if any(type(v) is not int or v <= 0 for v in (owner_id, job_id, request_id)):
         raise ResearchRunRejected("not_authorized")
-    pk, token, url, context, started_at = _claim(
+    claim = _claim(
         owner_id=owner_id, job_id=job_id, request_id=request_id,
     )
+    # Marking an expired/stale/crashed request is committed before rejection.
+    if claim[0] == "rejected":
+        raise ResearchRunRejected(claim[1])
+    pk, token, url, context, started_at = claim
     deadline = time.monotonic() + _RESEARCH_BUDGET_SECONDS
 
     def checkpoint():
