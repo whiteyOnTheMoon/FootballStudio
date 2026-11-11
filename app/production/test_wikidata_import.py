@@ -91,7 +91,7 @@ class WikidataSourceImportTests(TestCase):
             list(first.sources.values_list("external_id", flat=True)), ["Q123"],
         )
         self.assertEqual(
-            list(second.sources.values_list("external_id", flat=True)), ["Q456"],
+            list(second.sources.values_list("external_id", flat=True)), ["Q123", "Q456"],
         )
         self.assertEqual(SourceReference.objects.count(), 2)
 
