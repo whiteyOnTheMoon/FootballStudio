@@ -33,7 +33,7 @@ class NarrationLengthTests(SimpleTestCase):
 
     def test_punctuation_and_apostrophes_are_not_separate_words(self):
         result = plan_narration("It's a team's 100-year history.\nAnother chapter!")
-        self.assertEqual(result.words, 6)
+        self.assertEqual(result.words, 7)
 
     def test_invalid_settings_fail_closed(self):
         for rate in (0, -1, 301, 140.5, True):
