@@ -32,7 +32,7 @@
   <p class="eyebrow">FootballStudio · M2 · Explizite Einmalfreigabe</p>
   <h1>Recherchefreigabe dokumentieren</h1>
   <p class="muted">Job #{{ job.pk }} · {{ job.club_name }} · {{ job.league_name }} · Dossierversion {{ dossier.version }}</p>
-  <p class="notice"><strong>Jetzt wird noch nichts recherchiert.</strong> Diese Aktion speichert ausschließlich eine einmalige, auf 15 Minuten begrenzte Freigabe. Es existiert noch kein ausführender Worker. Weder die Website noch robots.txt werden bei diesem Vorgang abgerufen; du erhältst keinen fertigen Recherchebericht.</p>
+  <p class="notice"><strong>Diese Browseraktion startet keine Recherche.</strong> Sie speichert ausschließlich eine einmalige, auf 15 Minuten begrenzte Freigabe. Nur der Betreiber kann danach einen separaten, ausdrücklich bestätigten und streng begrenzten Verwaltungsbefehl starten. Beim Speichern werden weder die Website noch robots.txt abgerufen.</p>
   {% if error_message %}<p class="error" role="alert">{{ error_message }}</p>{% endif %}
 
   <section class="panel" aria-labelledby="source-heading">
@@ -81,7 +81,7 @@
       </div>
       {{ form.one_time_approved.errors }}
 
-      <p class="warn">Das Speichern ist <strong>keine Ausführung</strong>. Die Freigabe kann abgebrochen werden und läuft nach 15 Minuten ab. Ein zukünftiger Worker wird in einem gesonderten, erneut sicherheitsgeprüften Entwicklungsschritt umgesetzt.</p>
+      <p class="warn">Das Speichern ist <strong>keine Ausführung</strong>. Die Freigabe kann abgebrochen werden und läuft nach 15 Minuten ab. Ein Abruf erfordert den separaten Betreiberbefehl innerhalb der 15 Minuten, und kann durch Sicherheitsregeln blockiert werden.</p>
       <button type="submit">Einmalige Freigabe speichern – ohne Abruf</button>
     </form>
   </section>
