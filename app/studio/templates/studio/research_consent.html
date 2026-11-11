@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>Einmalige Recherchefreigabe dokumentieren · {{ job.club_name }} · FootballStudio</title>
+  <style>
+    :root {color-scheme:dark;--bg:#0b1320;--panel:#172536;--border:#355064;--text:#f1f7fc;--muted:#a6bdc9;--accent:#63ddbf}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:1rem/1.55 system-ui,-apple-system,sans-serif}
+    main{max-width:830px;margin:0 auto;padding:28px 18px 72px}
+    a{color:var(--accent);overflow-wrap:anywhere}
+    a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+    h1{font-size:clamp(1.8rem,5vw,2.5rem);line-height:1.2;margin:12px 0}
+    h2{font-size:1.3rem;margin:0 0 14px}.muted{color:var(--muted)}
+    .eyebrow{color:var(--accent);font-weight:800;font-size:.8rem;letter-spacing:.12em;text-transform:uppercase}
+    .panel{border:1px solid var(--border);border-radius:14px;padding:clamp(16px,4vw,26px);background:var(--panel);margin:22px 0}
+    .notice{border-left:4px solid var(--accent);background:#102c2e;padding:13px 16px}
+    .warn{border-left:4px solid #ffcb85;background:#443125;padding:13px 16px}
+    .error{border-left:4px solid #f4a6aa;background:#492632;padding:12px 16px;color:#ffe5e5}
+    .check{display:flex;gap:12px;align-items:flex-start;margin:19px 0}
+    .check input{flex:0 0 auto;width:23px;height:23px;margin-top:4px;accent-color:var(--accent)}
+    .check label{font-weight:600}
+    button{cursor:pointer;border:0;border-radius:9px;padding:13px 19px;background:var(--accent);color:#09251f;font:inherit;font-weight:800}
+    ul.errorlist{color:#ffbaba;padding-left:20px}
+    code{overflow-wrap:anywhere}footer{color:var(--muted);font-size:.88rem;margin-top:28px}
+  </style>
+</head>
+<body>
+<main>
+  <p><a href="{% url 'research-preflight' job.pk %}?source_id={{ source.source_id }}">← Zur Quellen-Vorabprüfung</a></p>
+  <p class="eyebrow">FootballStudio · M2 · Explizite Einmalfreigabe</p>
+  <h1>Recherchefreigabe dokumentieren</h1>
+  <p class="muted">Job #{{ job.pk }} · {{ job.club_name }} · {{ job.league_name }} · Dossierversion {{ dossier.version }}</p>
+  <p class="notice"><strong>Jetzt wird noch nichts recherchiert.</strong> Diese Aktion speichert ausschließlich eine einmalige, auf 15 Minuten begrenzte Freigabe. Es existiert noch kein ausführender Worker. Weder die Website noch robots.txt werden bei diesem Vorgang abgerufen; du erhältst keinen fertigen Recherchebericht.</p>
+  {% if error_message %}<p class="error" role="alert">{{ error_message }}</p>{% endif %}
+
+  <section class="panel" aria-labelledby="source-heading">
+    <h2 id="source-heading">Genau diese bereits selbst geprüfte Quelle</h2>
+    <p><strong>Kontext:</strong> {% if source.context == "club" %}Verein: {{ job.club_name }}{% else %}Liga: {{ job.league_name }}{% endif %}</p>
+    <p><strong>Quellen-ID:</strong> {{ source.source_id }} · <strong>Domain:</strong> {{ source.domain }}</p>
+    <p><strong>Gespeicherte HTTPS-Adresse:</strong> <a href="{{ source.source_url }}" target="_blank" rel="noopener noreferrer nofollow">{{ source.source_url }}</a></p>
+    <p class="muted">Frühere manuelle Bestätigung durch Prüfer-ID {{ source.confirmation_reviewer_id }} am {{ source.confirmation_checked_at }}. Diese frühere Bestätigung ersetzt <strong>nicht</strong> deine neue Zustimmung.</p>
+    <p><strong>Von dir notierter Domainbezug:</strong> {{ source.confirmation_basis }}</p>
+  </section>
+
+  <section class="panel" aria-labelledby="scope-heading">
+    <h2 id="scope-heading">Grenzen einer möglichen späteren Einmalrecherche</h2>
+    <p>Maximal <strong>eine Ausgangsseite plus drei interne HTML-Unterseiten</strong>; keine geratenen Seitenadressen, keine kompletten Artikel und keine automatische Faktenfreigabe.</p>
+    <p>Ein zukünftiger Worker muss vor jeder Verbindung noch einmal Job-Eigentum, aktuelle Quelle, Domain, gültige Freigabe, öffentliches DNS-Ziel, TLS und robots.txt prüfen. Es gelten Zeitlimit, Höchstgröße und Wartezeit. 403, 429, Weiterleitungen, CAPTCHA und technische Blockaden dürfen nicht umgangen werden.</p>
+    <p><strong>Robots-Adresse für spätere Prüfung:</strong> <code>{{ source.robots_url }}</code> <span class="muted">(noch nicht abgerufen)</span></p>
+    {% if existing and existing.visible_status == "pending_worker" %}
+      <p class="warn">Für diesen Job gibt es schon eine noch gültige Freigabe. Eine zweite Freigabe wird abgelehnt. <a href="{% url 'research-requests' job.pk %}">Freigaben ansehen oder abbrechen</a>.</p>
+    {% endif %}
+  </section>
+
+  <section class="panel" aria-labelledby="confirmation-heading">
+    <h2 id="confirmation-heading">Neue, ausdrückliche Bestätigung</h2>
+    <form method="post" action="{% url 'research-approve-source' job.pk source.source_id %}">
+      {% csrf_token %}
+      {{ form.expected_version }}
+      {{ form.request_key }}
+      {{ form.non_field_errors }}
+      {{ form.expected_version.errors }}
+      {{ form.request_key.errors }}
+
+      <div class="check">
+        {{ form.domain_rechecked }}
+        <label for="{{ form.domain_rechecked.id_for_label }}">{{ form.domain_rechecked.label }}</label>
+      </div>
+      {{ form.domain_rechecked.errors }}
+      <div class="check">
+        {{ form.terms_rechecked }}
+        <label for="{{ form.terms_rechecked.id_for_label }}">{{ form.terms_rechecked.label }}</label>
+      </div>
+      {{ form.terms_rechecked.errors }}
+      <div class="check">
+        {{ form.one_time_approved }}
+        <label for="{{ form.one_time_approved.id_for_label }}">{{ form.one_time_approved.label }}</label>
+      </div>
+      {{ form.one_time_approved.errors }}
+
+      <p class="warn">Das Speichern ist <strong>keine Ausführung</strong>. Die Freigabe kann abgebrochen werden und läuft nach 15 Minuten ab. Ein zukünftiger Worker wird in einem gesonderten, erneut sicherheitsgeprüften Entwicklungsschritt umgesetzt.</p>
+      <button type="submit">Einmalige Freigabe speichern – ohne Abruf</button>
+    </form>
+  </section>
+  <p><a href="{% url 'research-requests' job.pk %}">Bisherige Recherchefreigaben und Status ansehen</a></p>
+  <footer>Nur Job-Eigentümer · CSRF-geschützt · Keine externen Requests oder automatischen Faktentscheidungen</footer>
+</main>
+</body>
+</html>
