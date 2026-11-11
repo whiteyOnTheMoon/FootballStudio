@@ -19,7 +19,7 @@ def profile(qid="Q123", *, title="Example FC"):
         "label_en": title,
         "description_en": "association football club",
         "source_url": f"https://www.wikidata.org/wiki/Special:EntityData/{qid}.json",
-        "wikipedia_url_en": f"https://en.wikipedia.org/wiki/{title.replace(' ', '_')}",
+        "wikipedia_url_en": (f"https://en.wikipedia.org/wiki/{title.replace(' ', '_')}" if title else None),
         "fetched_at": "2026-11-11T02:00:00+00:00",
     }
 
