@@ -54,3 +54,26 @@ Namensgleichheit abgeleitet.
 Der eigentliche Abruf/Extraktion in einen Datenbank-Quellennachweis ist eine
 gesonderte M2-Teilaufgabe. Die bestehende App-/Job-Oberfläche bleibt
 unverändert.
+
+
+## Offizielle Ligaseiten als zusätzliche Primärquellen (#126)
+
+Für den **ausgewählten Ligadatensatz** soll künftig auch eine unabhängig
+identifizierte, offizielle Ligadomain eingebunden werden. Dort sind besonders
+Tabellen, Spielpläne, Ergebnisse, Regelwerk/Ligaformat und offizielle
+Vereinsprofile hilfreich. Fehlt eine offizielle Ligaseite, wird dies
+ausdrücklich als Datenlücke behandelt; es wird keine URL erfunden.
+
+Der vorhandene rein lokale Linkplaner unterstützt dafür
+`discover_official_pages(league_homepage_url, already_fetched_html,
+context="league", limit=8)`. Die Domain muss zuvor bewusst als offizielle
+Ligaseite bestätigt werden. Die Funktion lädt **nichts herunter**,
+wendet die bisherigen Host-/HTTPS-/Query-/Limit-Schutzregeln an und
+liefert lediglich Kandidaten für spätere kontrollierte Recherche.
+Die aktivierte Live-Abfrage muss wie bei Vereinsseiten zuvor
+`robots.txt`, Nutzungsbedingungen, DNS-/Redirect-/SSRF-Sicherheit
+und Abfrage-/Speicherlimits prüfen. Quellen werden datiert und
+Fakten niemals nur wegen ihres offiziellen Ursprungs automatisch bestätigt.
+
+Liga-/Saisonangaben (z. B. Tabelle der Saison 2026/27) dürfen niemals mit
+historischen Tabellen oder einer nicht erkennbaren Saison vermischt werden.
