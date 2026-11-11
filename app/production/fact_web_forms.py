@@ -6,7 +6,7 @@ evidence role promotion and no output to a film/script from this form.
 from django import forms
 
 from .fact_proposals import _value
-from .models import SourceReference
+from .models import SourceConfirmation, SourceReference
 
 
 PREDICATES = (
@@ -34,9 +34,15 @@ class _SourceChoice(forms.ModelChoiceField):
             "Verein" if obj.source_kind == SourceReference.Kind.CLUB_OFFICIAL
             else "Liga"
         )
+        try:
+            manual = obj.manual_confirmation
+        except SourceConfirmation.DoesNotExist:
+            manual = None
+        stamped_at = manual.checked_at if manual else obj.retrieved_at
+        kind_of_check = "manuell geprüft" if manual else "Import-/Abrufdatum"
         return (
             f"{kind} · {obj.title or obj.url} · "
-            f"abgerufen {obj.retrieved_at:%Y-%m-%d %H:%M} UTC "
+            f"{kind_of_check} {stamped_at:%Y-%m-%d %H:%M} UTC "
             f"(Quelle #{obj.pk})"
         )
 
