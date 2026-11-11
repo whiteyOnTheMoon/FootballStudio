@@ -45,7 +45,7 @@ def plan_narration(text: str, *, words_per_minute: int = 140,
     seconds = round(words * 60 / words_per_minute)
     if words < low:
         status = "too_short"
-        correction = f"Add at least {low - words} spoken words before TTS."
+        correction = f"Add at least {low - words} additional spoken words before TTS."
     elif words > high:
         status = "too_long"
         correction = f"Remove at least {words - high} spoken words before TTS."
