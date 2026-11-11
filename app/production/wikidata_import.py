@@ -8,6 +8,7 @@ from datetime import datetime
 
 from django.db import transaction
 
+from .dossier_versions import fork_dossier
 from .models import FactDossier, ProductionJob, SourceReference
 from .wikidata import (
     WikidataLookupError,
@@ -82,9 +83,7 @@ def import_wikidata_source(*, owner, job_id, qid, identity_confirmed=False):
         latest = _latest_dossier(locked_job)
         if _has_entity(latest, qid):
             return latest
-        dossier = FactDossier.objects.create(
-            job=locked_job, version=(latest.version + 1 if latest else 1),
-        )
+        dossier = fork_dossier(job=locked_job, previous=latest)
         source = SourceReference(
             dossier=dossier, url=url,
             source_kind=SourceReference.Kind.WIKIDATA,
