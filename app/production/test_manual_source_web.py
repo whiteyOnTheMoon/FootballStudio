@@ -76,7 +76,7 @@ class ManualSourceWebTests(TestCase):
         self.assertContains(form, "identity_confirmed")
         self.assertContains(form, "terms_confirmed")
         self.assertContains(form, "access_confirmed")
-        self.assertContains(form, "kein automatischer Websiteabruf")
+        self.assertContains(form, "Keine automatische Recherche")
         self.assertIn("no-store", form["Cache-Control"])
         self.assertEqual(FactDossier.objects.count(), 0)
 
@@ -322,15 +322,20 @@ class ManualSourceWebTests(TestCase):
 
     def test_source_confirmation_model_rejects_foreign_reviewer(self):
         self.register()
-        source = SourceReference.objects.get()
-        old = source.manual_confirmation
+        dossier = FactDossier.objects.get(job=self.job, version=1)
+        unconfirmed_source = SourceReference.objects.create(
+            dossier=dossier, url="https://club.example.org/about",
+            source_kind="club_official", title="Another page",
+            retrieved_at=dossier.created_at, access_state="accessible",
+        )
         with self.assertRaises(ValidationError):
             SourceConfirmation.objects.create(
-                source=source, reviewer=self.other,
-                checked_at=old.checked_at, confirmed_domain="club.example.org",
+                source=unconfirmed_source, reviewer=self.other,
+                confirmed_domain="club.example.org",
                 identity_confirmed=True, terms_confirmed=True,
                 access_confirmed=True, basis=BASIS,
             )
+        self.assertEqual(SourceConfirmation.objects.count(), 1)
 
     def test_no_confirmation_on_historical_imported_sources(self):
         first = FactDossier.objects.create(job=self.job, version=1)
