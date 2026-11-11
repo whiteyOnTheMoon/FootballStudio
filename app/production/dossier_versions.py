@@ -5,7 +5,7 @@ ProductionJob. Never edit rows of the preceding research version.
 """
 from copy import deepcopy
 
-from .models import Evidence, Fact, FactDossier, FactReview, SourceReference
+from .models import Evidence, Fact, FactDossier, FactReview, SourceConfirmation, SourceReference
 
 
 def fork_dossier(*, job, previous, return_mappings=False):
@@ -36,6 +36,18 @@ def fork_dossier(*, job, previous, return_mappings=False):
         new.full_clean()
         new.save()
         source_map[old.pk] = new
+        original_confirmation = SourceConfirmation.objects.filter(source=old).first()
+        if original_confirmation is not None:
+            SourceConfirmation.objects.create(
+                source=new,
+                reviewer=original_confirmation.reviewer,
+                checked_at=original_confirmation.checked_at,
+                confirmed_domain=original_confirmation.confirmed_domain,
+                identity_confirmed=original_confirmation.identity_confirmed,
+                terms_confirmed=original_confirmation.terms_confirmed,
+                access_confirmed=original_confirmation.access_confirmed,
+                basis=original_confirmation.basis,
+            )
 
     for old in previous.facts.prefetch_related("evidence").order_by("pk"):
         new = Fact(
