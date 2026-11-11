@@ -13,7 +13,7 @@ from datetime import timedelta
 from django.utils import timezone
 
 from .manual_source_import import validate_manual_source_url
-from .models import SourceReference
+from .models import SourceConfirmation, SourceReference
 from .official_site_links import _CATEGORIES, _LEAGUE_CATEGORIES
 
 
@@ -73,7 +73,7 @@ def plan_confirmed_official_source(source, *, owner_id, current_dossier_id):
 
     try:
         confirmation = source.manual_confirmation
-    except SourceReference.manual_confirmation.RelatedObjectDoesNotExist:
+    except SourceConfirmation.DoesNotExist:
         return None
 
     # Do not turn a historical or malformed attestation into network consent.
