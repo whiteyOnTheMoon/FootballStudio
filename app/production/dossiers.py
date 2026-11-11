@@ -3,7 +3,23 @@
 A snapshot contains references to evidence; it does not assert that the
 sources were independently fact-checked. No HTTP endpoint is exposed.
 """
-from .models import FactDossier
+from .models import FactDossier, FactReview
+
+
+def _review_metadata(fact):
+    """Expose recorded human decisions, not implied source trust."""
+    try:
+        review = fact.review
+    except FactReview.DoesNotExist:
+        return None
+    return {
+        "decision": review.decision,
+        "reviewer_id": review.reviewer_id,
+        "note": review.note,
+        "checked_source": review.checked_source,
+        "checked_season": review.checked_season,
+        "reviewed_at": review.reviewed_at.isoformat(),
+    }
 
 
 def load_fact_dossier(*, owner, job_id, version):
@@ -15,7 +31,7 @@ def load_fact_dossier(*, owner, job_id, version):
         job_id=job_id, job__owner=owner, version=version,
     )
     sources = list(dossier.sources.order_by("pk"))
-    facts = dossier.facts.prefetch_related("evidence").order_by("pk")
+    facts = dossier.facts.select_related("review").prefetch_related("evidence").order_by("pk")
     return {
         "job_id": dossier.job_id,
         "club_id": dossier.job.club_id,
@@ -41,6 +57,7 @@ def load_fact_dossier(*, owner, job_id, version):
                 "value": fact.value,
                 "assertion_text": fact.assertion_text,
                 "verification_state": fact.verification_state,
+                "review": _review_metadata(fact),
                 "evidence": [
                     {
                         "id": evidence.pk,

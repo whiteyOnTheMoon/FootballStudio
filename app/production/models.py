@@ -268,3 +268,47 @@ class Evidence(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()
         return super().save(*args, **kwargs)
+
+
+class FactReview(models.Model):
+    """Explicit, user-attributed decision on ONE fact in ONE dossier version.
+
+    A successful source fetch or a support-role evidence record does not
+    create this row. Only the explicit review service creates reviews.
+    Historical reviews are copied when versioning a dossier.
+    """
+
+    fact = models.OneToOneField(
+        Fact, on_delete=models.CASCADE, related_name="review",
+    )
+    reviewer = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
+        related_name="football_fact_reviews",
+    )
+    decision = models.CharField(
+        max_length=24,
+        choices=[
+            (Fact.Verification.VERIFIED, "Verified"),
+            (Fact.Verification.CONFLICTED, "Conflicted"),
+            (Fact.Verification.INSUFFICIENT, "Insufficient sources"),
+            (Fact.Verification.REJECTED, "Rejected"),
+        ],
+    )
+    note = models.CharField(max_length=500)
+    checked_source = models.BooleanField(default=False)
+    checked_season = models.BooleanField(default=False)
+    reviewed_at = models.DateTimeField(default=timezone.now)
+
+    def clean(self):
+        super().clean()
+        if self.fact_id and self.reviewer_id:
+            if self.fact.dossier.job.owner_id != self.reviewer_id:
+                raise ValidationError("Only the job owner may review its facts.")
+            if self.decision != self.fact.verification_state:
+                raise ValidationError("Review decision must equal fact status.")
+        if not isinstance(self.note, str) or not 30 <= len(self.note.strip()) <= 500:
+            raise ValidationError({"note": "Enter a meaningful, concise review note."})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
