@@ -37,6 +37,7 @@
 
   <section class="panel" aria-labelledby="source-heading">
     <h2 id="source-heading">Genau diese bereits selbst geprüfte Quelle</h2>
+    <p><strong>Bezeichnung:</strong> {{ source.source_title }}</p>
     <p><strong>Kontext:</strong> {% if source.context == "club" %}Verein: {{ job.club_name }}{% else %}Liga: {{ job.league_name }}{% endif %}</p>
     <p><strong>Quellen-ID:</strong> {{ source.source_id }} · <strong>Domain:</strong> {{ source.domain }}</p>
     <p><strong>Gespeicherte HTTPS-Adresse:</strong> <a href="{{ source.source_url }}" target="_blank" rel="noopener noreferrer nofollow">{{ source.source_url }}</a></p>
