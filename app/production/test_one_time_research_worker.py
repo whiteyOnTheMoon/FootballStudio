@@ -313,29 +313,35 @@ class OneTimeWorkerTests(TestCase):
         self.assertEqual(FactDossier.objects.count(), 2)
         self.assertEqual(OfficialResearchPage.objects.count(), 0)
 
-    @patch("app.production.one_time_research_worker.research_official_website")
-    def test_malicious_upstream_pages_are_not_imported(self, research):
-        for change in ("foreign_domain", "five_pages", "verified", "bad_heading"):
-            with self.subTest(change=change):
-                # Each subtest needs a new request; initial one is unconsumed
-                # until a single execution, so run distinct cases separately.
-                pages = self.snapshot(1)
-                if change == "foreign_domain":
-                    pages["pages"][1]["url"] = "https://evil.example.org/secret"
-                elif change == "five_pages":
-                    pages = self.snapshot(4)
-                elif change == "verified":
-                    pages["pages"][1]["verification_state"] = "verified"
-                elif change == "bad_heading":
-                    pages["pages"][1]["headings"] = ["x" * 300]
-                research.return_value = pages
-                result = self.execute()
-                self.assertEqual(result["status"], "stopped")
-                self.assertEqual(FactDossier.objects.count(), 1)
-                self.assertEqual(OfficialResearchPage.objects.count(), 0)
-                self.request.refresh_from_db()
-                self.assertIn(self.request.status, ("failed", "blocked"))
-                break  # Each request is strictly one attempt, never retry.
+    def _assert_rejected_snapshot(self, pages):
+        with patch(
+            "app.production.one_time_research_worker.research_official_website",
+            return_value=pages,
+        ):
+            result = self.execute()
+        self.assertEqual(result["status"], "stopped")
+        self.assertEqual(FactDossier.objects.count(), 1)
+        self.assertEqual(OfficialResearchPage.objects.count(), 0)
+        self.request.refresh_from_db()
+        self.assertIn(self.request.status, ("failed", "blocked"))
+
+    def test_foreign_domain_in_snapshot_is_not_imported(self):
+        pages = self.snapshot(1)
+        pages["pages"][1]["url"] = "https://evil.example.org/secret"
+        self._assert_rejected_snapshot(pages)
+
+    def test_five_page_snapshot_is_rejected(self):
+        self._assert_rejected_snapshot(self.snapshot(4))
+
+    def test_attempt_to_mark_page_verified_is_rejected(self):
+        pages = self.snapshot(1)
+        pages["pages"][1]["verification_state"] = "verified"
+        self._assert_rejected_snapshot(pages)
+
+    def test_oversized_heading_is_rejected(self):
+        pages = self.snapshot(1)
+        pages["pages"][1]["headings"] = ["x" * 300]
+        self._assert_rejected_snapshot(pages)
 
     def test_db_constraints_reject_verified_pages_and_extra_attempts(self):
         OfficialResearchRequest.objects.filter(pk=self.request.pk).update(
@@ -343,11 +349,15 @@ class OneTimeWorkerTests(TestCase):
         )
         with self.assertRaises(IntegrityError):
             with transaction.atomic():
-                OfficialResearchPage.objects.create(
-                    request=self.request, position=0, url=self.source.url,
-                    title="Safe", headings=[], retrieved_at=timezone.now(),
-                    verification_state="verified",
-                )
+                # bulk_create bypasses model.clean and verifies the
+                # database constraint itself rejects a forged review state.
+                OfficialResearchPage.objects.bulk_create([
+                    OfficialResearchPage(
+                        request=self.request, position=0, url=self.source.url,
+                        title="Safe", headings=[], retrieved_at=timezone.now(),
+                        verification_state="verified",
+                    )
+                ])
         with self.assertRaises(IntegrityError):
             with transaction.atomic():
                 OfficialResearchRequest.objects.filter(pk=self.request.pk).update(
