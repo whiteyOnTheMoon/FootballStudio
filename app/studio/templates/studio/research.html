@@ -73,6 +73,18 @@
   </section>
 
   {% if snapshot %}
+    {% if selected_version == latest_version %}
+      <section class="panel" aria-labelledby="proposal-heading">
+        <h2 id="proposal-heading">Eigenen Faktenvorschlag erfassen</h2>
+        {% if can_propose_facts %}
+          <p>Zu diesem Job sind offizielle Vereins- oder Ligaquellen erfasst. Du kannst eine einzelne Aussage mit konkreter Fundstelle als <strong>ungeprüften</strong> Vorschlag ergänzen.</p>
+          <p><a href="{% url 'research-new-fact' job.pk %}">Faktenvorschlag mit Quelle erfassen</a></p>
+          <p class="meta">Neue Vorschläge werden nicht automatisch verifiziert. Die inhaltliche Prüfung bleibt ein eigener Schritt.</p>
+        {% else %}
+          <p>Noch keine geeignete offizielle Vereins- oder Ligaquelle vorhanden. Die bestätigte Quellenaufnahme wird als separater Roadmap-Schritt ergänzt.</p>
+        {% endif %}
+      </section>
+    {% endif %}
     <section class="panel" aria-labelledby="sources-heading">
       <h2 id="sources-heading">Quellen ({{ snapshot.sources|length }})</h2>
       <p class="muted">„Erreichbar“ bezeichnet nur den damaligen technischen Abruf, nicht die inhaltliche Richtigkeit.</p>
