@@ -118,7 +118,7 @@
           {% if source.manual_confirmation %}
             <p class="meta">Herkunft: vom Nutzer eingegeben und nach eigener Zugriffs- und Identitätsprüfung bestätigt. Prüfer-ID: {{ source.manual_confirmation.reviewer_id }}. Website-Bedingungen bestätigt: {{ source.manual_confirmation.terms_confirmed|yesno:"ja,nein" }}. Das ist keine Prüfung einzelner Aussagen.</p>
             <p><strong>Eigene Zuordnungsbegründung:</strong> {{ source.manual_confirmation.basis }}</p>
-          {% endif %>
+          {% endif %}
           <p>
             {% if source.safe_link %}
               <a href="{{ source.safe_link }}" target="_blank" rel="noopener noreferrer nofollow">{{ source.url }}</a>
