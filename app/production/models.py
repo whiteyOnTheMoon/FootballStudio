@@ -174,6 +174,7 @@ class SourceReference(models.Model):
         WIKIDATA = "wikidata", "Wikidata"
         WIKIPEDIA = "wikipedia", "Wikipedia"
         CLUB_OFFICIAL = "club_official", "Official club site"
+        LEAGUE_OFFICIAL = "league_official", "Official league site"
         NEWS = "news", "News"
         OTHER = "other", "Other"
 
