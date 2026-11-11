@@ -171,10 +171,20 @@ def research_dossier(request, job_id):
             for evidence in fact["evidence"]:
                 evidence["source"] = references.get(evidence["source_id"])
 
+    can_propose_facts = (
+        snapshot is not None
+        and selected_version == (versions[0] if versions else None)
+        and any(
+            source["source_kind"] in ("club_official", "league_official")
+            and source["access_state"] == "accessible"
+            for source in snapshot["sources"]
+        )
+    )
     return render(request, "studio/research.html", {
         "job": job,
         "versions": versions,
         "selected_version": selected_version,
         "latest_version": versions[0] if versions else None,
         "snapshot": snapshot,
+        "can_propose_facts": can_propose_facts,
     })
