@@ -196,6 +196,61 @@ class SourceReference(models.Model):
     access_state = models.CharField(max_length=16, choices=Access.choices)
 
 
+
+
+class SourceConfirmation(models.Model):
+    """Audit of a manually checked source, NOT an HTTP fetch or fact review.
+
+    A separate record allows a source entered by the user to be distinguished
+    from Wikidata and the server's restricted official-site research. The
+    reviewer attests to the site association and manual access, not truth.
+    """
+    source = models.OneToOneField(
+        SourceReference, on_delete=models.CASCADE, related_name="manual_confirmation",
+    )
+    reviewer = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
+        related_name="football_source_confirmations",
+    )
+    checked_at = models.DateTimeField(default=timezone.now)
+    confirmed_domain = models.CharField(max_length=253)
+    identity_confirmed = models.BooleanField(default=False)
+    terms_confirmed = models.BooleanField(default=False)
+    access_confirmed = models.BooleanField(default=False)
+    basis = models.CharField(max_length=300)
+
+    def clean(self):
+        super().clean()
+        if self.source_id and self.reviewer_id:
+            if self.source.dossier.job.owner_id != self.reviewer_id:
+                raise ValidationError("Only the job owner may confirm a manual source.")
+            if self.source.source_kind not in (
+                SourceReference.Kind.CLUB_OFFICIAL,
+                SourceReference.Kind.LEAGUE_OFFICIAL,
+            ) or self.source.access_state != SourceReference.Access.ACCESSIBLE:
+                raise ValidationError("Manual confirmation needs an accessible official-type source.")
+            from .manual_source_import import validate_manual_source_url
+            try:
+                canonical, domain = validate_manual_source_url(self.source.url)
+            except ValueError:
+                raise ValidationError("The manual source URL is not permitted.") from None
+            if canonical != self.source.url or domain != self.confirmed_domain:
+                raise ValidationError("Confirmed domain does not match the source URL.")
+        if (self.identity_confirmed is not True
+                or self.terms_confirmed is not True
+                or self.access_confirmed is not True):
+            raise ValidationError("All three explicit manual source confirmations are required.")
+        if (not isinstance(self.basis, str)
+                or not 20 <= len(self.basis.strip()) <= 300
+                or "<" in self.basis
+                or any(ord(c) < 32 or ord(c) == 127 for c in self.basis)):
+            raise ValidationError({"basis": "Add a short, plain-text explanation (20–300 characters)."})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+
 class Fact(models.Model):
     """An atomic statement; never treated as verified without supporting evidence."""
 
