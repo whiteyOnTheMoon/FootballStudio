@@ -41,7 +41,7 @@ class _Links(HTMLParser):
             return
         if "nofollow" in (properties.get("rel") or "").lower().split():
             return
-        if properties.get("download") is not None:
+        if "download" in properties:
             return
         self.active = [href, properties.get("title") or "", []]
 
