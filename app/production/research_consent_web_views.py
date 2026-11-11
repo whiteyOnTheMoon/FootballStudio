@@ -6,7 +6,7 @@ start a task, contact any URL or mark any fact verified.
 from uuid import uuid4
 
 from django.contrib.auth.decorators import login_required
-from django.http import Http404
+from django.http import Http404, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
@@ -117,9 +117,11 @@ def approve_one_time_research(request, job_id, source_id):
 
 @login_required
 @never_cache
-@require_GET
 def list_research_requests(request, job_id):
+    # For all methods: enforce owner boundary *before* reporting 405.
     job = get_object_or_404(ProductionJob, pk=job_id, owner=request.user)
+    if request.method != "GET":
+        return HttpResponseNotAllowed(["GET"])
     records = list(OfficialResearchRequest.objects.filter(
         job=job, requested_by=request.user,
     ).order_by("-consented_at", "-pk")[:30])
