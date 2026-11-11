@@ -21,6 +21,15 @@ services:
       # Keep HSTS disabled until a live HTTPS check succeeds.
       DJANGO_HSTS_SECONDS: "${DJANGO_HSTS_SECONDS:-0}"
 
+    # Probe a private local TCP socket while presenting the externally
+    # allowed Django Host. This is NOT an additional public host binding.
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; req=urllib.request.Request('http://127.0.0.1:8000/healthz/', headers={'Host':'studio2.ap-pixels.com'}); response=urllib.request.urlopen(req,timeout=3); assert response.status==200 and response.read()==b'ok'"
+
   cloudflared:
     image: cloudflare/cloudflared:2026.10.7
     restart: unless-stopped

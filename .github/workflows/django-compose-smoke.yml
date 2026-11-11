@@ -185,6 +185,19 @@ jobs:
           bash scripts/verify_postgres_backup.sh "$archive" fs_m1_backup_restore_probe 1
           docker compose exec -T db sh -c 'psql -X -q -A -t -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT id FROM fs_m1_backup_restore_probe;"' | grep -qx 42
           rm -f -- "$archive"
+      - name: Verify production Tunnel web health using the real Compose overlay
+        env:
+          # Intentionally invalid placeholder: do NOT launch cloudflared in CI.
+          CLOUDFLARE_TUNNEL_TOKEN: "ci-fake-never-valid"
+        run: |
+          set -euo pipefail
+          # Reconfigure ONLY the web container to production settings; reuse
+          # the running test database and never connect to Cloudflare.
+          docker compose -f compose.yaml -f compose.tunnel.yaml up -d --no-deps --wait --wait-timeout 120 web
+          docker compose -f compose.yaml -f compose.tunnel.yaml exec -T web python -c "import urllib.request; req=urllib.request.Request('http://127.0.0.1:8000/healthz/', headers={'Host':'studio2.ap-pixels.com'}); res=urllib.request.urlopen(req,timeout=3); assert res.status==200 and res.read()==b'ok'"
+          # Ensure the HTTPS origin has not published any host ports.
+          docker compose -f compose.yaml -f compose.tunnel.yaml config --format json |
+            python scripts/verify_tunnel_compose.py
       - name: Print safe troubleshooting diagnostics on failure
         if: failure()
         run: |

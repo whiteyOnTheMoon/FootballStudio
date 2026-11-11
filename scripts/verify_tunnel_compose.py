@@ -36,6 +36,16 @@ expected = {
 for key, value in expected.items():
     assert env.get(key) == value, f"Invalid production setting {key}"
 assert int(env["DJANGO_HSTS_SECONDS"]) >= 0
+health = web.get("healthcheck", {}).get("test", [])
+assert health[:3] == ["CMD", "python", "-c"], (
+    "Use an in-container healthcheck, not a public URL"
+)
+script = health[3] if len(health) > 3 else ""
+assert "http://127.0.0.1:8000/healthz/" in script
+assert "'Host':'studio2.ap-pixels.com'" in script, (
+    "Production healthcheck must use a valid Django Host"
+)
+assert "response.status==200" in script and "response.read()==b'ok'" in script
 
 assert tunnel["image"] == "cloudflare/cloudflared:2026.10.7"
 assert tunnel.get("read_only") is True

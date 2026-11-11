@@ -130,3 +130,36 @@ ausgeführt. Die live ausstehende Abnahme bleibt in #6/#27/#28/#29.
 [Published application](https://developers.cloudflare.com/tunnel/routing/),
 [Token](https://developers.cloudflare.com/tunnel/reference/tunnel-tokens/),
 [Docker Compose merge](https://docs.docker.com/reference/compose-file/merge/).
+
+## Troubleshooting: Django läuft, ist aber „unhealthy“
+
+Beim ersten produktiven VPS-Start wurde ein interner Healthcheck entdeckt,
+der `http://127.0.0.1:8000/healthz/` mit dem Standard-HTTP-Host
+`127.0.0.1` statt der erlaubten Produktionsdomain aufrief. Die
+Tunnel-Compose-Datei stellt deshalb den Host-Header für genau diesen
+lokalen privaten Check auf `studio2.ap-pixels.com`. Die Web-App akzeptiert
+weiterhin nur ihren konfigurierten öffentlichen Hostnamen; es wird
+**kein** Port öffentlich freigegeben. Der CI-Docker-Job testet den
+Produktions-Overlay jetzt auch tatsächlich gegen einen gestarteten
+Django-Webcontainer (ohne echten Cloudflare-Tunnel).
+
+Bei einem Fehler den Healthcheck-Status und die letzten Logs ansehen,
+ohne Credentials zu posten:
+
+```bash
+cd /home/ap/www/footballstudio
+docker inspect --format '{{range .State.Health.Log}}{{println .ExitCode .Output}}{{end}}' footballstudio-web-1
+docker compose -f compose.yaml -f compose.tunnel.yaml logs --tail=40 web
+```
+
+Falls die neue Version gerade eingespielt wird, **kein**
+`docker compose down -v` verwenden; der bestehende Postgres-Datenträger
+bleibt erhalten:
+
+```bash
+git pull --ff-only
+docker compose -f compose.yaml -f compose.tunnel.yaml up -d --build --wait
+```
+
+Ein grüner Docker-Healthcheck allein belegt noch **nicht** die Live-Verbindung
+zum neuen Cloudflare-Tunnel oder die Korrektheit der öffentlichen Domainroute.
