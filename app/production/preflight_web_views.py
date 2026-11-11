@@ -27,6 +27,8 @@ def official_research_preflight(request, job_id):
     job = get_object_or_404(ProductionJob, pk=job_id, owner=request.user)
     dossier = FactDossier.objects.filter(job=job).order_by("-version").first()
     if dossier is None:
+        if request.GET.get("source_id") is not None:
+            raise Http404("Unknown confirmed source.")
         return render(request, "studio/official_research_preflight.html", {
             "job": job,
             "dossier": None,
