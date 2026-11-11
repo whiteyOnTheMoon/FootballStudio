@@ -50,14 +50,20 @@ def _wikipedia_link(entity):
     return "https://en.wikipedia.org/wiki/" + quote(title.replace(" ", "_"), safe="")
 
 
+def validate_wikidata_qid(qid):
+    """Reject anything except an explicit Wikidata entity ID."""
+    if not isinstance(qid, str) or not _QID.fullmatch(qid):
+        raise ValueError("A valid Wikidata Q-ID is required (for example Q123).")
+    return qid
+
+
 def fetch_wikidata_profile(qid):
     """Return serializable English profile metadata from Wikidata's EntityData API.
 
     Explicit Q-IDs only. Network is called only when this function is invoked.
     Does not write to the database, cache or call any paid service.
     """
-    if not isinstance(qid, str) or not _QID.fullmatch(qid):
-        raise ValueError("A valid Wikidata Q-ID is required (for example Q123).")
+    validate_wikidata_qid(qid)
 
     entity_url = f"https://www.wikidata.org/wiki/Special:EntityData/{qid}.json"
     request = Request(entity_url, headers={

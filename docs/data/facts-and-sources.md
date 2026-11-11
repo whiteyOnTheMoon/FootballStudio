@@ -156,3 +156,24 @@ Das Beispiel **„Beispiel FC“ und alle Zahlen/URLs sind reine Testdaten**, ke
 - [x] Trennung zwischen M0-Datenvertrag und späteren M1-/M2-/M3-Implementierungen dargestellt.
 
 **Folge-Issues:** Datenmodell [#22](https://github.com/whiteyOnTheMoon/FootballStudio/issues/22), Recherche/Dossier [#31–#33](https://github.com/whiteyOnTheMoon/FootballStudio/issues/31), Konfliktprüfung M3 [#52](https://github.com/whiteyOnTheMoon/FootballStudio/issues/52).
+
+
+## Q-ID-Rechercheübernahme als bewusst ausgelöster M2-Schritt (#121)
+
+`app.production.wikidata_import.import_wikidata_source(owner=..., job_id=..., qid=..., identity_confirmed=True)`
+ist ein interner Python-Service ohne HTTP-Endpunkt oder Hintergrundjob. Der Aufrufer
+muss zuvor den Wikidata-Eintrag für den **zur Laufzeit gewählten Verein** bewusst
+bestätigen: Ein Namensgleichklang oder eine Q-ID allein sind kein Identitätsbeleg.
+
+Zuerst wird geprüft, ob der Job dem aufrufenden Nutzer gehört. Nur dann werden
+eventuell öffentliche Wikidata-Daten abgerufen (ohne Paid-API). Gespeichert
+werden ausschließlich die zurückgegebene SourceReference, der sichere
+EntityData-Link, die Q-ID und der Abrufzeitpunkt. Eine bereits in der letzten
+Dossierversion vorhandene Q-ID wird ohne weiteren Netzaufruf wiederverwendet;
+bei einer anderen bestätigten Q-ID entsteht ein neuer, getrennter
+Versionsstand. Ein Netzwerk- oder Schemafehler speichert keine Teilversion.
+
+**Wichtig:** Die neue Version enthält zunächst weder Fakten noch Belege.
+Die Importfunktion setzt deshalb niemals `verification_state=verified`.
+Belegextraktion, Club-Identitätsprüfung, mögliche Widersprüche und die
+spätere Bedienoberfläche folgen separat in #31/#32/#33.
