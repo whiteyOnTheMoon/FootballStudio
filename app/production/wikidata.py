@@ -10,13 +10,13 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 
-_QID = re.compile(r"Q[1-9][0-9]{0,11}\Z")
-
 from .official_site_links import _homepage
+
+_QID = re.compile(r"Q[1-9][0-9]{0,11}\Z")
 
 _MAX_WEBSITE_CANDIDATES = 5
 _MAX_WEBSITE_STATEMENTS = 100
-_STATEMENT_ID = re.compile(r"Q[1-9][0-9]{0,11}\\$[A-Za-z0-9-]{1,80}\\Z")
+_STATEMENT_ID = re.compile(r"Q[1-9][0-9]{0,11}\$[A-Za-z0-9-]{1,80}\Z")
 
 
 def _official_website_candidates(entity, qid, source_url):
@@ -52,7 +52,7 @@ def _official_website_candidates(entity, qid, source_url):
             continue
         url = datavalue.get("value")
         if (not isinstance(url, str) or len(url) > 500 or not url
-                or any(c.isspace() or ord(c) < 32 or c == "\\\\" for c in url)):
+                or any(c.isspace() or ord(c) < 32 or c == "\\" for c in url)):
             continue
         try:
             normalized, _ = _homepage(url)
