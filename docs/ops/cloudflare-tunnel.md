@@ -1,185 +1,132 @@
-# FS-012: FootballStudio auf dem VPS über Cloudflare Tunnel
+# FootballStudio: eigener Cloudflare-Tunnel auf dem VPS
 
-**Alternative Architektur (NICHT für den bereits vorhandenen Tunnel `ap-pixels` starten):** Docker Compose auf einem VPS.
-Die öffentliche Domain und der HTTPS-Zugang werden über einen
-**remotely-managed Cloudflare Tunnel** geführt. Der bisherige Plan
-für einen eigenen öffentlich erreichbaren Nginx-/Caddy-Reverse-Proxy
-wird für dieses MVP **nicht** benötigt.
+**Verbindliche Entscheidung (11.11.2026):** FootballStudio verwendet einen
+**eigenständigen Cloudflare-Tunnel `footballstudio`** mit einem eigenen
+`cloudflared`-Docker-Container, analog zum bestehenden Projekt
+`videonews-studio`. Die vorherige Mitbenutzung von `ap-pixels` ist
+**verworfen**. Andere Tunnel, Websites und Netzwerke nicht verändern.
 
-> Status: **Konfiguration und CI-Validierung bereitgestellt**, aber
-> weder ein echter VPS noch das Cloudflare-Konto wurden aus diesem
-> Repository geprüft oder verändert. Ohne Token und Cloudflare-Route
-> gibt es noch keinen erreichbaren Dienst.
+## Bestätigter Serverbestand
 
-> **Aktualisierung 11.11.2026:** Der VPS hat bereits einen Tunnel `ap-pixels`
-> mit aktiven Webseiten. Für den aktuellen Nutzerfall gilt vorrangig
-> [Bestehenden `ap-pixels`-Tunnel wiederverwenden](existing-ap-pixels-tunnel.md).
-> Die nachfolgenden Schritte starten einen **zusätzlichen Connector**
-> und dürfen nicht ohne bewusste Architekturentscheidung verwendet werden.
-> Die vorhandenen Webprojekte unter `/home/ap/www` bleiben unberührt.
+Der Nutzer hat folgende **lesenden** VPS-Ergebnisse geliefert:
+`systemctl is-active cloudflared.service` → **inactive**.
+`docker ps` zeigt unabhängige Connectoren:
+`kurvenfunk-prod-cloudflared-1`,
+`kurvenfunk-staging-cloudflared-1`,
+`kurvenfunk-dev-cloudflared-1`,
+`videonews-studio-cloudflared` und
+`cloudflared_ap_pixels`, jeweils auf separaten Docker-Netzen.
+Das bestehende Tunnel-Dashboard zeigt
+`videonews-studio` → `studio.ap-pixels.com` →
+`http://web:3000`. **Diese Route nicht überschreiben.**
 
-## Zieltopologie
+FootballStudios neue Route lautet stattdessen:
 
-```text
-Browser --HTTPS--> Cloudflare edge (DNS/TLS, HTTPS redirect)
-                             |
-                      verschlüsselter Tunnel
-                             |
-             cloudflared (Docker; nur ausgehende Verbindung)
-                             |
-               Docker-Netz tunnel_frontend
-                             |
-                    web:8000 (Django)
-                             |
-                Docker-Standardnetz default
-                             |
-                      db:5432 (PostgreSQL)
-```
+| Einstellung | Wert |
+| --- | --- |
+| Cloudflare Tunnel | `footballstudio` (neu, eigener Tunnel) |
+| Published application | `studio2.ap-pixels.com` |
+| Service / Origin Type | `HTTP` |
+| Service URL | `http://web:8000` |
+| VPS-Verzeichnis | `/home/ap/footballstudio` |
+| Compose Services | `web`, `db`, `cloudflared` |
+| Öffentliche Host-Ports | **keine** |
 
-Die Produktionsdatei `compose.tunnel.yaml` wird **zusätzlich** zur
-lokalen `compose.yaml` genutzt. Dabei wird die Loopback-Publikation
-des Django-Ports über `ports: !reset []` **entfernt**, statt sie
-öffentlich freizuschalten. `db` und `cloudflared` haben
-ebenfalls **keine** veröffentlichten Host-Ports; `cloudflared`
-liegt nicht im Datenbank-Netz. Docker Compose benötigt Unterstützung
-für `!reset` (Docker Compose V2).
+Die Projekte in `/home/ap/www` bleiben unangetastet. Ein eigener
+Compose-Projektname `footballstudio`, PostgreSQL-Volume und eigene
+Netze trennen die Container von allen vorhandenen Projekten. Docker
+löst den Servicenamen `web` **im eigenen Tunnel-Netz**
+`tunnel_frontend` auf; `http://localhost:8000` wäre aus Sicht
+des Connector-Containers falsch.
 
-## Cloudflare einmalig konfigurieren
+## 1. Neuen Tunnel im Dashboard anlegen
 
-Im Cloudflare-Dashboard unter **Networking → Tunnels** den vorhandenen
-Tunnel auswählen oder einen neuen **remotely-managed Tunnel** anlegen.
-Dort einen **Published application**-Eintrag für
-`studio2.ap-pixels.com` mit folgendem Origin-Service konfigurieren:
+Im Cloudflare-Dashboard **Networking → Tunnels → Create a tunnel**
+öffnen, den Typ **cloudflared** wählen und den Namen
+**`footballstudio`** vergeben. Beim Connector-Setup Docker wählen.
+Den **neuen** Token ausschließlich auf dem VPS in
+`/home/ap/footballstudio/.env` unter
+`CLOUDFLARE_TUNNEL_TOKEN` speichern.
+**Niemals** im Chat, GitHub, Screenshot oder Terminalausgaben teilen.
+Den vorgeschlagenen `docker run`-Befehl **nicht zusätzlich**
+ausführen: Compose startet den Container selbst.
 
-- **Hostname:** `studio2.ap-pixels.com`
-- **Service URL:** `http://web:8000` (Docker-Service `web`, **nicht**
-  `http://localhost:8000`, da cloudflared im eigenen Container läuft)
-- **Transport:** Öffentliches **HTTPS** über Cloudflare; zum Django-
-  Container intern HTTP im privaten Docker-Netz (kein Origin-TLS nötig).
-- Cloudflare am Edge auf **Always Use HTTPS** konfigurieren.
-- Optional den Zugang zum MVP zusätzlich über **Cloudflare Access**
-  schützen; die Django-Anmeldung bleibt trotzdem aktiv.
+Unter **Routes → Add route → Published application** eine neue
+Route für `studio2.ap-pixels.com` und den internen Service
+**`http://web:8000`** hinzufügen. Prüfen, dass der DNS-Eintrag
+diesem **neuen** Tunnel zugeordnet ist. Andere Routen und Connectoren
+bleiben unverändert. Am Cloudflare Edge HTTPS / Always Use HTTPS
+prüfen; **HSTS zunächst auf 0** lassen.
 
-Für einen **bereits auf dem VPS-Host laufenden** Cloudflare-Connector
-ist die Docker-Service-URL nicht direkt erreichbar. In diesem Fall
-vorher entscheiden, ob der Connector in den Compose-Stack migriert
-wird (diese Anleitung) oder ob stattdessen der vorhandene Connector
-gezielt auf den lokalen Loopback-Port des separaten, nur lokal
-gebundenen Webdiensts zeigt. **Nicht unbeabsichtigt zwei Connectoren
-für denselben Anwendungsdienst starten.** Die hier vorgeschlagene
-Produktionsvariante ist **ein Connector im Compose-Stack**.
+## 2. Eigenständiges Docker-Projekt auf dem VPS
 
-## Geheimwerte und lokale Startprüfung
-
-Von Cloudflare unter **Networking → Tunnels → (Tunnel) →
-Add a replica** den Token abrufen. **Token niemals hier im Chat,
-in GitHub, auf Screenshots oder in Tickets posten.** Er verleiht
-dem Inhaber Zugriff auf den Tunnel; ein Leak erfordert Rotation.
-
-In einer privaten `.env` auf dem autorisierten VPS sind zu setzen:
-`DJANGO_SECRET_KEY`, `POSTGRES_PASSWORD` und
-`CLOUDFLARE_TUNNEL_TOKEN`. Verschiedene starke Werte nutzen;
-`DJANGO_HSTS_SECONDS=0` für die erste Inbetriebnahme belassen.
-`.env` nicht einchecken. Vorsicht: `docker compose config`
-**ohne `--quiet` kann aufgelöste Geheimwerte anzeigen**. Das
-CI verwendet ausschließlich wirkungslose Platzhalter.
+Zuerst freie Kapazität, vorhandene Verzeichnisse, Docker-/Compose-Version
+und bereits gestartete Container **nur lesend** prüfen.
+Keine fremden Container neustarten oder stoppen. Falls
+`/home/ap/footballstudio` noch nicht existiert:
 
 ```bash
-# Vorab: Inventur des VPS und bestehender Container/Dienste (#6)
-docker compose version
-
-# .env eigenständig auf dem autorisierten VPS anlegen (nicht teilen!)
+cd /home/ap
+git clone https://github.com/whiteyOnTheMoon/FootballStudio.git footballstudio
+cd /home/ap/footballstudio
+cp .env.example .env
 chmod 600 .env
+```
 
-# Compose-Overlay validieren, ohne dessen Secrets auszugeben:
+In `.env` **verschiedene sichere Werte** für `DJANGO_SECRET_KEY`,
+`POSTGRES_PASSWORD` und den **neuen**
+`CLOUDFLARE_TUNNEL_TOKEN` setzen; keine Beispielwerte verwenden.
+`DJANGO_HSTS_SECONDS=0` bis zur TLS-Liveprüfung. Kein Token
+eines anderen Projekts kopieren.
+
+```bash
+# config --quiet gibt keine aus .env aufgelösten Secrets aus.
 docker compose -f compose.yaml -f compose.tunnel.yaml config --quiet
-
-# Die tatsächlich benötigten drei Container starten:
 docker compose -f compose.yaml -f compose.tunnel.yaml up -d --build --wait
-
-# Health und Django-Konfiguration intern im Compose-Netz prüfen:
 docker compose -f compose.yaml -f compose.tunnel.yaml ps
-docker compose -f compose.yaml -f compose.tunnel.yaml exec -T web python manage.py check
-
-# Tunnel-Laufzeit prüfen, ohne den Token aus der Umgebung zu drucken:
-docker compose -f compose.yaml -f compose.tunnel.yaml logs --tail=30 cloudflared
 ```
 
-Cloudflare-Tunnelverbindungen werden **ausgehend** aufgebaut. Je nach
-VPS-/Firewall-Konfiguration muss ausgehend TCP/UDP **7844** erreichbar
-sein; **kein öffentliches Inbound-Portforwarding** für 8000, 5432,
-80 oder 443 einrichten. Eventuelle SSH-Verwaltung separat absichern.
+Das geprüfte Overlay `compose.tunnel.yaml` entfernt das
+Entwicklungs-Portmapping per `ports: !reset []`.
+`web`, `db` und `cloudflared` veröffentlichen **keinen
+Port am VPS**. `cloudflared` liegt ausschließlich im separaten
+Ingress-Netz; die Datenbank ausschließlich im Compose-Standardnetz,
+das sie nur mit `web` teilt. Jede Website hat ihr eigenes
+Docker-Compose-Netz, deshalb ist der generische Service-Name
+`web` korrekt.
 
-## HTTPS/CSRF/Healthchecks
+`cloudflared` nutzt den neuen Token aus der privaten
+Docker-Umgebung. **Wichtig:** `docker compose config` ohne
+`--quiet` kann Geheimwerte anzeigen. Auch andere Logquellen
+vor Weitergabe auf Secrets prüfen.
 
-Der Overlay setzt für Django:
+## 3. Live-Abnahme (noch ausstehend)
 
-```text
-DJANGO_DEBUG=0
-DJANGO_LOCAL_HTTP=0
-DJANGO_ALLOWED_HOSTS=studio2.ap-pixels.com
-DJANGO_TRUST_PROXY=1
-DJANGO_FORCE_HTTPS=1
-DJANGO_CSRF_TRUSTED_ORIGINS=https://studio2.ap-pixels.com
-DJANGO_HSTS_SECONDS=0
-```
+1. Cloudflare zeigt **`footballstudio` als Healthy** mit einer
+   Published-Application-Route `studio2.ap-pixels.com`.
+2. Von außen `https://studio2.ap-pixels.com/healthz/` testen:
+   `200 ok` (ggf. nach Cloudflare-Access-Anmeldung).
+3. `http://studio2.ap-pixels.com/` muss auf HTTPS umleiten;
+   Browser-Zertifikat kontrollieren.
+4. Anmeldung, CSRF-Formulare, Vereinspicker und Testjob prüfen.
+5. Kontrollieren, dass `studio.ap-pixels.com` und die bestehenden
+   `ap-pixels`-/`kurvenfunk`-Sites weiterhin funktionieren.
+6. HSTS erst nach erfolgreichem HTTPS-Test vorsichtig aktivieren.
+7. Datenbank-Backup und Wiederherstellungsprüfung aus
+   [Backup/Restore](postgres-backup-restore.md) für den VPS planen.
 
-`SECURE_PROXY_SSL_HEADER` vertraut `X-Forwarded-Proto` ausschließlich
-in diesem **portlosen Tunnel-Deployment**. Cloudflare überschreibt
-den vom Browser gesetzten Header. Django leitet echtes HTTP auf
-HTTPS um, akzeptiert Cookies nur als Secure und vermeidet durch
-den vertrauenswürdigen Proxy-Header HTTPS-Redirectschleifen.
-`/healthz/` bleibt bewusst von Django-internen HTTPS-Redirects
-ausgenommen, damit der **private Docker-Healthcheck** weiter funktioniert.
+`Healthy` zeigt die Connector-Verbindung an, **nicht**
+automatisch die Erreichbarkeit des Django-Ursprungs. Keine
+`docker compose down -v`-Befehle: das würde das
+PostgreSQL-Volume löschen. Falls ein Rollback nötig ist, nur
+den eigenen Stack und die neue `studio2`-Route zurücknehmen;
+andere Tunnel und ihre Routen unverändert lassen.
 
-**HSTS** vor dem öffentlichen HTTPS-/Redirect-Test deaktiviert
-lassen. Erst nach erfolgreichem Live-Test vorsichtig z. B.
-`DJANGO_HSTS_SECONDS=3600` einschalten; nicht sofort `preload`
-oder `includeSubDomains` auf einer gemeinsam genutzten Domain
-aktivieren. Änderung durch erneutes `up -d` ausrollen.
-
-## Live-Abnahme (ausstehend)
-
-1. Auf einem autorisierten VPS prüfen, dass Docker/Compose,
-   bestehende Tunnel/Reverse-Proxies, freie Ressourcen und Portbelegung
-   mit #6 übereinstimmen. Keine fremden Dienste deaktivieren.
-2. Cloudflare-Tunnel und Route im Dashboard prüfen; Tunnelstatus
-   **Healthy** allein beweist **keine** funktionierende Origin-Route.
-3. Von außerhalb `https://studio2.ap-pixels.com/healthz/`
-   aufrufen (bei Cloudflare Access erst nach Anmeldung).
-   Nur `ok` und 200, keine Datenbankdiagnostik.
-4. Django-Login, CSRF-geschützte Formulare, Vereinsauswahl und
-   Testjob im Browser testen; nur Secure-Cookies über HTTPS.
-5. `http://studio2.ap-pixels.com/` muss auf die HTTPS-Domain
-   umleiten. TLS-Zertifikat und Gültigkeitsdatum im Browser prüfen.
-6. Nach erfolgreicher HTTPS-Abnahme HSTS behutsam aktivieren.
-7. Backup-/Restore-Ablauf gemäß [FS-008c](postgres-backup-restore.md)
-   mit tatsächlich verfügbarem Speicher und gesicherter Offsite-Ablage
-   überprüfen. Erst dann Zielbetrieb freigeben.
-
-Zum Healthcheck, datensparsamen JSON-Logging und begrenzten Docker-Logs siehe
-[Healthcheck und Logging](health-and-logging.md).
-
-**Offene Abnahmepunkte:** echte Domain-/DNS- und Tunnel-Route (#27),
-gültiges öffentliches Zertifikat und HTTP→HTTPS (#28), realer
-VPS-Secret-/Rollback-Nachweis (#29). Ein erfolgreicher CI-Lauf ist
-nur ein Nachweis für die *Konfiguration*, nicht für Cloudflare oder
-einen tatsächlichen VPS-Deploy.
-
-## Rollback und Sicherheit
-
-Bei Fehlkonfiguration nicht an fremden Diensten oder den
-PostgreSQL-Volumes arbeiten. Auf den letzten funktionierenden
-Git-Commit der Web-Konfiguration zurücksetzen, danach
-`docker compose -f compose.yaml -f compose.tunnel.yaml up -d --build`
-mit **derselben bestehenden DB** ausführen; Migrationen
-vorher auf Rückwärtskompatibilität prüfen. Den Tunnel über das
-Cloudflare-Dashboard pausieren, falls eine öffentliche Route
-vorübergehend geschlossen werden muss. Weder `down -v` noch
-Löschbefehle gegen Datenbank-Volumes verwenden.
+**Status:** Die Compose-Konfiguration ist CI-geprüft,
+aber **kein** tatsächlicher VPS-/Cloudflare-Deploy wurde hier
+ausgeführt. Die live ausstehende Abnahme bleibt in #6/#27/#28/#29.
 
 **Quellen:** [Cloudflare Tunnel setup](https://developers.cloudflare.com/tunnel/get-started/),
-[Cloudflare token](https://developers.cloudflare.com/tunnel/reference/tunnel-tokens/),
-[Cloudflare routing](https://developers.cloudflare.com/tunnel/concepts/routing/),
-[Cloudflare Proxy Header](https://developers.cloudflare.com/fundamentals/reference/http-headers/),
-[Compose reset](https://docs.docker.com/reference/compose-file/merge/).
+[Published application](https://developers.cloudflare.com/tunnel/routing/),
+[Token](https://developers.cloudflare.com/tunnel/reference/tunnel-tokens/),
+[Docker Compose merge](https://docs.docker.com/reference/compose-file/merge/).

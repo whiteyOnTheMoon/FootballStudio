@@ -1,6 +1,8 @@
-# Production-only Cloudflare Tunnel overlay. Use with compose.yaml:
-# docker compose -f compose.yaml -f compose.tunnel.yaml up -d --build
-# Never run this overlay without configuring a remotely-managed Cloudflare tunnel.
+# Dedicated production tunnel named footballstudio, NOT a replica of other projects.
+# Cloudflare route studio2.ap-pixels.com -> http://web:8000.
+# Create a new remotely-managed Cloudflare tunnel and save only its new token
+# in the private .env as CLOUDFLARE_TUNNEL_TOKEN.
+# docker compose -f compose.yaml -f compose.tunnel.yaml up -d --build --wait
 services:
   web:
     # Do NOT publish Gunicorn on the VPS, not even on loopback, in tunnel mode.
@@ -27,7 +29,7 @@ services:
         condition: service_healthy
     command: ["tunnel", "--no-autoupdate", "run"]
     environment:
-      # cloudflared's documented token environment variable avoids CLI leaks.
+      # Use only the NEW footballstudio token; never copy other tunnel tokens.
       TUNNEL_TOKEN: "${CLOUDFLARE_TUNNEL_TOKEN:?Set CLOUDFLARE_TUNNEL_TOKEN in the private .env}"
     networks:
       - tunnel_frontend

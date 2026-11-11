@@ -13,7 +13,7 @@
 - **Web:** Python/Django, Templates und lokale JavaScript-Dropdowns (Verband → Land → Liga → Verein); kein Frontend-CDN.
 - **Daten:** PostgreSQL mit persistentem Docker-Volume; versionierte Offline-Referenz- und Vereinssnapshots ohne regelmäßige Katalog-API-Aufrufe.
 - **Produktion:** separater Hintergrund-Worker mit Recherche-, LLM-, Medien-, TTS- und FFmpeg-Modulen; Zwischenergebnisse/Retry.
-- **Betrieb:** Docker Compose mit getrennten Services `web`, `db` und ab M2 `worker`; Reverse Proxy + TLS am bestehenden VPS.
+- **Betrieb:** Docker Compose unter `/home/ap/footballstudio`, mit eigenem Cloudflare-Tunnel `footballstudio` als drittem Dienst neben `web` und `db`; Cloudflare übernimmt öffentliches HTTPS. Der spätere Worker kommt ab M2.
 - **Sprache:** `en` zuerst; Architektur für `de`, `fr`, `it`, `es`, `pt`.
 - **Sicherheit:** Anmeldung, private Produktionsdateien, keine Secrets im Repository; keine automatische YouTube-Veröffentlichung im MVP.
 
@@ -31,8 +31,8 @@
 | [Medien und Rechte](docs/data/media-and-rights.md) | Lizenzmetadaten, Fallback und Publikationsgrenzen |
 | [VPS-Inventur](docs/ops/vps-inventory.md) | Lesender Prüfplan; tatsächliche Serverwerte noch offen |
 | [PostgreSQL Backup/Restore](docs/ops/postgres-backup-restore.md) | Datenbank-Dumps, isolierter Restore-Test, Aufbewahrung und Risiken |
-| [Bestehenden Cloudflare-Tunnel weiterverwenden](docs/ops/existing-ap-pixels-tunnel.md) | VPS unter `/home/ap/footballstudio`, bestehende `/www`-Projekte und `ap-pixels`-Tunnel bleiben unverändert; zwei Anschlussvarianten |
-| [Cloudflare-Tunnel-Deployment](docs/ops/cloudflare-tunnel.md) | Alternative mit eigenem `cloudflared`-Connector, wenn ausdrücklich erforderlich; derzeit nicht die bevorzugte VPS-Variante |
+| [Cloudflare-Tunnel-Deployment](docs/ops/cloudflare-tunnel.md) | **Bevorzugte VPS-Variante:** eigener Tunnel `footballstudio` → `http://web:8000` und eigene Docker-Netze |
+| [Historische Tunnel-Alternative](docs/ops/existing-ap-pixels-tunnel.md) | Vorherige Planung der Mitbenutzung von `ap-pixels`; **nicht für den aktuellen VPS verwenden** |
 | [Healthcheck & Logging](docs/ops/health-and-logging.md) | Readiness, datensparsame JSON-Fehlerlogs und Docker-Logrotation |
 | [Repository-Struktur](docs/development/repository-layout.md) | Geplante Verzeichnisse, lokaler Einstieg und Konventionen |
 | [Django- und Docker-Grundlage](docs/development/docker-local.md) | Aktueller lokaler Start, sichere Konfiguration, Tests und Grenzen |
@@ -53,7 +53,7 @@ curl -f http://127.0.0.1:8000/healthz/
 docker compose exec web python manage.py test app.studio
 ```
 
-**Wichtig:** Standardmäßig ist die Web-App nur über die lokale Loopback-Adresse erreichbar. Für den bekannten VPS wird der **vorhandene Tunnel `ap-pixels` wiederverwendet**. Die [Anleitung für bestehende Projekte und Tunnel](docs/ops/existing-ap-pixels-tunnel.md) setzt FootballStudio separat unter `/home/ap/footballstudio` auf; vorhandene Seiten unter `/home/ap/www` werden nicht verändert. Je nach laufendem Connector gilt ein privater Host-Origin-Port oder eine eigene Docker-Bridge. Kein Live-VPS-Deployment wurde durchgeführt. Die Anmeldung und die dynamische Vereinsauswahl sind implementiert; die manuelle Vereinsanlage und Job-Oberflächen folgen noch. [Vollständige Anleitung](docs/development/docker-local.md).
+**Wichtig:** Standardmäßig ist die Web-App nur über die lokale Loopback-Adresse erreichbar. Auf dem VPS bekommt FootballStudio einen **eigenen Docker-Stack mit eigenem Cloudflare-Tunnel** unter `/home/ap/footballstudio`, wie `videonews-studio`. Die bestehenden Sites unter `/home/ap/www` und ihre Tunnel bleiben unverändert. Die [VPS-Anleitung](docs/ops/cloudflare-tunnel.md) verwendet das bestehende `compose.tunnel.yaml` und veröffentlicht keinerlei Host-Ports. **Noch kein Live-VPS-Deployment ausgeführt.**
 
 ## GitHub-Arbeitsprozess
 
