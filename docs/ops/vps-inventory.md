@@ -89,3 +89,18 @@ systemctl is-active nginx caddy apache2 2>/dev/null
 - [ ] Messergebnis und Entscheidung zur M1-Tauglichkeit im Issue verlinkt.
 
 **Bis diese Punkte erfüllt sind, bleibt #6 ausdrücklich offen.**
+
+## Teilinventur aus VPS-Ausgabe (11.11.2026)
+
+- `cloudflared.service` (systemd): **inactive**.
+- Existierende Tunnel-Connectoren als Docker-Container: drei
+  `kurvenfunk-*-cloudflared-1`, ein
+  `videonews-studio-cloudflared` und
+  `cloudflared_ap_pixels`, auf voneinander getrennten
+  Docker-Netzen.
+- **Vorgabe:** FootballStudio nutzt einen **eigenen** Tunnel und
+  separaten Connector `footballstudio`, nicht den bestehenden
+  `ap-pixels`-Tunnel. [Aktuelle Anleitung](cloudflare-tunnel.md).
+- CPU/RAM/Platte, Docker-/Compose-Versionen, Portbelegung und
+  öffentliche TLS-/DNS-Antwort **noch nicht** durch einen
+  vollständigen Hostbericht nachgewiesen.

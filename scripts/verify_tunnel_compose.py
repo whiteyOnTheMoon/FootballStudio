@@ -9,7 +9,9 @@ import json
 import sys
 
 config = json.load(sys.stdin)
+assert config.get("name") == "footballstudio", "Isolate Compose project from other sites"
 services = config["services"]
+assert set(services) == {"db", "web", "cloudflared"}, "Exactly one dedicated connector"
 web = services["web"]
 db = services["db"]
 tunnel = services["cloudflared"]
@@ -38,7 +40,9 @@ assert int(env["DJANGO_HSTS_SECONDS"]) >= 0
 assert tunnel["image"] == "cloudflare/cloudflared:2026.10.7"
 assert tunnel.get("read_only") is True
 assert "ALL" in tunnel.get("cap_drop", [])
-assert tunnel["environment"].get("TUNNEL_TOKEN"), "Missing tunnel token"
+assert tunnel["environment"].get("TUNNEL_TOKEN"), "Missing dedicated tunnel token"
+assert "TUNNEL_TOKEN" not in web["environment"]
+assert "TUNNEL_TOKEN" not in db["environment"]
 assert tunnel.get("command") == ["tunnel", "--no-autoupdate", "run"]
 assert tunnel["depends_on"]["web"]["condition"] == "service_healthy"
 
@@ -47,5 +51,8 @@ db_networks = set(db.get("networks", {}))
 tunnel_networks = set(tunnel.get("networks", {}))
 assert web_networks & tunnel_networks, "Web and tunnel need a private bridge"
 assert not db_networks & tunnel_networks, "Tunnel must not share DB network"
-assert "tunnel_frontend" in tunnel_networks, "Expected dedicated ingress network"
-print("Tunnel Compose validation passed: no host ports, isolated DB, proxy settings, token supplied.")
+assert web_networks == {"default", "tunnel_frontend"}
+assert db_networks == {"default"}, "DB must stay outside ingress network"
+assert tunnel_networks == {"tunnel_frontend"}, "Connector must not share DB or other network"
+assert not config.get("networks", {}).get("tunnel_frontend", {}).get("external"), "Use project-owned ingress network"
+print("Dedicated FootballStudio tunnel: ports closed, networks isolated, config valid.")
