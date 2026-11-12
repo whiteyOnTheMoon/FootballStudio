@@ -87,7 +87,7 @@ def validate_title_candidates(payload, *, club_name, reviewed_sentences):
         raise TitleContractError("missing_reviewed_context")
     known_numbers = set()
     for sentence in reviewed_sentences:
-        known_numbers.update(re.findall(r"(?<!\\w)\\d+(?!\\w)", sentence))
+        known_numbers.update(re.findall(r"(?<!\w)\d+(?!\w)", sentence))
     seen = set()
     for title in titles:
         if not _printable(title, 12, 180):
@@ -98,6 +98,6 @@ def validate_title_candidates(payload, *, club_name, reviewed_sentences):
         if signature in seen:
             raise TitleContractError("duplicate_titles")
         seen.add(signature)
-        if not set(re.findall(r"(?<!\\w)\\d+(?!\\w)", title)) <= known_numbers:
+        if not set(re.findall(r"(?<!\w)\d+(?!\w)", title)) <= known_numbers:
             raise TitleContractError("unreviewed_number")
     return tuple(titles)
