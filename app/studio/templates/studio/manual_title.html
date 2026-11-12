@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>Arbeitstitel ändern · FootballStudio</title>
+  <style>
+    :root {color-scheme:dark}
+    body {margin:0;background:#0b1320;color:#f1f7fc;font:1rem/1.55 system-ui,sans-serif}
+    main {max-width:680px;margin:0 auto;padding:28px 18px}
+    a {color:#63ddbf}
+    section {margin-top:22px;padding:22px;border:1px solid #355064;border-radius:14px;background:#172536}
+    label {display:block;font-weight:700;margin:12px 0 6px}
+    input {width:100%;box-sizing:border-box;border:1px solid #688294;border-radius:8px;padding:12px;background:#101c2b;color:inherit;font:inherit}
+    button {margin-top:18px;padding:12px 18px;background:#63ddbf;color:#061712;border:0;border-radius:8px;font:inherit;font-weight:700}
+    .errorlist {color:#ffb9b9}
+    :focus-visible {outline:3px solid #63ddbf;outline-offset:3px}
+  </style>
+</head>
+<body><main>
+  <a href="{% url 'home' %}">← Zur Jobübersicht</a>
+  <h1>Arbeitstitel bearbeiten</h1>
+  <p>Job #{{ job.pk }} · {{ job.club_name }}</p>
+  <section>
+    <p>Du kannst einen eigenen englischen Arbeitstitel speichern. KI-Vorschläge sind noch nicht aktiviert. Es wird kein Video oder API-Aufruf gestartet.</p>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      <label for="id_title">Neuer Arbeitstitel</label>
+      {{ form.title.errors }}
+      {{ form.title }}
+      {{ form.revision.as_hidden }}
+      {{ form.revision.errors }}
+      <button type="submit">Arbeitstitel speichern</button>
+    </form>
+  </section>
+</main></body></html>
