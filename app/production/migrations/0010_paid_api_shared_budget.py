@@ -75,6 +75,7 @@ class Migration(migrations.Migration):
                 ("reserved_at", models.DateTimeField(
                     default=django.utils.timezone.now,
                 )),
+                ("dispatch_started_at", models.DateTimeField(null=True, blank=True)),
                 ("reconciled_at", models.DateTimeField(null=True, blank=True)),
                 ("job", models.ForeignKey(
                     on_delete=django.db.models.deletion.PROTECT,
