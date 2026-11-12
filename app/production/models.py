@@ -688,6 +688,7 @@ class PaidApiCharge(models.Model):
         max_length=12, choices=State.choices, default=State.RESERVED,
     )
     reserved_at = models.DateTimeField(default=timezone.now)
+    dispatch_started_at = models.DateTimeField(null=True, blank=True)
     reconciled_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
