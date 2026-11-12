@@ -142,8 +142,7 @@ def locked_gate():
     return gate
 
 
-def reserve_paid_api_budget(*, owner_id, job_id, rate_key, max_units, request_key,
-                            now=None):
+def reserve_paid_api_budget(*, owner_id, job_id, rate_key, max_units, request_key):
     """The one authorization point BEFORE a billable provider request.
 
     max_units is a conservative bound, not actual consumption. A rate card
@@ -164,7 +163,7 @@ def reserve_paid_api_budget(*, owner_id, job_id, rate_key, max_units, request_ke
         raise PaidApiBudgetError("invalid_reservation")
     card, per_unit = approved_rate(rate_key)
     reservation = (per_unit * max_units).quantize(MICRO, rounding=ROUND_CEILING)
-    month = utc_month(now)
+    month = utc_month()
     with transaction.atomic():
         locked_gate()
         if PaidApiCharge.objects.filter(request_key=request_key).exists():
