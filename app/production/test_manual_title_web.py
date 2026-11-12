@@ -61,7 +61,7 @@ class ManualTitleBrowserTests(TestCase):
         self.assertEqual(self.job.title, "Updated title")
 
     def test_invalid_title_rejected(self):
-        for title in ("", "X", "<script>alert(1)</script>", "a\\nb"):
+        for title in ("", "X", "<script>alert(1)</script>", "a\nb"):
             with self.subTest(title=title):
                 response = self.client.post(self.url, {
                     "title": title, "revision": self.job.updated_at.isoformat(),
