@@ -19,7 +19,10 @@ class ManualTitleForm(forms.Form):
     revision = forms.CharField(max_length=80)
 
     def clean_title(self):
-        value = " ".join(self.cleaned_data["title"].split())
+        original = self.cleaned_data["title"]
+        if not original.isprintable() or any(ord(char) < 32 or ord(char) == 127 for char in original):
+            raise forms.ValidationError("Control characters are not permitted.")
+        value = " ".join(original.split())
         if (
             len(value) < 4 or len(value) > 180
             or not value.isprintable()
