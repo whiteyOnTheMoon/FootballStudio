@@ -110,7 +110,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
-# FS-004c: all paid services OFF by default. Provider credentials, approved
+# FS-015a: independent kill switch. No approved title LLM provider exists.\n# Future activation requires a separately reviewed provider integration.\nTITLE_LLM_ENABLED = False\n\n# FS-004c: all paid services OFF by default. Provider credentials, approved
 # price tables and USD ceiling must be explicitly configured by an operator.
 # Never commit provider secrets or infer permission from a provider URL.
 PAID_API_CALLS_ENABLED = os.environ.get("PAID_API_CALLS_ENABLED") == "1"
