@@ -49,6 +49,9 @@ class Migration(migrations.Migration):
                 )),
                 ("provider", models.CharField(max_length=48)),
                 ("rate_key", models.CharField(max_length=120)),
+                ("model_id", models.CharField(max_length=100)),
+                ("price_version", models.CharField(max_length=60)),
+                ("unit_name", models.CharField(max_length=30)),
                 ("unit_count", models.PositiveIntegerField()),
                 ("quoted_unit_usd", models.DecimalField(
                     max_digits=14, decimal_places=6,
