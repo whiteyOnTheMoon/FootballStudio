@@ -120,7 +120,7 @@ API_MONTHLY_BUDGET_USD = os.environ.get("API_MONTHLY_BUDGET_USD", "")
 # variable named by each tariff without logging its value.
 import json
 try:
-    PAID_API_RATE_CARDS = json.loads(os.environ.get("PAID_API_RATE_CARDS_JSON", "{}"))
+    PAID_API_RATE_CARDS = json.loads(os.environ.get("PAID_API_RATE_CARDS_JSON") or "{}")
 except (ValueError, TypeError) as exc:
     raise ImproperlyConfigured("Invalid PAID_API_RATE_CARDS_JSON.") from exc
 if not isinstance(PAID_API_RATE_CARDS, dict):
