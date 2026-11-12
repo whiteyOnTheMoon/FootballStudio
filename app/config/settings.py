@@ -110,6 +110,22 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
+# FS-004c: all paid services OFF by default. Provider credentials, approved
+# price tables and USD ceiling must be explicitly configured by an operator.
+# Never commit provider secrets or infer permission from a provider URL.
+PAID_API_CALLS_ENABLED = os.environ.get("PAID_API_CALLS_ENABLED") == "1"
+API_MONTHLY_BUDGET_USD = os.environ.get("API_MONTHLY_BUDGET_USD", "")
+# Configured trusted pricing schedule, NOT user/request input. Loaded only
+# as JSON, without credentials. The guard checks the credential environment
+# variable named by each tariff without logging its value.
+import json
+try:
+    PAID_API_RATE_CARDS = json.loads(os.environ.get("PAID_API_RATE_CARDS_JSON", "{}"))
+except (ValueError, TypeError) as exc:
+    raise ImproperlyConfigured("Invalid PAID_API_RATE_CARDS_JSON.") from exc
+if not isinstance(PAID_API_RATE_CARDS, dict):
+    raise ImproperlyConfigured("PAID_API_RATE_CARDS_JSON must be an object.")
+
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
