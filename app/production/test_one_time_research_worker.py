@@ -266,8 +266,10 @@ class OneTimeWorkerTests(TestCase):
         self.assertEqual(self.request.attempt_count, 0)
 
     def test_expired_unstarted_consent_is_terminal_not_refreshed(self):
+        old_consent = timezone.now() - timedelta(minutes=25)
         OfficialResearchRequest.objects.filter(pk=self.request.pk).update(
-            expires_at=timezone.now() - timedelta(seconds=1),
+            consented_at=old_consent,
+            expires_at=old_consent + timedelta(minutes=15),
         )
         with self.assertRaises(ResearchRunRejected) as exc:
             self.assert_no_fetch(self.execute)
