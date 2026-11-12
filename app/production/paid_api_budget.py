@@ -195,6 +195,46 @@ def reserve_paid_api_budget(*, owner_id, job_id, rate_key, max_units, request_ke
         )
 
 
+def mark_paid_api_dispatch_started(*, owner_id, job_id, request_key):
+    """Irreversibly consume one permit immediately BEFORE any paid HTTP call.
+
+    The operator may disable paid calls or replace a tariff between the
+    initial reservation and dispatch. Re-check them here; never use the
+    stale quote after the UTC period switches.
+    """
+    if not isinstance(request_key, UUID):
+        raise PaidApiBudgetError("invalid_reservation")
+    if not getattr(settings, "PAID_API_CALLS_ENABLED", False):
+        raise PaidApiBudgetError("paid_calls_disabled")
+    cap = configured_cap()
+    with transaction.atomic():
+        locked_gate()
+        row = PaidApiCharge.objects.filter(
+            request_key=request_key, job_id=job_id, job__owner_id=owner_id,
+        ).first()
+        if row is None:
+            raise PaidApiBudgetError("not_authorized")
+        if row.state != PaidApiCharge.State.RESERVED or row.dispatch_started_at:
+            raise PaidApiBudgetError("already_dispatched_or_finished")
+        if row.period_start != utc_month():
+            raise PaidApiBudgetError("period_changed")
+        card, per_unit = approved_rate(row.rate_key)
+        if (
+            card["provider"] != row.provider or card["purpose"] != row.purpose
+            or card["model"] != row.model_id
+            or card["price_version"] != row.price_version
+            or card["unit_name"] != row.unit_name
+            or per_unit != row.quoted_unit_usd
+        ):
+            raise PaidApiBudgetError("pricing_changed")
+        total, _ = month_charges(row.period_start)
+        if total > cap:
+            raise PaidApiBudgetError("budget_exhausted")
+        row.dispatch_started_at = timezone.now()
+        row.save(update_fields=("dispatch_started_at",))
+        return row
+
+
 def reconcile_paid_api_budget(*, owner_id, job_id, request_key, actual_usd=None):
     """Known provider cost or conservatively UNKNOWN. Never default to zero.
 
@@ -245,7 +285,7 @@ def release_unspent_paid_api_budget(*, owner_id, job_id, request_key,
         ).first()
         if row is None:
             raise PaidApiBudgetError("not_authorized")
-        if row.state != PaidApiCharge.State.RESERVED:
+        if row.state != PaidApiCharge.State.RESERVED or row.dispatch_started_at:
             raise PaidApiBudgetError("already_dispatched_or_finished")
         row.state = PaidApiCharge.State.RELEASED
         row.reconciled_at = timezone.now()
