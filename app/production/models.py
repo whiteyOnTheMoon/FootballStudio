@@ -627,3 +627,100 @@ class OfficialResearchPage(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()
         return super().save(*args, **kwargs)
+
+
+
+class SharedPaidApiBudgetLock(models.Model):
+    """Permanent singleton: every provider/worker serializes budget here.
+
+    Migration 0010 creates pk=1. A missing row fails closed; it is NEVER
+    created lazily in application code (avoids a cross-worker creation race).
+    """
+
+    id = models.PositiveSmallIntegerField(primary_key=True, default=1, editable=False)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(id=1), name="prod_paid_budget_singleton",
+            ),
+        ]
+
+
+class PaidApiCharge(models.Model):
+    """Immutable-in-practice shared USD budget ledger, no secrets or prompts.
+
+    A reservation is not confirmation that a paid provider was called.
+    An unknown provider charge stays reserved until manually reconciled.
+    """
+
+    class State(models.TextChoices):
+        RESERVED = "reserved", "Budget reserved; dispatch not confirmed"
+        SETTLED = "settled", "Provider cost confirmed"
+        UNCERTAIN = "uncertain", "Provider cost unknown; reserve retained"
+        RELEASED = "released", "Confirmed no paid request was sent"
+
+    class Purpose(models.TextChoices):
+        LLM = "llm", "Text generation"
+        TTS = "tts", "Speech generation"
+        MEDIA = "media", "Paid media"
+        RESEARCH = "research", "Paid research"
+
+    request_key = models.UUIDField(unique=True)
+    job = models.ForeignKey(
+        ProductionJob, on_delete=models.PROTECT, related_name="paid_api_charges",
+    )
+    purpose = models.CharField(max_length=12, choices=Purpose.choices)
+    provider = models.CharField(max_length=48)
+    rate_key = models.CharField(max_length=120)
+    model_id = models.CharField(max_length=100)
+    price_version = models.CharField(max_length=60)
+    unit_name = models.CharField(max_length=30)
+    unit_count = models.PositiveIntegerField()
+    quoted_unit_usd = models.DecimalField(max_digits=14, decimal_places=6)
+    reserved_usd = models.DecimalField(max_digits=14, decimal_places=6)
+    actual_usd = models.DecimalField(
+        max_digits=14, decimal_places=6, null=True, blank=True,
+    )
+    period_start = models.DateField()  # UTC first of calendar month
+    state = models.CharField(
+        max_length=12, choices=State.choices, default=State.RESERVED,
+    )
+    reserved_at = models.DateTimeField(default=timezone.now)
+    dispatch_started_at = models.DateTimeField(null=True, blank=True)
+    reconciled_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        indexes = [
+            models.Index(
+                fields=("period_start", "state"), name="prod_paid_month_state_ix",
+            ),
+            models.Index(
+                fields=("job", "reserved_at"), name="prod_paid_job_time_ix",
+            ),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(unit_count__gte=1),
+                name="prod_paid_units_positive",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(quoted_unit_usd__gt=0),
+                name="prod_paid_unit_cost_gt0",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(reserved_usd__gt=0),
+                name="prod_paid_reserve_gt0",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(actual_usd__isnull=True) |
+                models.Q(actual_usd__gte=0),
+                name="prod_paid_actual_nonneg",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(state="settled", actual_usd__isnull=False) |
+                ~models.Q(state="settled"),
+                name="prod_paid_settle_has_cost",
+            ),
+        ]
