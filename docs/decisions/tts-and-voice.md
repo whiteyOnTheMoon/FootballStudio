@@ -84,3 +84,45 @@ Die M1-/M2-Testaufgaben für die Implementierung bleiben in [#41](https://github
 - [ ] Kurztest und tatsächlicher API-Verbrauch erst nach Freigabe und Implementierung ausgeführt.
 
 **FS-004b / #9 bleibt wegen offener Anbieter-/Stimmwahl und ausstehender Nutzungsrechteprüfung offen.**
+
+
+## Aktualisierung 13.11.2026 — Gemini als favorisierten Kandidaten prüfen
+
+Der Product Owner hat **Gemini als bevorzugten TTS-Prüfkandidaten genannt**.
+Dies ist **keine Freigabe** eines kostenpflichtigen API-Zugangs, einer Stimme,
+eines Modells oder eines konkreten Tarifplans. Vorherige Anbieter-/Stimmwahl
+bleibt nur ein Testvorschlag; Issue #9 bleibt offen.
+
+**Aktuelle öffentliche Produktunterlagen (13.11.2026):** Google listet
+Gemini 3.8 Flash-Lite TTS (`gemini-3.8-flash-lite-tts`) und Flash TTS als
+spezialisierte Sprachmodelle; die Gemini-TTS-Dokumentation beschreibt
+englische Single-Speaker-Ausgabe. Die Preisübersicht nennt für Flash-Lite
+beim Paid-Standardtarif bis 31.12.2026 **$0.50/1M Texttokens und
+$6/1M Audiotokens**, ab 01.01.2027 **$1/1M Texttokens und
+$12/1M Audiotokens**. Dies sind veröffentlichte Tarife, **keine
+verbindliche individuelle Kostenzusage**; Abrechnung, Rate-Limits,
+Verfügbarkeit, Lizenzrechte und Voice-Qualität müssen vor einer konkreten
+Providerfreigabe erneut geprüft werden.
+
+Wichtig zur Nutzungsberechtigung: Die Gemini Developer API Additional Terms
+(effective 23.03.2026) nennen ein **Mindestalter von 18 Jahren** und
+untersagen die Bereitstellung über an Minderjährige gerichtete API-Clients.
+Vor einer künftigen API-Anbindung muss ein berechtigter Verantwortlicher
+die Nutzungsberechtigung und die jeweiligen Vertragsbedingungen prüfen.
+**Keine Kontoerstellung, Schlüsselvergabe, Provideraktivierung oder
+echter Testcall im Rahmen dieses Arbeitspakets.**
+
+Quellen (Google, abgerufen am 13.11.2026):
+- https://ai.google.dev/gemini-api/docs/pricing
+- https://ai.google.dev/gemini-api/docs/speech-generation
+- https://ai.google.dev/gemini-api/terms
+
+**Implementierungsschritt #41:** Neuer rein lokaler
+`app.production.tts_offline`-Vertrag mit injizierbarem, vertrauenswürdigem
+Testbackend und atomar gespeicherter, als `demo_only` gekennzeichneter
+PCM-WAV-Datei pro Segment. Er verlangt 24-kHz, Mono, 16-Bit-Audio,
+prüft Eingabewerte/Dateigröße/Audiodauer, berechnet Prüfsummen
+und berührt **weder** Netzwerke **noch** bezahlte Provider/Budgetreservierungen.
+Die Daten sind **Demo-Artefakte ohne echte Sprache**. 
+Eine reale TTS-Implementierung, Längen-Synchronisierung und
+Providerkosten-Abrechnung bleiben offene Folgearbeiten.
