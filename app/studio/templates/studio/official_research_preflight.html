@@ -94,7 +94,7 @@
       </ul>
       <p>Ein späterer Ablauf muss vor jeder Verbindung die manuelle Domainzuordnung erneut prüfen, die geltenden Website-Bedingungen respektieren und <code>robots.txt</code> erfolgreich einlesen. Nur zulässige HTTPS-Verbindungen mit öffentlicher, geprüfter IP und gültigem TLS-Zertifikat wären erlaubt. Weiterleitungen, 403/429, blockierte Robots-Regeln, CAPTCHA, private IPs und nicht-HTML dürfen nicht umgangen werden.</p>
       <p>Ergebnisse wären höchstens Seiten-URL, knapper Titel, wenige Überschriften und Abrufzeitpunkt. <strong>Keine</strong> kompletten Artikel, keine automatische Faktenfreigabe und keine Erstellung eines Films.</p>
-      <p class="warn"><strong>Recherche noch nicht startbar:</strong> Eine neue einmalige Freigabe kann jetzt ausdrücklich gespeichert und widerrufen werden. Erst ein späterer, getrennt sicherheitsgeprüfter Worker könnte nach erneuter Quellen-/robots-/SSRF-Prüfung einen Abruf ausführen. Der Preflight selbst erzeugt weder einen Auftrag noch ein Einverständnistoken.</p>
+      <p class="warn"><strong>Recherche noch nicht startbar:</strong> Eine neue einmalige Freigabe kann jetzt ausdrücklich gespeichert und widerrufen werden. Nur der Betreiber kann später einen separaten, strikt begrenzten Einmalbefehl ausführen, der vorher Quellen-/robots-/SSRF-Schutz erneut prüft. Der Preflight selbst erzeugt weder einen Auftrag noch ein Einverständnistoken.</p>
       <p><a href="{% url 'research-approve-source' job.pk selected.source_id %}">Einmalige Freigabe für diese Quelle ausdrücklich dokumentieren (kein Abruf)</a></p>
     </section>
   {% endif %}

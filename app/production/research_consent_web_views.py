@@ -124,7 +124,12 @@ def list_research_requests(request, job_id):
         return HttpResponseNotAllowed(["GET"])
     records = list(OfficialResearchRequest.objects.filter(
         job=job, requested_by=request.user,
-    ).order_by("-consented_at", "-pk")[:30])
+    ).prefetch_related("pages").order_by("-consented_at", "-pk")[:30])
+    # Never turn a possibly corrupted stored URL into an unsafe hyperlink.
+    from .views import _safe_source_link
+    for record in records:
+        for page in record.pages.all():
+            page.safe_link = _safe_source_link(page.url)
     return render(request, "studio/research_requests.html", {
         "job": job,
         "records": records,

@@ -694,6 +694,125 @@ verifizieren. Danach den bestehenden Compose-Rebuild starten,
 kontrollieren. Das persistente PostgreSQL-Docker-Volume niemals
 löschen.
 
+## M2 – Einmaliger, strikt begrenzter Recherche-Worker (#161)
+
+Nach dem **GET-only Preflight** #157 und dem **frisch bestätigten,
+15 Minuten gültigen Einmal-Consent** #159 existiert nun ein gesonderter,
+**nur vom Betreiber bewusst ausführbarer** Django-Managementbefehl.
+Es gibt **keinen** Celery-/Cron-/Scheduler-Loop, keine automatische
+Abarbeitung aller Freigaben und **keinen externen Fetch aus einer
+Browser-GET/POST-Anfrage**. Ein echter Websiteabruf ist daher niemals
+eine Nebenwirkung des bloßen Öffnens/Speicherns einer Zustimmung.
+
+Die additive Migration **\`production.0009_bounded_official_research\`**
+ergänzt den bestehenden \`OfficialResearchRequest\` mit
+\`running\`, \`succeeded\`, \`failed\`, \`blocked\`, einer befristeten
+Ausführungskennung/Lease, \`started_at\`, \`finished_at\`,
+\`failure_code\`, \`result_count\` und der übernommenen
+Dossierversion. Die partielle Datenbank-Eindeutigkeit umfasst
+**pending und running**: pro Job höchstens eine aktive Freigabe.
+Außerdem ergänzt \`OfficialResearchPage\` einen eigenständigen
+Audit-Beleg pro tatsächlich gelesener HTML-Seite mit ausschließlich
+kanonischer URL, kurzer Titel-/Heading-Referenz, Kategorie,
+Abrufzeit und **unverified**-Status. Eine Datenbank-Constraint
+verbietet \`verified\` selbst bei umgangener Modellvalidierung.
+Maximal vier Seitenpositionen und eindeutige URL/Position je Request.
+
+### Bewusste Bedienung – ausschließlich durch Betreiber
+
+Den Managementbefehl \`run_official_research_request\` **nicht**
+automatisch im Container-Startskript, in Compose \`up\`, einer
+periodischen Aufgabe oder im normalen Web-Request verwenden.
+Falls der Job-Eigentümer **gerade eben** im Browser für genau eine
+manuell bestätigte offizielle Quelle eine Freigabe erteilt hat und
+diese noch nicht abgelaufen/abgebrochen ist, kann der Betreiber
+die konkrete Job-, Freigabe- und Besitzer-ID aus der privaten
+Auditansicht prüfen und *einmalig* im Webcontainer aufrufen:
+
+\`\`\`bash
+docker compose -f compose.yaml -f compose.tunnel.yaml exec -T web \
+  python manage.py run_official_research_request \
+  --job-id JOB_ID --request-id REQUEST_ID --owner-id OWNER_ID --execute
+\`\`\`
+
+**Keine** freie Homepage-URL und keine Site-Override-Option gehören
+zum Befehl. Ohne das zusätzliche explizite \`--execute\` wird nichts
+ausgeführt. **Bereits abgelaufene Freigaben nicht nachholen**;
+stattdessen nach einer neuen Prüfung eine neue zeitlich begrenzte
+Zustimmung einholen. Keine weiteren automatischen Retries desselben
+consent-Schlüssels.
+
+### Sicherheits- und Datenfluss
+
+1. Der Befehl beansprucht **unter \`transaction.atomic()\` und
+   PostgreSQL-Job-Zeilenlock** eine frische, unbenutzte Freigabe.
+   Er prüft Eigentümer, aktuelle Dossierversion, verknüpfte
+   SourceReference und SourceConfirmation, kanonischen
+   HTTPS-Domain-/Club-/Ligafingerprint sowie die drei zusätzlichen
+   Einmal-Consent-Flags. Anschließend wird **vor dem ersten
+   externen Zugriff** \`attempt_count=1\`, Status \`running\`
+   und eine zufällige Lease gesetzt. Alle Locks werden vor
+   Netzwerk-I/O wieder freigegeben. Ein abgestürzter/abgelaufener
+   Versuch wird endgültig fehlgeschlagen, niemals neu gestartet.
+2. Das bereits vorhandene \`research_official_website\` erzwingt
+   **robots.txt** und dessen Disallow- und Delay-Regeln, pro
+   Verbindung neu kontrollierte öffentliche DNS-Adressen,
+   IP-Pinning mit Host-/SNI-/TLS-Prüfung, HTTPS-only und
+   Redirect-Verbot. 403/429, CAPTCHA, blockierte/fehlende robots,
+   unpassende Content-Types, übergroße Antworten und Timeouts
+   dürfen nicht umgangen werden. Eine kleine konservative
+   Robot-Policy kann absichtlich auch eigentlich erlaubte
+   Pfade überspringen. Maximal **eine Startseite plus drei
+   gleichnamige Host-Unterseiten**, keine Artikel-Downloads.
+3. Mit \`time.monotonic\`, Kooperationschecks vor/nach einzelnen
+   HTTPS-Aufrufen und Pausen, max. **60 Sekunden Laufbudget**,
+   **70 Sekunden POSIX-Hardalarm** und **80 Sekunden DB-Lease**
+   wird ein zeitlich endlicher Versuch angestrebt. Kein
+   Endlosschlafen oder unbeschränkter Retry. Schon eine
+   veränderte/abgebrochene/abgelaufene Freigabe bzw. Dossioversion
+   blockiert vor dem nächsten Request und bei der endgültigen
+   Übernahme. Ein bereits laufender Einzelrequest kann bis zu
+   dessen eigenem Timeout enden, bevor ein Abbruch greift.
+4. Der Server speichert **nur nach erneuter Job-/Source-/Version-/
+   Lease-Prüfung unter frischem Joblock** eine vollständig
+   geklonte Dossioversion; Fakten, Evidence und manuelle
+   SourceConfirmations bleiben erhalten. Max. zehn neue
+   Versionen pro Job/Minute. Fehlende/schädliche/abweichende
+   Antworten werden vollständig verworfen; es entstehen
+   weder halbfertige Dossiers noch Fake-Reviews. Die
+   Ausgangsquelle behält ihre menschliche Prüfprovenienz;
+   ggf. neu aufgenommene HTML-Unterseiten sind **maschinen-
+   abgefragte, unverified Quellenverweise**, keine
+   menschlich geprüften Behauptungen.
+5. In der owner-only, \`never_cache\`-geschützten
+   \`/jobs/<job_id>/research/requests/\`-Ansicht werden
+   sichere Zustands-/Fehlercodes und bei Erfolg nur kurze
+   Seitenmetadaten angezeigt. Sie startet bei GET nie einen
+   externen Abruf. Ein laufender Versuch kann per CSRF-POST
+   kooperativ abgebrochen werden. Weder technische Details
+   aus Upstream-Responses noch komplette Artikeltexte werden
+   in der UI gespeichert/angezeigt.
+
+**Einschränkungen:** Die persönliche Domain-/Bedingungsprüfung
+ist keine unabhängige Lizenz- oder Faktenprüfung. Dass eine URL
+erreichbar ist, autorisiert weder die Reproduktion geschützter
+Inhalte noch ein \`verified\`-Fact. Jede neu gefundene konkrete
+Aussage muss weiterhin im menschlichen Fakten- und Belegreview
+geprüft werden. Es gibt **keine** LLM-, TTS-, FFmpeg-, Paid-API-
+oder Veröffentlichungsfunktion in diesem Worker. Das erste
+produktive Ausführen gegen eine echte Clubdomain sollte nur
+nach nochmaliger Prüfung der Websitebedingungen und robots-
+Konformität durch den Betreiber erfolgen; CI verwendet
+ausschließlich synthetische/mocked HTTP- und Datenbanktests.
+
+**Deployment mit neuer Migration:** Vor \`0009\`
+PostgreSQL-Backup und **verifizierten isolierten Restore**
+durchführen. Danach Compose-Rebuild, \`showmigrations
+production\`, Container-Healthchecks und öffentlichen
+\`/healthz/\` prüfen; niemals \`down -v\` ausführen.
+Ein erfolgreiches Deployment **führt keinen** der bereits
+gespeicherten Requests automatisch aus.
+
 ## Grundregeln
 
 1. Der **zur Laufzeit ausgewählte** Verein (Land → Liga → Verein, bei Bedarf manuell angelegt) bestimmt den Recherchekontext. Es gibt keine fest vorgegebene Club-ID.

@@ -373,17 +373,22 @@ class FactReview(models.Model):
 
 
 class OfficialResearchRequest(models.Model):
-    """Audited one-time *authorization*, never an executed crawl.
+    """Audited one-time *authorization* consumed only by an operator-run worker.
 
     A future independently reviewed worker must check the still-valid consent,
     owner, source, domain, version, robots and SSRF rules again before fetching.
-    This table cannot enqueue tasks and has no 'completed' status.
+    It does not enqueue tasks. State transitions occur only in the standalone
+    operator command and never during a normal HTTP request.
     """
 
     class Status(models.TextChoices):
         PENDING = "pending_worker", "Recorded; no worker available"
         CANCELLED = "cancelled", "Cancelled by the job owner"
         EXPIRED = "expired", "Consent expired without execution"
+        RUNNING = "running", "Research in progress"
+        SUCCEEDED = "succeeded", "Bounded metadata research completed"
+        FAILED = "failed", "Research stopped without imported pages"
+        BLOCKED = "blocked", "Research blocked by site or security rules"
 
     job = models.ForeignKey(
         ProductionJob, on_delete=models.CASCADE, related_name="official_research_requests",
@@ -416,6 +421,13 @@ class OfficialResearchRequest(models.Model):
     attempt_count = models.PositiveSmallIntegerField(default=0)
     max_pages = models.PositiveSmallIntegerField(default=4)
     cancelled_at = models.DateTimeField(null=True, blank=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+    lease_expires_at = models.DateTimeField(null=True, blank=True)
+    lease_key = models.UUIDField(null=True, blank=True)
+    failure_code = models.CharField(max_length=40, blank=True)
+    result_count = models.PositiveSmallIntegerField(default=0)
+    result_dossier_version = models.PositiveIntegerField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -424,8 +436,9 @@ class OfficialResearchRequest(models.Model):
                 fields=("job", "request_key"), name="production_research_req_key_uniq",
             ),
             models.UniqueConstraint(
-                fields=("job",), condition=models.Q(status="pending_worker"),
-                name="production_research_one_pending_job",
+                fields=("job",),
+                condition=models.Q(status__in=("pending_worker", "running")),
+                name="prod_res_one_active_job",
             ),
             models.CheckConstraint(
                 condition=models.Q(expected_version__gte=1),
@@ -457,8 +470,15 @@ class OfficialResearchRequest(models.Model):
     @property
     def visible_status(self):
         """Expiry is enforced even if no housekeeping worker runs."""
-        if self.status == self.Status.PENDING and self.expires_at <= timezone.now():
+        now = timezone.now()
+        if self.status == self.Status.PENDING and self.expires_at <= now:
             return self.Status.EXPIRED
+        if (
+            self.status == self.Status.RUNNING
+            and self.lease_expires_at is not None
+            and self.lease_expires_at <= now
+        ):
+            return self.Status.FAILED
         return self.status
 
     def clean(self):
@@ -523,6 +543,86 @@ class OfficialResearchRequest(models.Model):
             raise ValidationError("Cancellation needs a timestamp.")
         if self.attempt_count > 1 or self.max_pages != 4:
             raise ValidationError("This request can never exceed one attempt and four pages.")
+        if self.result_count > 4:
+            raise ValidationError("No research can contain more than four pages.")
+        if self.status == self.Status.RUNNING and (
+            self.attempt_count != 1 or self.lease_key is None
+            or self.lease_expires_at is None or self.started_at is None
+        ):
+            raise ValidationError("A running request requires a consumed attempt and lease.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+
+
+class OfficialResearchPage(models.Model):
+    """Unverified metadata of one bounded, actually fetched official HTML page."""
+
+    request = models.ForeignKey(
+        OfficialResearchRequest, on_delete=models.CASCADE, related_name="pages",
+    )
+    saved_source = models.ForeignKey(
+        SourceReference, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="official_research_page_metadata",
+    )
+    position = models.PositiveSmallIntegerField()
+    url = models.URLField(max_length=750)
+    title = models.CharField(max_length=160, blank=True)
+    headings = models.JSONField(default=list)
+    category = models.CharField(max_length=20, blank=True)
+    retrieved_at = models.DateTimeField()
+    verification_state = models.CharField(
+        max_length=16, default="unverified", editable=False,
+    )
+
+    class Meta:
+        ordering = ("position",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=("request", "position"), name="prod_res_page_position_uq",
+            ),
+            models.UniqueConstraint(
+                fields=("request", "url"), name="prod_res_page_url_uq",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(position__gte=0, position__lte=3),
+                name="prod_res_page_four_max",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(verification_state="unverified"),
+                name="prod_res_page_unverified",
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.verification_state != "unverified" or not 0 <= self.position < 4:
+            raise ValidationError("Only four unverified pages may be stored.")
+        if (
+            not isinstance(self.headings, list) or len(self.headings) > 5
+            or any(not isinstance(h, str) or len(h) > 160 for h in self.headings)
+            or len(self.title) > 160
+        ):
+            raise ValidationError("Only short title and heading metadata are allowed.")
+        from .safe_official_fetch import WebsiteFetchError, _checked_url
+        try:
+            canonical, host = _checked_url(self.url)
+        except WebsiteFetchError:
+            raise ValidationError("Unsafe page URL.") from None
+        if canonical != self.url or host != self.request.confirmed_domain:
+            raise ValidationError("Page must match the confirmed domain.")
+        if self.saved_source_id and self.saved_source.url != self.url:
+            raise ValidationError("Linked source must refer to the same page.")
+        if self.request_id:
+            if self.request.status != OfficialResearchRequest.Status.SUCCEEDED:
+                raise ValidationError("Results are stored only for a successful attempt.")
+            if (
+                self.saved_source_id and
+                self.saved_source.dossier.job_id != self.request.job_id
+            ):
+                raise ValidationError("Page source must belong to the same job.")
 
     def save(self, *args, **kwargs):
         self.full_clean()
