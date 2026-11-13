@@ -63,7 +63,6 @@ class ResearchAutopilotWebTests(TestCase):
             result, 'name="expected_version" value="0"',
         )
         self.assertContains(result, "fetch(form.action")
-        self.assertContains(result, "englischen") if False else None
         self.assertEqual(self.client.get(self.url).status_code, 405)
         self.assertEqual(FactDossier.objects.count(), 0)
         importer.assert_not_called()
