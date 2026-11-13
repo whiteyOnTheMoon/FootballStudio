@@ -225,3 +225,70 @@ def crosscheck_official_legends(request, job_id):
         )
     url = reverse("research-job", kwargs={"job_id": job.pk})
     return redirect(url + "?" + urlencode({"version": dossier.version}))
+
+
+@login_required
+@require_POST
+@never_cache
+def discover_official_honours(request, job_id):
+    """One confirmed-source honours chronicle; GET never touches the network."""
+    from .official_honours import import_official_honours_timeline
+
+    job = get_object_or_404(ProductionJob, pk=job_id, owner=request.user)
+    raw = request.POST.get("expected_version")
+    if (
+        type(raw) is not str or not raw.isascii() or not raw.isdecimal()
+        or not 1 <= len(raw) <= 9 or raw.startswith("0")
+    ):
+        raise Http404("Ungültige Dossierversion.")
+    try:
+        dossier = import_official_honours_timeline(
+            owner=request.user, job_id=job.pk, expected_version=int(raw),
+        )
+    except AutoResearchError as exc:
+        reasons = {
+            "no_confirmed_league_source": (
+                "Für die automatische Titelchronik fehlt eine zuvor "
+                "bestätigte offizielle Liga-Website. Kein Abruf durchgeführt."
+            ),
+            "ambiguous_official_source": (
+                "Mehrere unterschiedliche offizielle Quellenzuordnungen "
+                "gefunden. Keine Website wurde ohne eindeutige Auswahl abgerufen."
+            ),
+            "no_honours_found": (
+                "Die offizielle Ligatabelle enthält keine eindeutig "
+                "zugeordneten Titel des ausgewählten Vereins."
+            ),
+            "invalid_honours_table": (
+                "Die offizielle Ligaseite enthält keine eindeutig lesbare "
+                "Titelträger-Tabelle mit Saison, Meister und Cup-Sieger."
+            ),
+            "ambiguous_honours_table": (
+                "Die Ligaseite zeigt widersprüchliche Tabellenangaben. "
+                "Es wurden keine Titel übernommen."
+            ),
+            "invalid_club_profile": (
+                "Das Vereinsprofil kann nicht eindeutig ausgewertet werden."
+            ),
+            "no_unique_honours_link": (
+                "Keine eindeutig zuordenbare Titelseite gefunden."
+            ),
+            "version_rate_limited": "Zu viele Dossierversionen in kurzer Zeit.",
+        }
+        if exc.code.startswith("league_site_"):
+            message = (
+                "Die offizielle Liga-Website konnte unter den Sicherheits- "
+                "und robots.txt-Regeln nicht zuverlässig abgerufen werden. "
+                "Es wurden keine Titel gespeichert."
+            )
+            status = 503
+        else:
+            message = reasons.get(exc.code, _MESSAGES.get(exc.code, _DEFAULT))
+            status = 503 if exc.code in (
+                "network_error", "service_busy", "upstream_error",
+            ) else 409
+        return HttpResponse(
+            message, status=status, content_type="text/plain; charset=utf-8",
+        )
+    url = reverse("research-job", kwargs={"job_id": job.pk})
+    return redirect(url + "?" + urlencode({"version": dossier.version}))
