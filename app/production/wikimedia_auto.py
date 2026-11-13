@@ -113,7 +113,10 @@ def _search_qids(name):
             continue
         labels = [row.get("label"), (row.get("match") or {}).get("text")
                   if isinstance(row.get("match"), dict) else None]
-        if any(isinstance(v, str) and _name(v) == target for v in labels):
+        if any(
+            isinstance(v, str) and _NAME.fullmatch(v) and _name(v) == target
+            for v in labels
+        ):
             if qid not in qids:
                 qids.append(qid)
     return qids[:3]
@@ -224,7 +227,8 @@ def _wikipedia_intro(title):
     if (
         not isinstance(page, dict) or type(page.get("pageid")) is not int
         or page["pageid"] < 1 or page.get("ns") != 0
-        or page.get("title", "").casefold() != title.casefold()
+        or type(page.get("title")) is not str
+        or page["title"].casefold() != title.casefold()
         or not isinstance(page.get("extract"), str)
     ):
         raise AutoResearchError("invalid_response")
@@ -301,6 +305,7 @@ def _already_imported(dossier):
     return dossier is not None and dossier.sources.filter(
         source_kind=SourceReference.Kind.WIKIDATA,
         external_id__startswith="Q",
+        title__startswith="[auto] ",
     ).exists()
 
 
@@ -343,26 +348,43 @@ def import_free_club_research(*, owner, job_id, expected_version):
         if (latest.version if latest is not None else 0) != expected_version:
             raise AutoResearchError("stale_dossier")
         dossier = fork_dossier(job=locked, previous=latest)
-        source = SourceReference.objects.create(
-            dossier=dossier,
-            url=discovered["wikidata_url"],
+        source = dossier.sources.filter(
             source_kind=SourceReference.Kind.WIKIDATA,
-            title=discovered["label"][:250],
             external_id=discovered["qid"],
-            retrieved_at=discovered["retrieved_at"],
-            access_state=SourceReference.Access.ACCESSIBLE,
-        )
-        wikipedia_source = None
-        if discovered["wikipedia_url"]:
-            wikipedia_source = SourceReference.objects.create(
+            url=discovered["wikidata_url"],
+        ).first()
+        if source is None:
+            source = SourceReference.objects.create(
                 dossier=dossier,
-                url=discovered["wikipedia_url"],
-                source_kind=SourceReference.Kind.WIKIPEDIA,
-                title="English Wikipedia: " + discovered["label"][:225],
+                url=discovered["wikidata_url"],
+                source_kind=SourceReference.Kind.WIKIDATA,
+                title="[auto] " + discovered["label"][:243],
                 external_id=discovered["qid"],
                 retrieved_at=discovered["retrieved_at"],
                 access_state=SourceReference.Access.ACCESSIBLE,
             )
+        else:
+            # Only the new dossier version is modified; earlier snapshots stay intact.
+            source.title = "[auto] " + discovered["label"][:243]
+            source.retrieved_at = discovered["retrieved_at"]
+            source.access_state = SourceReference.Access.ACCESSIBLE
+            source.save(update_fields=["title", "retrieved_at", "access_state"])
+        wikipedia_source = None
+        if discovered["wikipedia_url"]:
+            wikipedia_source = dossier.sources.filter(
+                source_kind=SourceReference.Kind.WIKIPEDIA,
+                url=discovered["wikipedia_url"],
+            ).first()
+            if wikipedia_source is None:
+                wikipedia_source = SourceReference.objects.create(
+                    dossier=dossier,
+                    url=discovered["wikipedia_url"],
+                    source_kind=SourceReference.Kind.WIKIPEDIA,
+                    title="English Wikipedia: " + discovered["label"][:225],
+                    external_id=discovered["qid"],
+                    retrieved_at=discovered["retrieved_at"],
+                    access_state=SourceReference.Access.ACCESSIBLE,
+                )
         year = discovered["founded_year_candidate"]
         if year is not None:
             fact = Fact.objects.create(
