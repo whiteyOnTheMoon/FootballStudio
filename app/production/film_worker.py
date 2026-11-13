@@ -155,6 +155,24 @@ def perform_film_research(job_id):
             finally:
                 _heartbeat(job_id)
 
+        # A machine-only research assessment can be calculated without
+        # human review, paid API, additional website access, or DB mutation.
+        # The saved dossier is the canonical, reproducible input.
+        latest = FactDossier.objects.filter(job=job).order_by("-version").first()
+        if latest is not None:
+            from .dossiers import load_fact_dossier
+            from .film_claim_assessment import assess_research_snapshot
+            snapshot = load_fact_dossier(
+                owner=job.owner, job_id=job.pk, version=latest.version,
+            )
+            assessment = assess_research_snapshot(snapshot)
+            logger.info(
+                "Film source assessment: job_id=%s dossier=%s machine_matches=%s "
+                "listing_differences=%s; no human reviews or narration released",
+                job_id, latest.version,
+                assessment["counts"]["matching_records"],
+                assessment["counts"]["listing_difference"],
+            )
         _finish_failed(job_id, _NO_RENDERER)
     except Exception:
         logger.exception("Film research worker failed: job_id=%s", job_id)

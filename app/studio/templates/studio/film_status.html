@@ -49,6 +49,33 @@
       {% endif %}
     {% endif %}
   </section>
+  {% if film.machine_source_assessment %}
+    <section class="panel" aria-labelledby="machine-source-heading">
+      <h2 id="machine-source-heading">Automatische Belegbewertung</h2>
+      <p>FootballStudio vergleicht die bereits gespeicherten Quellen selbst. Eine Übereinstimmung bedeutet <strong>zwei passende Quellenangaben</strong>, nicht eine menschliche Verifikation oder eine Freigabe für die Sprecherstimme.</p>
+      <p>
+        <strong>{{ film.machine_source_assessment.counts.matching_records }}</strong> übereinstimmende Titelangaben ·
+        <strong>{{ film.machine_source_assessment.counts.listing_difference }}</strong> unterschiedliche Listen ·
+        <strong>{{ film.machine_source_assessment.counts.single_source }}</strong> nur eine auswertbare Quelle
+      </p>
+      <p class="muted">Noch nicht maschinell bewertet: {{ film.machine_source_assessment.counts.not_evaluated }} · Ausgeschlossen: {{ film.machine_source_assessment.counts.excluded }} · Konflikt: {{ film.machine_source_assessment.counts.conflict }}. Keine automatisch verifizierten Fakten.</p>
+      <details>
+        <summary>Quellenvergleich im Detail ansehen (optional)</summary>
+        <ul>
+          {% for item in film.machine_source_assessment.items %}
+            {% if item.status == "matching_records" %}
+              <li><strong>Gleiche Titelangabe:</strong> {{ item.research_sentence }} <span class="muted">· Fakt #{{ item.fact_id }} · Quellenreferenzen: {{ item.source_ids|join:", " }}</span></li>
+            {% elif item.status == "listing_difference" %}
+              <li><strong>Abweichende Auflistung:</strong> Fakt #{{ item.fact_id }}. Eine Quelle führt die Saison nicht auf; dies beweist keinen falschen Titel.</li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+        {% if film.machine_source_assessment.additional_facts_not_evaluated %}
+          <p class="muted">Weitere {{ film.machine_source_assessment.additional_facts_not_evaluated }} Fakten wurden wegen der Auswertungsgrenze nicht automatisch bewertet.</p>
+        {% endif %}
+      </details>
+    </section>
+  {% endif %}
   <details class="panel">
     <summary><strong>Quellen und Recherche optional ansehen oder bearbeiten</strong></summary>
     <p>Die detaillierten Quellen, Fakten und vorhandenen Recherchedossiers kannst du freiwillig öffnen. Für den normalen Start ist keine Einzelprüfung erforderlich.</p>
