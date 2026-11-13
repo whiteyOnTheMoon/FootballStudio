@@ -81,14 +81,14 @@ def _execute(args, *, timeout, input_data=None):
 def _video_filter():
     # Fixed author-owned wording only: no untrusted user text can enter
     # FFmpeg filter arguments, filesystem paths, or dynamic shell commands.
-    base = f"fontfile={_FONT}:fontcolor=white"
+    base = f"fontfile={_FONT}"
     return ",".join((
-        f"drawtext={base}:text='FootballStudio':fontsize=58:"
+        f"drawtext={base}:fontcolor=white:text='FootballStudio':fontsize=58:"
         "x=(w-text_w)/2:y=(h-text_h)/2-65",
-        f"drawtext={base}:text='LOCAL RENDER TEST':fontsize=29:"
+        f"drawtext={base}:fontcolor=white:text='LOCAL RENDER TEST':fontsize=29:"
         "x=(w-text_w)/2:y=(h-text_h)/2+26",
-        f"drawtext={base}:text='Synthetic media only':fontsize=19:"
-        "fontcolor=0x9acac5:x=(w-text_w)/2:y=(h-text_h)/2+83",
+        f"drawtext={base}:fontcolor=0x9acac5:text='Synthetic media only':fontsize=19:"
+        "x=(w-text_w)/2:y=(h-text_h)/2+83",
     ))
 
 
