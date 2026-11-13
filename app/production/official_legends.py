@@ -31,7 +31,7 @@ from .wikimedia_auto import AutoResearchError
 # exception to source consent / robots / TLS. The generic path finder works
 # for sites whose homepage exposes a legend page.
 _KNOWN_CLUB_PATHS = {
-    "Q124007617": "/c/legendenklub",
+    ("Q124007617", "sksturm.at"): "/c/legendenklub",
 }
 _MAX_PEOPLE = 30
 _MAX_TRAINERS = 12
@@ -288,7 +288,7 @@ def _read_official_legends(homepage, club_qid):
     started = time.monotonic()
     base, host = _checked_url(homepage)
     _robots_url, gate, delay = _robots_policy(base)
-    path_hint = _KNOWN_CLUB_PATHS.get(club_qid)
+    path_hint = _KNOWN_CLUB_PATHS.get((club_qid, host))
     if path_hint is None:
         if not gate.can_fetch(_USER_AGENT, base):
             raise WebsiteFetchError("robots_disallowed")
