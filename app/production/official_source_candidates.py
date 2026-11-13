@@ -243,3 +243,73 @@ def import_official_site_candidates(*, owner, job_id, expected_version):
                 ),
             )
         return dossier
+
+
+
+def proposed_site_for_context(dossier, context):
+    """Read one saved P856 suggestion for a read-only form prefill.
+
+    This is NOT authorization for automatic crawling; the manual source
+    registration service still validates the URL and requires all three
+    fresh, independent checkbox attestations.
+    """
+    if context not in ("club", "league") or dossier is None:
+        return None
+    try:
+        club_qid = _confirmed_club_qid(dossier)
+    except AutoResearchError:
+        return None
+    if not _already_scanned(dossier, club_qid):
+        return None
+    predicate = (
+        "official_club_site_candidate" if context == "club"
+        else "official_league_site_candidate"
+    )
+    matches = list(dossier.facts.filter(
+        predicate=predicate,
+        verification_state=Fact.Verification.UNVERIFIED,
+    ).prefetch_related("evidence__source").order_by("pk")[:2])
+    if len(matches) != 1:
+        return None
+    fact = matches[0]
+    value = fact.value
+    if not isinstance(value, dict) or value.get("context") != context:
+        return None
+    url, qid = value.get("url"), value.get("wikidata_qid")
+    if (
+        type(qid) is not str or not _QID.fullmatch(qid)
+        or (context == "club" and qid != club_qid)
+        or (context == "league" and qid == club_qid)
+        or type(url) is not str
+    ):
+        return None
+    try:
+        validated, _ = validate_manual_source_url(url)
+    except ValueError:
+        return None
+    if validated != url:
+        return None
+    good_evidence = any(
+        item.source.source_kind == SourceReference.Kind.WIKIDATA
+        and item.source.url == _WD_ENTITY + qid + ".json"
+        and item.locator == f"Wikidata {qid} · official website (P856)"
+        for item in fact.evidence.all()
+    )
+    if not good_evidence:
+        return None
+    confirmed = dossier.sources.filter(
+        source_kind=(
+            SourceReference.Kind.CLUB_OFFICIAL if context == "club"
+            else SourceReference.Kind.LEAGUE_OFFICIAL
+        ),
+        url=url, manual_confirmation__isnull=False,
+    ).exists()
+    return {
+        "context": context, "url": url, "qid": qid,
+        "confirmed": confirmed,
+        "title": (
+            f"Offizielle Vereinswebsite · {dossier.job.club_name}"
+            if context == "club"
+            else f"Offizielle Ligawebsite · {dossier.job.league_name}"
+        )[:160],
+    }
