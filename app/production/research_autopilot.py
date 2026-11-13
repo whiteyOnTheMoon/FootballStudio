@@ -19,6 +19,7 @@ STEP_ORDER = (
     ("club", "Verein eindeutig zuordnen", "Wikidata / Wikipedia"),
     ("stadium", "Stadion recherchieren", "Wikidata P115"),
     ("players", "Spieler der Vereinsgeschichte finden", "Wikidata P54"),
+    ("sources", "Offizielle Website-Kandidaten finden", "Wikidata P856 / P118"),
     ("legends", "Offizielle Vereinslegenden abgleichen", "bestätigte Vereinswebsite"),
     ("honours", "Titelchronik und Quellenvergleich", "bestätigte Ligawebsite"),
 )
@@ -29,6 +30,7 @@ _IMPORTERS = {
     "club": ("wikimedia_auto", "import_free_club_research"),
     "stadium": ("wikimedia_stadium", "enrich_wikimedia_stadium"),
     "players": ("wikimedia_players", "import_wikidata_player_candidates"),
+    "sources": ("official_source_candidates", "import_official_site_candidates"),
     "legends": ("official_legends", "crosscheck_official_club_legends"),
     "honours": ("official_honours", "import_official_honours_timeline"),
 }
@@ -89,6 +91,12 @@ def research_plan(*, job, dossier=None):
             external_id="auto-p54:" + qid,
         ).exists()
     )
+    has_sites = bool(
+        has_club and dossier.sources.filter(
+            source_kind=SourceReference.Kind.WIKIDATA,
+            external_id="auto-p856-sites:" + qid,
+        ).exists()
+    )
     has_legends = bool(
         has_club and dossier.sources.filter(
             source_kind=SourceReference.Kind.CLUB_OFFICIAL,
@@ -114,6 +122,9 @@ def research_plan(*, job, dossier=None):
         ),
         "players": (
             "completed" if has_players else "ready" if has_club else "waiting"
+        ),
+        "sources": (
+            "completed" if has_sites else "ready" if has_players else "waiting"
         ),
         "legends": (
             "completed" if has_legends
