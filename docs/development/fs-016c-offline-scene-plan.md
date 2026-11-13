@@ -118,3 +118,58 @@ Containerstatus und HTTPS-Healthcheck prüfen.
 Die auf dem VPS bestehende gemeinsame Paid-API-Monatsgrenze
 steht derzeit auf `UNCONFIGURED`; bezahlte Aufrufe bleiben
 durch `PAID_API_CALLS_ENABLED=0` vollständig gesperrt.
+
+
+### Ergänzung: Eigene Szenenplan-Vorschau in der Weboberfläche
+
+Vom privaten Recherchedossier führt ein neuer Link zu
+`/jobs/<job_id>/research/scenes/?version=<v>&wpm=145`.
+Diese Oberfläche ist **nur für den Job-Eigentümer** sichtbar
+und wird nie öffentlich geteilt. GET baut eine
+**temporäre** Szenevorschau und schreibt weder neue Fakten,
+Dossiers noch Szenenpläne. Bei nicht ausreichend geprüften
+Quellen zeigt die Seite einen Hinweis und bietet keine
+Speicheraktion an.
+
+Das Sprechtempo lässt sich für die Planung ausdrücklich
+zwischen **120, 145 und 165 Wörtern/Minute** wählen.
+Für jeden Sprecherabschnitt werden Reihenfolge,
+englische Narration, Dauer**schätzung**, überprüfte
+Fakten-/Quellenlinks und der Medien-Platzhalter gezeigt.
+
+Nur bei einem aktuellen Dossierstand erscheint
+„Diesen Szenenplan jetzt speichern“ als Formular.
+Dieser **POST** verlangt Benutzeranmeldung, standardmäßigen
+Django-CSRF-Schutz, eine exakte positive Dossierversion,
+einen erlaubten Sprechtempo-Wert und den beim GET
+angezeigten SHA-256-Plan-Fingerprint. Wird der
+Job-Titel, ein Fakt oder eine andere maßgebliche Eingabe
+zwischen Vorschau und Klick geändert, antwortet die
+Anwendung mit **409** und schreibt nichts.
+Danach übernimmt weiterhin
+`save_scene_plan_snapshot` das atomare,
+eigentümergeschützte, versionierte Speichern.
+
+Bereits gespeicherte Pläne können durch erneutes Öffnen
+der Seite geprüft und gelesen werden; ein korrupter
+oder veralteter Plan erhält **keine** TTS- oder
+Renderfreigabe. Historische Dossierversionen bleiben
+rein lesbar.
+
+Die Oberfläche zeigt bewusst an, dass ein
+Skript außerhalb der 8–10-Minuten-Grenze redaktionell
+überarbeitet werden muss. Ein gespeichert-planbarer
+Storyboard-Entwurf ist noch kein freigegebenes Drehbuch
+und kein Produktionsjob.
+
+Browser-Tests:
+`python manage.py test app.production.test_scene_storyboard_views`
+prüft reale Reviewentscheidungen, Vorschau ohne
+Schreibzugriff, explizites Speichern, Wiederladen,
+CSRF-Schutz, fremde/fehlende Jobs, historische
+Versionen, geänderte Daten und vollständigen
+Netzwerkverzicht.
+
+**Keine neue Migration** für diese Oberfläche:
+Tabelle `0011_scene_plan_snapshots` existiert bereits.
+Keine Provider-Anbindung oder neuen Secrets.
