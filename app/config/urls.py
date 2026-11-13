@@ -5,7 +5,7 @@ from app.accounts.forms import EmailAuthenticationForm
 from django.urls import include, path
 from app.studio import views
 from app.production import views as production_views
-from app.production import title_web_views, fact_web_views, source_web_views, evidence_web_views, fact_decision_web_views, script_preview_views, scene_storyboard_views, preflight_web_views, research_consent_web_views
+from app.production import title_web_views, wikimedia_auto_views, fact_web_views, source_web_views, evidence_web_views, fact_decision_web_views, script_preview_views, scene_storyboard_views, preflight_web_views, research_consent_web_views
 
 urlpatterns = [
     path("", views.home, name="home"),
@@ -18,6 +18,9 @@ urlpatterns = [
     path("healthz/", views.healthz, name="healthz"),
     path("clubs/api/", include(("app.clubs.urls", "clubs"), namespace="clubs")),
     path("jobs/api/", include(("app.production.urls", "production"), namespace="production")),
+    path("jobs/<int:job_id>/research/auto-wikimedia/",
+         wikimedia_auto_views.start_free_wikimedia_research,
+         name="research-auto-wikimedia"),
     path("jobs/<int:job_id>/research/", production_views.research_dossier,
          name="research-job"),
     path("jobs/<int:job_id>/research/facts/new/", fact_web_views.manual_fact_proposal,
