@@ -724,3 +724,38 @@ class PaidApiCharge(models.Model):
                 name="prod_paid_settle_has_cost",
             ),
         ]
+
+
+class ScenePlanSnapshot(models.Model):
+    """Private, immutable-by-service, versioned offline storyboard snapshot.
+
+    PostgreSQL retains the small JSON artifact across web container restarts.
+    A consistent SHA-256 is a corruption/staleness check, not authentication.
+    """
+
+    job = models.ForeignKey(
+        ProductionJob, on_delete=models.CASCADE, related_name="scene_plan_snapshots",
+    )
+    dossier_version = models.PositiveIntegerField()
+    words_per_minute = models.PositiveSmallIntegerField()
+    source_script_fingerprint_sha256 = models.CharField(max_length=64)
+    plan_fingerprint_sha256 = models.CharField(max_length=64)
+    plan_payload = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("dossier_version", "words_per_minute", "pk")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("job", "dossier_version", "words_per_minute"),
+                name="prod_scene_job_ver_wpm_uq",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(dossier_version__gte=1),
+                name="prod_scene_version_positive",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(words_per_minute__gte=100, words_per_minute__lte=200),
+                name="prod_scene_wpm_100_200",
+            ),
+        ]

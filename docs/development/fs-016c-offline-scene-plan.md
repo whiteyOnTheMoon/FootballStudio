@@ -3,8 +3,9 @@
 **Teilumsetzung:** Eine deterministische reine Funktion erzeugt aus dem
 bestehenden, vom berechtigten Job-Eigentümer geladenen
 FS-016a-Drehbuchentwurf eine chronologisch geordnete Szenenliste.
-Noch **kein** vollständig produzierbarer Szenenplan, keine gespeicherte
-Datenbank- oder Dateiversion, kein Worker und keine Medien-/TTS-API.
+Noch **kein** vollständig produzierbarer Szenenplan, kein Worker und
+keine Medien-/TTS-API. Persistente PostgreSQL-Snapshots sind inzwischen
+als separater, bewusst kleiner Schritt hinzugekommen (siehe unten).
 
 `app.production.scene_plan.build_scene_plan(draft, words_per_minute=145)`
 verwendet den bestehenden FS-016b-Längenplaner einschließlich
@@ -66,8 +67,54 @@ an WPM, fehlende Medienfreigabe, kurze Skripte, kaputte
 Fingerprint-/Dossierdaten, manipulierte Segment-IDs und
 vollständig fehlende externe Netzwerkanfragen.
 
-**Offen innerhalb #38:** Persistierte versionierte Szenenpläne
-und erneutes Laden, echte Medienbedarfe je Szene, Zusammenführung
+**Offen innerhalb #38:** echte Medienbedarfe je Szene, Zusammenführung
 mit Medien-/Renderpipeline und End-to-End-Abnahme. Das vorhandene
 $10-API-Monatsbudget und alle Default-OFF-Schalter bleiben
 unverändert.
+
+
+### Ergänzung 13.11.2026 – PostgreSQL-Snapshots (Migration 0011)
+
+Der neue additive `ScenePlanSnapshot` speichert einen kleinen
+JSON-Szenenplan direkt in der bereits persistenten PostgreSQL-Datenbank.
+Damit gehen Daten beim Austausch des Web-Containers nicht verloren.
+Eine unveränderliche Zuordnung `(job, dossier_version, words_per_minute)`
+mit Unique-Constraint erlaubt parallele, klar getrennte Varianten:
+neuer Dossierstand oder geänderte Sprechgeschwindigkeit → anderes Artefakt.
+Es werden **keine** großen Audio-/Video-Dateien in der Datenbank abgelegt.
+
+`app.production.scene_snapshots.save_scene_plan_snapshot(owner=..., job_id=..., dossier_version=..., words_per_minute=145)`
+lädt über den bestehenden owner-scoped Django-Pfad den aktuellen
+faktengeprüften Drehbuchentwurf, baut die Szenen mit
+`build_scene_plan()` und legt unter Job-Row-Lock höchstens einmal
+eine unveränderliche Version ab. Ein identischer erneuter Aufruf
+liefert denselben DB-Datensatz; eine Abweichung bei gleichbleibender
+Dossierversion und WPM wird mit `stale_scene_snapshot`
+**abgelehnt**, nicht überschrieben. Für eine inhaltliche neue Version
+ist ein neuer Dossierstand erforderlich.
+
+`load_scene_plan_snapshot(owner=..., job_id=..., dossier_version=..., words_per_minute=145)`
+verlangt dieselbe Besitzerprüfung, verifiziert die gespeicherten
+Metadaten und den SHA-256-Fingerprint und vergleicht den Snapshot
+erneut mit der **aktuellen geprüften** Eingabe. Es gibt keine
+öffentliche Download-Route oder fremde Job-ID-Abfrage. Ein geänderter
+Titel oder überarbeiteter Fakt bei derselben Dossierversion wird
+nicht still als aktueller Plan ausgegeben. Fingerprints dienen
+**nur** der Konsistenz, nicht der Authentisierung fremder Daten.
+Maximale JSON-Nutzlast: 512 KiB.
+
+Der gespeicherte Plan behält `ready_for_tts=False`,
+`ready_for_render=False`, `rights_cleared=False`.
+Die echten Medienrechte, die Audio-Länge und eine fachliche
+Redaktionsfreigabe müssen später separat erfolgen.
+
+Tests: `python manage.py test app.production.test_scene_snapshots`
+
+**VPS-Deployment mit neuer Migration:** Zuerst PostgreSQL-Backup
+erstellen und in einer Wegwerf-Datenbank verifiziert restaurieren,
+dann Pull/Compose-Build und `showmigrations production`,
+`migrate --noinput`, `check`, `show_paid_api_budget`,
+Containerstatus und HTTPS-Healthcheck prüfen.
+Die auf dem VPS bestehende gemeinsame Paid-API-Monatsgrenze
+steht derzeit auf `UNCONFIGURED`; bezahlte Aufrufe bleiben
+durch `PAID_API_CALLS_ENABLED=0` vollständig gesperrt.
