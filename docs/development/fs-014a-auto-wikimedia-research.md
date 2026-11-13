@@ -84,3 +84,60 @@ stale Version und kein Netzaufruf für fremde Jobs.
 
 Referenz zur freien Wikimedia-Schnittstelle:
 https://www.wikidata.org/wiki/Wikidata:Data_access/en
+
+
+## Ergänzung: Stadionsuche als zweiter automatischer Schritt
+
+Nach dem ersten kostenlosen Wikimedia-Import (z. B. Sturm Graz,
+Dossierversion 3 mit `founded_year=1909`) zeigt das aktuelle
+Recherchedossier jetzt den Knopf
+**„Weitere Fakten automatisch recherchieren: Stadion“**.
+
+Diese Aktion nimmt **ausschließlich** die bereits für den
+eigentümergeschützten Job automatisch zugeordnete Club-Q-ID
+aus dem gespeicherten Dossier. Sie fragt Wikidata P115
+(*home venue*) ab, verwirft beendete oder erst für die
+Zukunft vorgesehene Heimspielstätten und akzeptiert nur
+eine eindeutige aktuelle P115-Zuordnung. Ein `preferred`-Wert
+hat Vorrang vor `normal`. Wenn keine aktuelle eindeutige
+Zuordnung oder kein geeigneter englischer Stadionname
+existiert, wird **kein** Fakt erfunden oder gespeichert.
+
+Der Name wird aus der **zugehörigen Stadion-Q-ID** über
+die feste Wikidata EntityData-API ermittelt, nicht aus
+freiem Nutzereingabetext und ohne manuelle Q-ID-Suche.
+
+Im Erfolgsfall erzeugt der Import genau einen
+**ungeprüften** `stadium_name`-Faktenvorschlag in der
+nächsten Dossierversion; die beiden strukturierten
+Wikidata-Links P115 (Vereinsobjekt) und English label
+(Stadionobjekt) bleiben in der Evidenz sichtbar.
+**Beide Wikidata-Seiten zählen ausdrücklich nicht als
+zwei unabhängige Quellennachweise.**
+
+Voraussetzungen: Login, gültiger CSRF-Token, eigene
+Job-ID, neuester Dossierstand, vorhandene automatische
+Club-Q-ID. Abgefangene upstream/API-Fehler, unbekannte
+Stadien und widersprüchliche Zuordnungen führen zu
+einer erklärten Nichtübernahme. Keine fremden Domains,
+keine Bilddateien, keine bezahlten APIs, kein Freitext-LLM.
+Wiederholte erfolgreiche POSTs erzeugen keine neuen
+Dossierversionen und führen keine weiteren Netzabfragen
+aus. Frühere Versionsstände und bereits verifizierte
+Fakten bleiben unangetastet.
+
+Die kritische Produktgrenze bleibt: Das ist eine
+**automatische Faktenrecherche**, keine automatische
+Verifikation und kein vollständiger 8–10-Minuten-Film.
+In den nächsten Schritten müssen breit belegte weitere
+Clubevents, unabhängig geprüfte Quellencrosschecks und
+eine formale automatische Freigabeentscheidung folgen.
+Automatisch gefundene Aussagen werden nicht als
+menschlich geprüft ausgegeben.
+
+Offline-Tests (Wikidata-HTTP gemockt):
+`python manage.py test app.production.test_wikimedia_stadium app.production.test_wikimedia_stadium_views`
+
+Keine Datenbankmigration; bestehende Dossierversion 3
+von Sturm Graz wird erst durch ausdrückliches Klicken
+der neuen Folgeaktion um einen Stadionkandidaten ergänzt.

@@ -180,7 +180,23 @@ def research_dossier(request, job_id):
             for source in snapshot["sources"]
         )
     )
+    auto_research_imported = (
+        snapshot is not None
+        and selected_version == (versions[0] if versions else None)
+        and any(
+            source["source_kind"] == "wikidata"
+            and source["title"].startswith("[auto] ")
+            and source["external_id"].startswith("Q")
+            for source in snapshot["sources"]
+        )
+    )
+    has_stadium_fact = (
+        snapshot is not None
+        and any(fact["predicate"] == "stadium_name" for fact in snapshot["facts"])
+    )
     return render(request, "studio/research.html", {
+        "auto_research_imported": auto_research_imported,
+        "has_stadium_fact": has_stadium_fact,
         "job": job,
         "versions": versions,
         "selected_version": selected_version,
