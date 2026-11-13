@@ -207,3 +207,68 @@ Offline-Tests:
 \`python manage.py test app.production.test_wikimedia_players app.production.test_wikimedia_players_views\`.
 Keine echte Query-Service-Anfrage in CI, keine Paid API,
 keine Migration.
+
+
+## Ergänzung: Abgleich mit **offiziellen** Vereinslegenden
+
+Für einen bereits automatisch erkannten Verein (Club-Q-ID aus Wikidata),
+bereits automatisch gefundene Spieler (Wikidata P54) und eine zuvor vom
+Job-Eigentümer bestätigte **offizielle Vereinsdomain**
+zeigt der neueste Dossierstand die Aktion
+**„Offizielle Vereinslegenden automatisch abgleichen“**.
+
+Die Aktion startet genau einmal einen **auf die bestätigte Domain
+begrenzten** kostenlosen HTTPS-Abruf:
+1. Eigentümer, aktuelle Dossierversion, frühere Wikidata-Identität und
+   bestehende Club-Website-Zuordnung mit dokumentierter Website-/Terms-
+   Bestätigung **vor Netzwerk** prüfen.
+2. Bereits existierende DNS-gepinnte TLS-Verbindungen,
+   Redirect-/IP-/Content-Type-Blockierung und Robots-Regeln aus
+   \`safe_official_fetch\` und \`official_site_research\` verwenden.
+   robots.txt muss eindeutig anwendbar sein; kein CAPTCHAs-/429-Bypass,
+   keine Fremddomain, kein Transfermarkt-Crawl.
+3. **Eine** geeignete Legenden-Übersichtsseite abrufen; wo vorhanden
+   anhand **eines begrenzten Links** auf der Clubhomepage finden.
+   Für die reale Pilotzuordnung Q124007617 + sksturm.at
+   existiert ein *Pfad-Hinweis* \`/c/legendenklub\` zur Suchverkürzung.
+   Dies ist **keine** fest eingebaute Namens-/Legendenliste und
+   keine Ausnahme vom Robots-/TOS-/TLS-Schutz.
+4. Nur die ausdrücklich überschriebenen Bereiche
+   „Spielerlegenden“ bzw. „Trainerlegenden“ oder die englischen
+   Äquivalente auswerten, jeweils kurze comma-/semicolon-getrennte
+   Namenslisten, keine Nachrichten-/Artikeltexte.
+   Nur **exakte** normalisierte Namensübereinstimmungen mit den
+   zuvor per Wikidata P54 gefundenen Spielern als
+   \`official_player_legend_candidate\` erfassen.
+5. Zusätzlich bis zu zwölf namentlich veröffentlichte
+   Trainerlegenden als \`official_coach_legend_candidate\` mit
+   eigener Quellen-Fundstelle übernehmen. Hier fehlt noch ein
+   unabhängiger Personen-ID-/Biografie-Abgleich.
+6. Dossier unter \`SELECT FOR UPDATE\` forken und nur
+   Quellen-URL, Abrufzeit, ausgewählte Namen, Quellenhinweise und
+   **\`unverified\`**-Faktenvorschläge persistieren. Keine Seite
+   oder geschützten Volltexte speichern, ältere Dossierstände
+   nicht ändern. Idempotenter Retry ohne erneuten Websiteabruf.
+
+**Warum keine automatische Verifikation?**
+Eine dokumentierte Vereinsliste kann belegen, dass der Verein die
+betreffende Person offiziell als Legende aufführt. Die technische
+Extraktion ist aber weiterhin ein maschineller Abgleich.
+Die bestehende \`FactReview\`-Schnittstelle und die Regeln für
+\`verified\`-Fakten / Skript / TTS werden **nicht** umgangen.
+Zwischen „offiziell gelistet“ und redaktionell freigegeben wird
+bewusst unterschieden. Besonders frühere Namen und Trainer benötigen
+ggf. Identitätsprüfung, bevor eine lebendige Biografie erzählt wird.
+
+**Begrenzung:** Nicht jeder Verein veröffentlicht eine solche Liste,
+manche Seiten verbergen sie hinter JavaScript, verlinken sie nicht
+auf der Homepage oder verbieten den automatischen Abruf.
+Dann wird nichts geraten und es findet keine fingierte erfolgreiche
+Recherche statt. Die nächste Stufe ergänzt weitere vereinsübergreifende
+Discovery-Quellen und redaktionell abgesicherte automatisch
+wiederverwendbare Entscheidungen.
+
+**Offline-Tests:**
+\`python manage.py test app.production.test_official_legends app.production.test_official_legends_views\`
+
+Keine Migration, keine Paid API, keine externe Website im CI-Test.
