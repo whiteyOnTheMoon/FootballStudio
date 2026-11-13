@@ -302,7 +302,22 @@ def research_dossier(request, job_id):
         key=lambda entry: (entry["season"], entry["category"]),
         reverse=True,
     )
+    autopilot_plan = None
+    if selected_version is None or selected_version == (versions[0] if versions else None):
+        from .research_autopilot import research_plan
+        latest_dossier = FactDossier.objects.filter(job=job).order_by(
+            "-version"
+        ).first()
+        autopilot_plan = research_plan(job=job, dossier=latest_dossier)
+
+    research_outline = None
+    if snapshot is not None:
+        from .research_outline import build_documentary_research_outline
+        research_outline = build_documentary_research_outline(snapshot)
+
     return render(request, "studio/research.html", {
+        "autopilot_plan": autopilot_plan,
+        "research_outline": research_outline,
         "has_official_honours": has_official_honours,
         "official_honours": official_honours,
         "honours_counts": honours_counts,
