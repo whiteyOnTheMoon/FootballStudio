@@ -141,17 +141,12 @@ def assemble_english_documentary_draft(snapshot, *, assessment=None):
         or not isinstance(snapshot.get("sources"), list)
     ):
         raise ValueError("A serialized owned research dossier is required.")
-    assessment = (
-        assess_research_snapshot(snapshot) if assessment is None else assessment
-    )
-    if (
-        not isinstance(assessment, dict)
-        or assessment.get("mode") != "machine_source_assessment_only"
-        or assessment.get("dossier_version") != snapshot.get("version")
-        or not isinstance(assessment.get("items"), list)
-        or assessment.get("approved_for_voiceover") is not False
-    ):
-        raise ValueError("An assessment of the same dossier version is required.")
+    # Never trust caller-supplied match classifications. A mismatched
+    # or stale assessment must not enter the script, even in a preview.
+    verified_assessment = assess_research_snapshot(snapshot)
+    if assessment is not None and assessment != verified_assessment:
+        raise ValueError("An assessment of this exact dossier is required.")
+    assessment = verified_assessment
 
     facts = [
         row for row in snapshot["facts"][:_MAX_FACTS]
@@ -175,7 +170,11 @@ def assemble_english_documentary_draft(snapshot, *, assessment=None):
     qid = _club_qid(snapshot)
     groups = {key: [] for key, _title in _SECTIONS}
 
-    if _safe_name(club) and qid is not None:
+    # Never interpolate untrusted club names in English draft paragraphs.
+    if not _safe_name(club):
+        club = None
+
+    if club is not None and qid is not None:
         source = next((
             row for row in sources.values()
             if row.get("source_kind") == "wikidata"
@@ -273,7 +272,7 @@ def assemble_english_documentary_draft(snapshot, *, assessment=None):
             and row.get("corroboration") == "both"
         ):
             honours.append((season, category, fact["id"]))
-    for season, category, fid in sorted(honours)[:_MAX_TITLES]:
+    for season, category, fid in sorted(honours)[:_MAX_TITLES] if club else ():
         title = (
             "domestic cup" if category == "domestic_cup"
             else "league championship"
@@ -330,7 +329,7 @@ def assemble_english_documentary_draft(snapshot, *, assessment=None):
             continue
         people.append((value["name"], "player" if is_player else "coach",
                        fact["id"], linked[0]))
-    for name, role, fid, sid in sorted(people)[:_MAX_LEGENDS]:
+    for name, role, fid, sid in sorted(people)[:_MAX_LEGENDS] if club else ():
         groups["people"].append(_line(
             f"On its published {role}-legends list, the club names "
             f"{name}. This is a record of the club's own recognition, "
