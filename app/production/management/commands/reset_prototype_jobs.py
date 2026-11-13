@@ -82,7 +82,7 @@ class Command(BaseCommand):
         for job in qs.order_by("pk")[:20]:
             self.stdout.write(
                 f"  #{job.pk} · owner #{job.owner_id} · {job.club_name} "
-                f"· status={job.status}"
+                f"· {job.title} · status={job.status}"
             )
         if total > 20:
             self.stdout.write(f"  … and {total - 20} more test jobs.")
