@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>Szenenplan · {{ job.club_name }} · FootballStudio</title>
+  <style>
+    :root { color-scheme:dark; --bg:#0b1320; --panel:#172536; --border:#355064; --text:#f1f7fc; --muted:#a6bdc9; --accent:#63ddbf; }
+    * { box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); margin:0; font:1rem/1.55 system-ui,-apple-system,sans-serif; }
+    main { max-width:920px; margin:0 auto; padding:28px 18px 70px; }
+    a { color:var(--accent); overflow-wrap:anywhere; }
+    a:focus-visible, button:focus-visible, select:focus-visible { outline:3px solid var(--accent); outline-offset:3px; }
+    h1 { font-size:clamp(1.8rem,5vw,2.5rem); line-height:1.2; margin:12px 0; }
+    h2 { font-size:1.3rem; margin:0 0 12px; }
+    p { margin:10px 0; }
+    .eyebrow { font-size:.82rem; text-transform:uppercase; letter-spacing:.12em; font-weight:800; color:var(--accent); }
+    .muted { color:var(--muted); }
+    .panel { border:1px solid var(--border); border-radius:14px; background:var(--panel); padding:clamp(14px,4vw,24px); margin:20px 0; }
+    .notice { border-left:4px solid var(--accent); background:#102c2e; padding:12px 15px; }
+    .warning { border-left:4px solid #e2b77a; background:#3a2a24; padding:12px 15px; }
+    .narration { white-space:pre-wrap; background:#0f2130; border-radius:10px; padding:14px; }
+    .meta { color:var(--muted); font-size:.9rem; overflow-wrap:anywhere; }
+    .controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:16px; }
+    select { padding:8px; border-radius:8px; color:var(--text); background:#102b35; border:1px solid #779da0; }
+    button { padding:10px 15px; border:0; border-radius:8px; background:var(--accent); color:#061712; font:inherit; font-weight:800; cursor:pointer; }
+    ul { padding-left:22px; }
+    li { overflow-wrap:anywhere; margin:6px 0; }
+    footer { color:var(--muted); font-size:.88rem; margin-top:30px; }
+  </style>
+</head>
+<body>
+<main>
+  <a href="{% url 'research-job' job.pk %}?version={{ version }}">← Zum ausgewählten Recherchedossier</a>
+  <p class="eyebrow">FootballStudio · M2 · Storyboard</p>
+  <h1>Englischer Szenenplan: {{ job.club_name }}</h1>
+  <p class="muted">Job #{{ job.pk }} · Dossierversion {{ version }} {% if version == latest_version %}(aktuell){% else %}(historisch){% endif %} · {{ wpm }} Wörter/Minute</p>
+  <p class="notice"><strong>Nur redaktionelle Planung.</strong> Alle Szenenzeiten sind geschätzt, alle Bilder sind noch offene Original-Textkarten-Platzhalter. Hier werden keine Medien heruntergeladen, keine KI/TTS-Anfragen gestartet und keine Filme gerendert. Nur geprüfte Fakten erscheinen als Tatsachen im Sprechertext.</p>
+
+  <section class="panel">
+    <h2>Sprechtempo auswählen</h2>
+    <p class="muted">Das Tempo beeinflusst die Laufzeitschätzung, nicht die geprüften Fakten.</p>
+    <nav aria-label="Sprechtempo auswählen" class="controls">
+      {% for rate in wpm_options %}
+        <a href="{% url 'research-scene-plan' job.pk %}?version={{ version }}&amp;wpm={{ rate }}"
+           {% if rate == wpm %}aria-current="page"{% endif %}>{{ rate }} Wörter/Minute</a>
+      {% endfor %}
+    </nav>
+  </section>
+
+  {% if error_message %}
+    <section class="panel" role="status">
+      <h2>Noch keine sichere Szenenplanung möglich</h2>
+      <p class="warning">{{ error_message }}</p>
+      <p><a href="{% url 'research-script-preview' job.pk %}?version={{ version }}">Fakten und Quellenstatus prüfen</a></p>
+    </section>
+  {% elif plan %}
+    <section class="panel">
+      <h2>Planungsstand</h2>
+      <p><strong>{{ scene_cards|length }} Szenen</strong> · Geschätzt {{ estimated_minutes }} Minuten · {{ length_label }}</p>
+      <p class="meta">Drehbuch-SHA: <code>{{ plan.source_script_fingerprint_sha256 }}</code></p>
+      {% if saved %}
+        <p class="notice"><strong>Version gespeichert.</strong> Dieser unveränderte Szenenplan ist in PostgreSQL hinterlegt und wurde gegen den aktuellen Dossierstand geprüft.</p>
+      {% elif version == latest_version %}
+        <form method="post" action="{% url 'research-scene-plan' job.pk %}" class="controls">
+          {% csrf_token %}
+          <input type="hidden" name="version" value="{{ version }}">
+          <input type="hidden" name="wpm" value="{{ wpm }}">
+          <input type="hidden" name="expected_fingerprint" value="{{ plan.plan_fingerprint_sha256 }}">
+          <button type="submit">Diesen Szenenplan jetzt speichern</button>
+        </form>
+        <p class="meta">Speichern erfolgt ausschließlich nach Klick. Abweichende Daten für denselben Dossierstand werden nicht überschrieben.</p>
+      {% else %}
+        <p class="muted">Historische Dossierversionen sind nur lesbar. Zum neuen Speichern bitte den aktuellen Forschungsstand öffnen.</p>
+      {% endif %}
+      {% if plan.script_length_status != "within_target" %}
+        <p class="warning"><strong>Noch nicht produktionsreif:</strong> Das geschätzte Skript liegt außerhalb des Ziels von 8–10 Minuten. Bitte weitere belegte Fakten erarbeiten oder den Text redaktionell kürzen.</p>
+      {% endif %}
+    </section>
+
+    {% for scene in scene_cards %}
+      <article class="panel">
+        <h2>Szene {{ scene.scene_number }} · {{ scene.section }}</h2>
+        <p class="meta">Start {{ scene.start_ms_estimate }} ms · Dauer ca. {{ scene.duration_seconds }} Sekunden · {{ scene.word_count }} Wörter</p>
+        <p lang="en" class="narration">{{ scene.narration }}</p>
+        {% if scene.fact_id %}
+          <p class="meta">Geprüfter Fakt #{{ scene.fact_id }}</p>
+          <ul>
+            {% for reference in scene.evidence_refs %}
+              <li>Quelle #{{ reference.source_id }} · <a href="{{ reference.url }}" target="_blank" rel="noopener noreferrer nofollow">Originalquelle öffnen</a></li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="meta">Allgemeine, faktenneutrale Einleitung oder Schluss.</p>
+        {% endif %}
+        <p class="meta">Medienbedarf: Original-Textkarten-Platzhalter · Keine externen Bilder ausgewählt · Medienrechte nicht freigegeben</p>
+      </article>
+    {% endfor %}
+  {% endif %}
+
+  <footer>Private, owner-geschützte Ansicht · Keine TTS-/Renderfreigabe · Keine kostenpflichtigen Anfragen</footer>
+</main>
+</body>
+</html>

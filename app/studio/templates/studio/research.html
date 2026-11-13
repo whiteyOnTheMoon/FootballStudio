@@ -93,6 +93,8 @@
       <h2 id="preview-heading">Sichere englische Skriptvorschau</h2>
       <p>Vorläufige, rein lesende Formulierungen aus diesem Dossiostand: vollständig manuell geprüfte Fakten, gekennzeichnete Unsicherheit und nachvollziehbar ausgelassene Behauptungen. <strong>Kein</strong> fertiger Film oder KI-generiertes Skript.</p>
       <p><a href="{% url 'research-script-preview' job.pk %}?version={{ selected_version }}">Englische Textbausteine und Quellenlage ansehen</a></p>
+      <p><a href="{% url 'research-scene-plan' job.pk %}?version={{ selected_version }}">Szenenplan mit Quellen und Laufzeitschätzung ansehen</a></p>
+      <p class="meta">Mit überprüften Fakten kann der Szenenplan nach ausdrücklicher Bestätigung dauerhaft gespeichert werden. Kein TTS und kein Render.</p>
     </section>
     {% if selected_version == latest_version %}
       <section class="panel" aria-labelledby="proposal-heading">
