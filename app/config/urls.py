@@ -5,7 +5,7 @@ from app.accounts.forms import EmailAuthenticationForm
 from django.urls import include, path
 from app.studio import views
 from app.production import views as production_views
-from app.production import research_autopilot_views
+from app.production import research_autopilot_views, film_views
 from app.production import title_web_views, wikimedia_auto_views, fact_web_views, source_web_views, evidence_web_views, fact_decision_web_views, script_preview_views, scene_storyboard_views, preflight_web_views, research_consent_web_views
 
 urlpatterns = [
@@ -19,6 +19,8 @@ urlpatterns = [
     path("healthz/", views.healthz, name="healthz"),
     path("clubs/api/", include(("app.clubs.urls", "clubs"), namespace="clubs")),
     path("jobs/api/", include(("app.production.urls", "production"), namespace="production")),
+    path("jobs/<int:job_id>/production/",
+         film_views.film_status_page, name="film-status-page"),
     path("jobs/<int:job_id>/research/auto-continue/",
          research_autopilot_views.continue_research,
          name="research-autopilot-continue"),

@@ -11,12 +11,13 @@ import sys
 config = json.load(sys.stdin)
 assert config.get("name") == "footballstudio", "Isolate Compose project from other sites"
 services = config["services"]
-assert set(services) == {"db", "web", "cloudflared"}, "Exactly one dedicated connector"
+assert set(services) == {"db", "web", "cloudflared", "film-worker"}, "Exactly one dedicated connector"
 web = services["web"]
 db = services["db"]
 tunnel = services["cloudflared"]
+worker = services["film-worker"]
 
-for name, service in (("web", web), ("db", db), ("cloudflared", tunnel)):
+for name, service in (("web", web), ("db", db), ("cloudflared", tunnel), ("film-worker", worker)):
     assert not service.get("ports"), f"{name} must not publish any host ports"
     logging = service.get("logging", {})
     assert logging.get("driver") == "local", f"{name}: unexpected log driver"
@@ -46,6 +47,16 @@ assert "'Host':'studio2.ap-pixels.com'" in script, (
     "Production healthcheck must use a valid Django Host"
 )
 assert "response.status==200" in script and "response.read()==b'ok'" in script
+
+assert worker["image"] == "footballstudio-web", "Worker must use the application image"
+assert worker.get("command") == [
+    "python", "manage.py", "produce_films", "--loop", "--interval", "10",
+], "Worker may only run the bounded production command"
+assert worker["depends_on"]["web"]["condition"] == "service_healthy"
+assert worker["environment"]["PAID_API_CALLS_ENABLED"] == "0", "Worker must not enable paid APIs"
+assert "TUNNEL_TOKEN" not in worker["environment"]
+assert "CLOUDFLARE_TUNNEL_TOKEN" not in worker["environment"]
+assert set(worker.get("networks", {})) == {"default"}, "Worker must stay off tunnel ingress"
 
 assert tunnel["image"] == "cloudflare/cloudflared:2026.10.7"
 assert tunnel.get("read_only") is True

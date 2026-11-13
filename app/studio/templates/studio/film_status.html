@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  {% if film.status == "queued" or film.status == "running" %}
+    <meta http-equiv="refresh" content="8">
+  {% endif %}
+  <title>Videoproduktion · {{ job.club_name }} · FootballStudio</title>
+  <style>
+    :root {color-scheme:dark;--bg:#0b1320;--panel:#172536;--text:#f1f7fc;--muted:#b8c7d4;--accent:#63ddbf;--border:#365166;}
+    * {box-sizing:border-box;}
+    body {background:var(--bg);color:var(--text);font:1rem/1.55 system-ui,-apple-system,sans-serif;margin:0;}
+    main {max-width:790px;margin:0 auto;padding:28px 18px 70px;}
+    h1 {font-size:clamp(1.7rem,5vw,2.5rem);}
+    a {color:var(--accent);}
+    .panel {background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:22px;margin:24px 0;}
+    .muted {color:var(--muted);}
+    .big {font-weight:750;font-size:1.2rem;}
+    li {padding:5px 0;}
+    a:focus-visible {outline:3px solid var(--accent);outline-offset:3px;}
+    progress {width:100%;height:18px;accent-color:var(--accent);}
+    .notice {border-left:4px solid var(--accent);padding:12px 15px;background:#112d30;}
+  </style>
+</head>
+<body>
+<main>
+  <p><a href="{% url 'home' %}">← Zur Vereinsauswahl und meinen Produktionen</a></p>
+  <h1>{{ job.club_name }}: Video erstellen</h1>
+  <p class="muted">Produktionsauftrag #{{ job.pk }} · {{ job.title }}</p>
+  <section class="panel" aria-labelledby="film-progress-heading">
+    <h2 id="film-progress-heading">Automatischer Produktionsstatus</h2>
+    <p class="big" role="status" aria-live="polite">
+      {% if film.status == "queued" %}In der Warteschlange
+      {% elif film.status == "running" %}Recherche läuft automatisch
+      {% elif film.status == "completed" and film.video_ready %}Video ist fertig
+      {% else %}Automatischer Auftrag beendet – noch kein Video{% endif %}
+    </p>
+    <p>{{ film.message }}</p>
+    <label for="research-progress">Recherche: {{ film.research_completed }} von {{ film.research_total }} erfassten Bausteinen</label>
+    <progress id="research-progress" max="{{ film.research_total }}" value="{{ film.research_completed }}">{{ film.research_completed }} von {{ film.research_total }}</progress>
+    <p class="muted">Die Angaben zeigen gespeicherte Rechercheschritte, keine bestätigte Faktenqualität. Nicht verfügbare Quellen blockieren die Recherche nicht zwingend.</p>
+    {% if film.status == "queued" or film.status == "running" %}
+      <p class="notice">Diese Seite darf geschlossen werden. Der separate Server-Worker verarbeitet den Auftrag weiter; die Anzeige aktualisiert sich automatisch.</p>
+    {% else %}
+      {% if not film.video_ready %}
+        <p class="notice">Noch keine MP4-Datei. Der englische Drehbuch-, Sprach-, Medien- und Renderdienst ist noch nicht einsatzbereit. Es wird kein fertiges Video behauptet und keine kostenpflichtige API gestartet.</p>
+      {% endif %}
+    {% endif %}
+  </section>
+  <details class="panel">
+    <summary><strong>Quellen und Recherche optional ansehen oder bearbeiten</strong></summary>
+    <p>Die detaillierten Quellen, Fakten und vorhandenen Recherchedossiers kannst du freiwillig öffnen. Für den normalen Start ist keine Einzelprüfung erforderlich.</p>
+    <p><a href="{% url 'research-job' job.pk %}">Erweiterten Quellen- und Fakteneditor öffnen</a></p>
+  </details>
+  <p class="muted">Die Videoerstellung wird schrittweise ausgebaut. Automatisch gefundene Fakten werden nicht ohne ausreichende Belege als menschlich geprüft ausgegeben.</p>
+</main>
+</body>
+</html>

@@ -19,10 +19,25 @@ mode = sys.argv[1]
 config = json.load(sys.stdin)
 services = config["services"]
 assert config.get("name") == "footballstudio", "Must never share the project name of other webapps"
-assert set(services) == {"web", "db"}, "An existing-tunnel overlay must not start cloudflared"
+assert set(services) == {"web", "db", "film-worker"}, "An existing-tunnel overlay must not start cloudflared"
 web, db = services["web"], services["db"]
+worker = services["film-worker"]
 assert not db.get("ports"), "Database must have no published host ports"
 assert "cloudflared" not in services, "Must reuse the existing Cloudflare connector"
+
+assert worker["image"] == "footballstudio-web"
+assert worker.get("command") == [
+    "python", "manage.py", "produce_films", "--loop", "--interval", "10",
+]
+assert worker["depends_on"]["web"]["condition"] == "service_healthy"
+assert not worker.get("ports"), "Worker must never publish a host port"
+assert set(worker.get("networks", {})) == {"default"}, (
+    "Worker must not join the external connector network"
+)
+assert worker["environment"]["PAID_API_CALLS_ENABLED"] == "0"
+assert not any(key in worker["environment"] for key in (
+    "TUNNEL_TOKEN", "CLOUDFLARE_TUNNEL_TOKEN",
+))
 
 env = web["environment"]
 expected = {
