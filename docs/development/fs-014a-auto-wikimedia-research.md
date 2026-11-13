@@ -272,3 +272,100 @@ wiederverwendbare Entscheidungen.
 \`python manage.py test app.production.test_official_legends app.production.test_official_legends_views\`
 
 Keine Migration, keine Paid API, keine externe Website im CI-Test.
+
+
+## FS-014b: offizielle Titelchronik mit dokumentierten Quellenunterschieden
+
+Nach den ersten Vereins- und Legenden-Recherchen bietet das neueste
+Dossier jetzt **„Meisterschaften und Pokalsiege automatisch recherchieren“**.
+
+Ein bewusst kleiner, sicherer Pilot-Adapter kann eine bereits
+eigentümerbestätigte offizielle **Ligaquelle** auswerten
+(Saison/Meister/Cup-Sieger) und die Saisonlisten nach Möglichkeit mit
+einer separat bestätigten **Vereinsquelle** vergleichen.
+Dazu werden die vorhandenen identitäts-/terms-geprüften
+\`SourceConfirmation\`-Einträge und exakt derselbe DNS-gepinnte
+HTTPS-/TLS-, IP-, no-redirect-, Content-Type-, Robots- und
+Politeness-Schutz wie beim Legendenabruf verwendet.
+CSRF, Eigentümer, aktuelle Dossierversion und zuvor automatisch
+erkanntes Club-Wikidata-Objekt sind Vorbedingungen **vor** der
+ersten externen Anfrage.
+
+Für den bereits bestätigten Sturm-Graz-Pilot
+nutzt der Adapter lediglich URL-**Pfadhinweise**:
+- Liga (AT + bestätigtes \`www.bundesliga.at\`):
+  \`/de/titel-uebersicht\`;
+- Verein (Q124007617 + bestätigtes \`sksturm.at\`):
+  \`/en/c/steckbrief\`.
+
+Es werden **keine** Saisons, Titel, Quelleninhalte oder Siegernamen
+im Produktcode fest eingetragen. Die Parser verarbeiten:
+- ausschließlich eine eindeutige Tabellenstruktur mit Saison,
+  Meister und Cup-Sieger;
+- ausschließlich exakt gezählte Meister-/Pokalsaisonlisten im
+  Bereich **National success** des offiziellen Vereinsprofils;
+- ausschließlich die ausgewählte Teambezeichnung mit
+  konservativem Präfix-/Sponsorenabgleich (z. B.
+  \`SK Puntigamer Sturm Graz\` vs. \`Sturm Graz\`).
+  U21-, Frauen- oder Reserveteams werden nicht als derselbe Verein
+  angesehen.
+
+Pro eindeutige Kombination aus Saison und Meisterschaft/Pokal
+entsteht ein \`club_honour_candidate\`-Eintrag mit
+\`verification_state=unverified\`, \`Evidence.role=unknown\`,
+Saison, Wettbewerb, konkreten Quell-URLs und einer
+Quellenvergleichskategorie:
+
+- \`both\`: offizielle Liga und eigenes Clubprofil nennen
+  denselben Titel für die Saison;
+- \`league_only\`: Titel auf Ligaseite, im tatsächlich
+  ausgewerteten Vereinsprofil **nicht aufgeführt** (keine
+  Behauptung, dass er falsch sei);
+- \`club_only\`: nur Clubprofil, nicht in Ligatabelle
+  nachgewiesen;
+- \`club_not_checked\`: Ligaseite erfolgreich, aber das
+  Vereinsprofil war nicht verfügbar/auswertbar.
+  **Diese Kategorie ist keine Quellenabweichung.**
+
+Die Webseite zeigt die saisonweise Chronik und die
+Vergleichszahlen mit Klicks zur offiziellen Quelle.
+Für den realen Sturm-Graz-Fall ist der Pokal
+2023/24 auf der offiziellen Ligaseite verzeichnet,
+fehlt jedoch in der zum Analysezeitpunkt veröffentlichten
+englischen Vereinsprofil-Liste. Das System soll diese
+Abweichung **sichtbar** lassen, nicht automatisch
+eine Seite zum Gewinner erklären.
+
+**Sicherheits-/Produktschranken:** Keine ungeprüften
+Sprechertexte oder FactReview-Fälschung. Ein
+Zwei-Quellen-Treffer bedeutet noch **keine**
+redaktionelle Verifikation. Maximal 32
+Saison-/Wettbewerbs-Kandidaten, mindestens 10
+Saisoneinträge in einer eindeutigen Ligatabelle,
+keine externe URL aus Formularen, höchstens
+eine Ligaseite und eine Clubprofil-Seite (plus
+je eine Homepage für generische Linksuche),
+maximale Abrufzeit sowie keine kostenpflichtigen APIs.
+Fehlt die Clubprofilseite, wird die Ligarecherche
+nur als \`club_not_checked\` gespeichert.
+Ist die Ligaseite nicht sicher abrufbar oder
+nicht strukturiert erkennbar, wird gar nichts
+übernommen. Historische Dossierversionen
+werden nur kopiert, nicht mutiert; erneuter
+POST nach Erfolg bleibt idempotent.
+
+Es handelt sich um den **österreichischen Pilot**
+für dieses Tabellenformat; fremde Ligaformate
+benötigen separate, quellenspezifische Parser.
+Ein Klick ersetzt noch nicht den gesamten
+Vereinsfilm-Workflow. Die nächste Stufe
+ist automatische Einordnung der relevanten
+historischen Wendepunkte und eine sichere
+editoriale Überleitung zum englischen Skript.
+
+Offline-Tests:
+\`python manage.py test app.production.test_official_honours app.production.test_official_honours_views\`
+
+Keine neue Migration; bestehender Sturm-Graz-Job
+Version 6 bleibt unverändert, bis die
+neue Aktion ausdrücklich gestartet wird.
