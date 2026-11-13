@@ -54,6 +54,7 @@ services:
 
 
   film-worker:
+    build: .
     image: footballstudio-web
     restart: unless-stopped
     command: ["python", "manage.py", "produce_films", "--loop", "--interval", "10"]
