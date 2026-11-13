@@ -70,7 +70,7 @@ def _one_p856(entity):
             canonical, _host = validate_manual_source_url(value)
         except ValueError:
             continue
-        if canonical == value and len(canonical) <= 500:
+        if len(canonical) <= 500:
             urls.add(canonical)
     return next(iter(urls)) if len(urls) == 1 else None
 
