@@ -194,8 +194,10 @@ class AutomaticEnglishScriptUnitTests(SimpleTestCase):
         out = self.report(d)
         self.assertEqual(out["sections"][0]["paragraph_count"], 0)
         assessment = assess_research_snapshot(d)
+        # Deliberately forge a source match that the actual dossier does
+        # NOT contain; the preview must refuse external confidence input.
         assessment["items"][0]["status"] = "matching_records"
-        assessment["items"][0]["source_ids"] = [11, 12]
+        assessment["items"][0]["source_ids"] = [9999]
         with self.assertRaisesRegex(ValueError, "exact dossier"):
             assemble_english_documentary_draft(d, assessment=assessment)
 
