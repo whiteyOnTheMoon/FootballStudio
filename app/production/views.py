@@ -302,6 +302,20 @@ def research_dossier(request, job_id):
         key=lambda entry: (entry["season"], entry["category"]),
         reverse=True,
     )
+    source_candidates = []
+    if snapshot is not None:
+        from .official_source_candidates import proposed_site_for_context
+        dossier_for_candidates = FactDossier.objects.filter(
+            job=job, version=selected_version,
+        ).first()
+        if dossier_for_candidates is not None:
+            for context in ("club", "league"):
+                proposed = proposed_site_for_context(
+                    dossier_for_candidates, context,
+                )
+                if proposed is not None:
+                    source_candidates.append(proposed)
+
     autopilot_plan = None
     if selected_version is None or selected_version == (versions[0] if versions else None):
         from .research_autopilot import research_plan
@@ -316,6 +330,7 @@ def research_dossier(request, job_id):
         research_outline = build_documentary_research_outline(snapshot)
 
     return render(request, "studio/research.html", {
+        "source_candidates": source_candidates,
         "autopilot_plan": autopilot_plan,
         "research_outline": research_outline,
         "has_official_honours": has_official_honours,
