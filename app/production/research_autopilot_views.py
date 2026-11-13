@@ -91,6 +91,7 @@ _TITLES = {
     "club": "Vereinszuordnung",
     "stadium": "Stadionrecherche",
     "players": "Spielerrecherche",
+    "sources": "Vorschläge für offizielle Websites",
     "legends": "Abgleich offizieller Vereinslegenden",
     "honours": "Meisterschafts- und Pokalchronik",
 }
