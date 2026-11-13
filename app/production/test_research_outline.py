@@ -95,6 +95,10 @@ class DocumentaryResearchOutlineTests(SimpleTestCase):
             "season": "2024-25", "category": "league_champion",
             "corroboration": "both",
         }))
+        data["facts"].append(row(12, "club_honour_candidate", {
+            "season": "2023/24", "category": ["domestic_cup"],
+            "corroboration": {"status": "both"},
+        }))
         result = build_documentary_research_outline(data)
         self.assertEqual(result["sections"][2]["candidate_count"], 1)
 
