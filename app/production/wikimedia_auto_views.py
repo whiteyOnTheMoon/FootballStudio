@@ -60,3 +60,52 @@ def start_free_wikimedia_research(request, job_id):
         )
     url = reverse("research-job", kwargs={"job_id": job.pk})
     return redirect(url + "?" + urlencode({"version": dossier.version}))
+
+
+@login_required
+@require_POST
+@never_cache
+def enrich_free_wikimedia_stadium(request, job_id):
+    """Use the already associated Q-ID, never arbitrary user-supplied URLs."""
+    from .wikimedia_stadium import enrich_wikimedia_stadium
+
+    job = get_object_or_404(ProductionJob, pk=job_id, owner=request.user)
+    raw = request.POST.get("expected_version")
+    if (
+        type(raw) is not str or not raw.isascii() or not raw.isdecimal()
+        or not 1 <= len(raw) <= 9
+        or raw.startswith("0")
+    ):
+        raise Http404("Ungültige Dossierversion.")
+    version = int(raw)
+    try:
+        dossier = enrich_wikimedia_stadium(
+            owner=request.user, job_id=job.pk, expected_version=version,
+        )
+    except AutoResearchError as exc:
+        messages = {
+            "no_auto_research": (
+                "Bitte zuerst die automatische Wikidata-Vereinsrecherche "
+                "starten; es liegt noch keine eindeutige Vereinszuordnung vor."
+            ),
+            "no_stadium_candidate": (
+                "Wikidata enthält keine eindeutige aktuelle Heimspielstätte. "
+                "Es wurde nichts erfunden oder gespeichert."
+            ),
+            "ambiguous_stadium": (
+                "Wikidata nennt mehrere mögliche Heimspielstätten. "
+                "Es wurde kein Stadion automatisch ausgewählt."
+            ),
+            "missing_stadium_label": (
+                "Für das Stadion fehlt ein geeigneter englischer Name. "
+                "Es wurde kein Faktenvorschlag gespeichert."
+            ),
+        }
+        return HttpResponse(
+            messages.get(exc.code, _MESSAGES.get(exc.code, _DEFAULT)),
+            status=503 if exc.code in ("network_error", "service_busy", "upstream_error")
+            else 409,
+            content_type="text/plain; charset=utf-8",
+        )
+    url = reverse("research-job", kwargs={"job_id": job.pk})
+    return redirect(url + "?" + urlencode({"version": dossier.version}))
