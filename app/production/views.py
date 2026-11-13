@@ -218,7 +218,46 @@ def research_dossier(request, job_id):
             for source in snapshot["sources"]
         )
     )
+    official_legends_compared = (
+        snapshot is not None
+        and any(
+            source["source_kind"] == "club_official"
+            and source["external_id"].startswith("auto-official-legends:Q")
+            for source in snapshot["sources"]
+        )
+    )
+    official_player_legends = []
+    official_trainer_legends = []
+    if snapshot is not None:
+        for fact in snapshot["facts"]:
+            value = fact.get("value")
+            if (
+                fact["predicate"] not in (
+                    "official_player_legend_candidate",
+                    "official_coach_legend_candidate",
+                )
+                or not isinstance(value, dict)
+                or not isinstance(value.get("name"), str)
+                or fact.get("verification_state") != "unverified"
+            ):
+                continue
+            entry = {
+                "name": value["name"],
+                "source_url": (
+                    fact["evidence"][0]["source"].get("safe_link")
+                    if fact["evidence"] and isinstance(
+                        fact["evidence"][0].get("source"), dict
+                    ) else None
+                ),
+            }
+            if fact["predicate"] == "official_player_legend_candidate":
+                official_player_legends.append(entry)
+            else:
+                official_trainer_legends.append(entry)
     return render(request, "studio/research.html", {
+        "official_legends_compared": official_legends_compared,
+        "official_player_legends": official_player_legends,
+        "official_trainer_legends": official_trainer_legends,
         "player_candidates": player_candidates,
         "has_player_scan": has_player_scan,
         "auto_research_imported": auto_research_imported,

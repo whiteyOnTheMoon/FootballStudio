@@ -77,6 +77,18 @@
         {% else %}
           <p class="meta">Die automatisch gefundenen Spieler-Kandidaten sind gespeichert. Mehrfaches Abrufen ist nicht erforderlich.</p>
         {% endif %}
+        {% if has_player_scan %}
+          {% if official_legends_compared %}
+            <p class="meta">Der automatische Abgleich mit einer ausdrücklich bestätigten offiziellen Vereinsdomain ist bereits gespeichert.</p>
+          {% else %}
+            <form method="post" action="{% url 'research-auto-official-legends' job.pk %}">
+              {% csrf_token %}
+              <input type="hidden" name="expected_version" value="{{ selected_version }}">
+              <button type="submit">Offizielle Vereinslegenden automatisch abgleichen</button>
+            </form>
+            <p class="meta">Nur mit zuvor bestätigter offizieller Vereinsdomain und nach Prüfung der robots.txt-Regeln. Der Abruf erfolgt erst beim Klicken. Spieler werden mit der offiziellen Legendenliste verglichen; Trainerlegenden können zusätzlich erfasst werden. Ergebnisse bleiben ungeprüfte Kandidaten, bis die redaktionelle Quellenprüfung abgeschlossen ist.</p>
+          {% endif %}
+        {% endif %}
       {% else %}
         <form method="post" action="{% url 'research-auto-wikimedia' job.pk %}">
           {% csrf_token %}
@@ -118,6 +130,30 @@
         {% endfor %}
       </ul>
       <p class="meta">Offiziell ausgezeichnete Spieler-/Trainerlegenden brauchen einen separaten Nachweis des Vereins. Für mögliche spätere Drehbuchaussagen bleiben sämtliche Einträge ungeprüft.</p>
+    </section>
+  {% endif %}
+
+  {% if official_legends_compared %}
+    <section class="panel" aria-labelledby="official-legends-heading">
+      <h2 id="official-legends-heading">Abgleich mit dem offiziellen Vereins-Legendenklub</h2>
+      <p>Die folgende Zuordnung entstand durch einen begrenzten Abruf der zuvor bestätigten offiziellen Vereinsdomain. Die Namen stehen auf der veröffentlichten Vereinsliste; es handelt sich trotzdem um <strong>automatisch ausgewertete, noch ungeprüfte Faktenvorschläge</strong>, nicht um eine menschliche Faktenfreigabe.</p>
+      {% if official_player_legends %}
+        <h3>Spieler mit Übereinstimmung auf der offiziellen Vereinsliste</h3>
+        <ul>
+          {% for legend in official_player_legends %}
+            <li>{{ legend.name }} {% if legend.source_url %}· <a href="{{ legend.source_url }}" target="_blank" rel="noopener noreferrer nofollow">Originale Vereinsliste</a>{% endif %}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+      {% if official_trainer_legends %}
+        <h3>Trainerlegenden laut offizieller Vereinsliste</h3>
+        <ul>
+          {% for legend in official_trainer_legends %}
+            <li>{{ legend.name }} {% if legend.source_url %}· <a href="{{ legend.source_url }}" target="_blank" rel="noopener noreferrer nofollow">Originale Vereinsliste</a>{% endif %}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+      <p class="meta">Der Quellabgleich belegt nur die Veröffentlichung eines Namens auf der Vereinsliste, nicht automatisch die Richtigkeit aller biografischen Angaben oder die Freigabe für Sprechertext und Rendering.</p>
     </section>
   {% endif %}
 

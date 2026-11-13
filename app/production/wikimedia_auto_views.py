@@ -155,3 +155,73 @@ def discover_free_wikimedia_players(request, job_id):
         )
     url = reverse("research-job", kwargs={"job_id": job.pk})
     return redirect(url + "?" + urlencode({"version": dossier.version}))
+
+
+@login_required
+@require_POST
+@never_cache
+def crosscheck_official_legends(request, job_id):
+    """One explicitly clicked, robots-gated official club legend-list check."""
+    from .official_legends import crosscheck_official_club_legends
+
+    job = get_object_or_404(ProductionJob, pk=job_id, owner=request.user)
+    raw = request.POST.get("expected_version")
+    if (
+        type(raw) is not str or not raw.isascii() or not raw.isdecimal()
+        or not 1 <= len(raw) <= 9 or raw.startswith("0")
+    ):
+        raise Http404("Ungültige Dossierversion.")
+    try:
+        dossier = crosscheck_official_club_legends(
+            owner=request.user, job_id=job.pk, expected_version=int(raw),
+        )
+    except AutoResearchError as exc:
+        errors = {
+            "no_confirmed_club_source": (
+                "Für diese Recherche ist eine bereits zugeordnete und bestätigte "
+                "offizielle Vereinsdomain erforderlich. Die Website wurde nicht abgerufen."
+            ),
+            "no_player_candidates": (
+                "Bitte zuerst die automatische Spieler-Kandidatenliste erstellen."
+            ),
+            "no_legend_sections": (
+                "Auf der abgerufenen Vereinsseite wurden keine eindeutigen "
+                "Legendenabschnitte gefunden; es wurde nichts übernommen."
+            ),
+            "no_legend_names": (
+                "Auf der abgerufenen Vereinsseite konnte keine geeignete "
+                "Namenliste erkannt werden; es wurde nichts gespeichert."
+            ),
+            "no_unique_legends_link": (
+                "Die offizielle Vereinsseite bietet keinen eindeutig auffindbaren "
+                "Legenden-Link. Es wurde nichts geraten."
+            ),
+            "no_legend_matches": (
+                "Die offizielle Seite lieferte keinen eindeutigen Abgleich mit "
+                "den bisherigen Kandidaten oder Trainerlegenden."
+            ),
+            "official_site_robots_disallowed": (
+                "Die Website untersagt den automatischen Abruf. "
+                "FootballStudio respektiert diese Vorgabe."
+            ),
+            "official_site_robots_unusable": (
+                "Die robots.txt-Regeln der Vereinsseite konnten nicht sicher "
+                "ausgewertet werden; kein Abruf wurde durchgeführt."
+            ),
+            "official_site_access_restricted": (
+                "Die Website hat den automatischen Abruf eingeschränkt. "
+                "FootballStudio umgeht keine Zugriffssperren."
+            ),
+            "version_rate_limited": "Zu viele neue Dossierversionen in kurzer Zeit.",
+        }
+        code = exc.code
+        return HttpResponse(
+            errors.get(code, _MESSAGES.get(code, _DEFAULT)),
+            status=503 if (
+                code in ("network_error", "service_busy", "upstream_error")
+                or code.startswith("official_site_")
+            ) else 409,
+            content_type="text/plain; charset=utf-8",
+        )
+    url = reverse("research-job", kwargs={"job_id": job.pk})
+    return redirect(url + "?" + urlencode({"version": dossier.version}))
