@@ -48,14 +48,18 @@ def _site_identity(url):
     try:
         parsed = urlsplit(url)
         host = parsed.hostname
-        if (
-            parsed.scheme != "https" or not host
-            or parsed.username is not None or parsed.password is not None
-            or parsed.port is not None or parsed.query or parsed.fragment
-            or not parsed.path.startswith("/") and parsed.path
-            or any(ch.isspace() for ch in url)
-        ):
-            return None
+        port = parsed.port
+    except ValueError:
+        return None
+    if (
+        parsed.scheme != "https" or not host
+        or parsed.username is not None or parsed.password is not None
+        or port is not None or parsed.query or parsed.fragment
+        or (parsed.path and not parsed.path.startswith("/"))
+        or any(ch.isspace() for ch in url)
+    ):
+        return None
+    try:
         ipaddress.ip_address(host)
         return None
     except ValueError:
@@ -101,10 +105,10 @@ def _autohonour_source_pairs(sources):
 
 
 def _evidence_role_conflict(fact):
-    return any(
+    rows = fact.get("evidence")
+    return isinstance(rows, list) and any(
         isinstance(row, dict) and row.get("role") == "contradicts"
-        for row in fact.get("evidence", [])
-        if isinstance(fact.get("evidence"), list)
+        for row in rows
     )
 
 
@@ -115,7 +119,8 @@ def _source_ids_for_title(fact, sources_by_id, season, category):
         "league_official": f"Season {season} · {_TITLE_CATEGORIES[category][1]}",
         "club_official": f"National success · {season} · {category}",
     }
-    for link in fact.get("evidence", []):
+    links = fact.get("evidence")
+    for link in links if isinstance(links, list) else ():
         if not isinstance(link, dict) or link.get("role") not in ("unknown", "supports"):
             continue
         sid = link.get("source_id")
@@ -213,12 +218,29 @@ def assess_research_snapshot(snapshot):
                                 f"{name} as {title} winners for {season}."
                             )
                     elif record_status in ("league_only", "club_only"):
-                        # An omission in a list is not a contrary fact claim.
-                        status, reason = (
-                            "listing_difference", "source_lists_not_aligned"
+                        # A missing entry in a second published list is only
+                        # a documented listing difference if that second
+                        # official page was actually fetched and saved.
+                        all_league = set(league_sources.values())
+                        all_club = set(club_sources.values())
+                        first, other = (
+                            (leagues, all_club) if record_status == "league_only"
+                            else (clubs, all_league)
                         )
-                        source_ids = sorted(ids_league | ids_club)
-                    elif record_status == "club_not_checked":
+                        both_contexts = any(
+                            qid_a == qid_b and root_a != root_b
+                            for qid_a, root_a in first
+                            for qid_b, root_b in other
+                        )
+                        if first and both_contexts:
+                            status, reason = (
+                                "listing_difference", "source_lists_not_aligned"
+                            )
+                            source_ids = sorted(ids_league | ids_club)
+                        elif first:
+                            status, reason = "single_source", "second_profile_not_available"
+                            source_ids = sorted(ids_league | ids_club)
+                    elif record_status == "club_not_checked" and leagues:
                         status, reason = "single_source", "club_profile_not_checked"
                         source_ids = sorted(ids_league | ids_club)
                     else:
