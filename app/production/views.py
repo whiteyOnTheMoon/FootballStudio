@@ -194,7 +194,33 @@ def research_dossier(request, job_id):
         snapshot is not None
         and any(fact["predicate"] == "stadium_name" for fact in snapshot["facts"])
     )
+    player_candidates = []
+    if snapshot is not None:
+        for fact in snapshot["facts"]:
+            if (
+                fact["predicate"] != "club_player_candidate"
+                or not isinstance(fact["value"], dict)
+                or not isinstance(fact["value"].get("name"), str)
+            ):
+                continue
+            evidence = fact["evidence"]
+            linked = evidence[0].get("source") if evidence else None
+            player_candidates.append({
+                "name": fact["value"]["name"],
+                "person_qid": fact["value"].get("person_qid", ""),
+                "source_url": linked.get("safe_link") if isinstance(linked, dict) else None,
+            })
+    has_player_scan = (
+        snapshot is not None
+        and any(
+            source["source_kind"] == "wikidata"
+            and source["external_id"].startswith("auto-p54:Q")
+            for source in snapshot["sources"]
+        )
+    )
     return render(request, "studio/research.html", {
+        "player_candidates": player_candidates,
+        "has_player_scan": has_player_scan,
         "auto_research_imported": auto_research_imported,
         "has_stadium_fact": has_stadium_fact,
         "job": job,

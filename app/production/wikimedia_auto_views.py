@@ -109,3 +109,49 @@ def enrich_free_wikimedia_stadium(request, job_id):
         )
     url = reverse("research-job", kwargs={"job_id": job.pk})
     return redirect(url + "?" + urlencode({"version": dossier.version}))
+
+
+@login_required
+@require_POST
+@never_cache
+def discover_free_wikimedia_players(request, job_id):
+    """Search bounded P54 candidates for the owner's auto-identified club."""
+    from .wikimedia_players import import_wikidata_player_candidates
+
+    job = get_object_or_404(ProductionJob, pk=job_id, owner=request.user)
+    raw = request.POST.get("expected_version")
+    if (
+        type(raw) is not str or not raw.isascii() or not raw.isdecimal()
+        or not 1 <= len(raw) <= 9 or raw.startswith("0")
+    ):
+        raise Http404("Ungültige Dossierversion.")
+    try:
+        dossier = import_wikidata_player_candidates(
+            owner=request.user, job_id=job.pk, expected_version=int(raw),
+        )
+    except AutoResearchError as exc:
+        errors = {
+            "no_people_candidates": (
+                "Wikidata bietet für diesen Verein derzeit keine geeigneten "
+                "Spieler-Kandidaten mit nachvollziehbarer Vereinszugehörigkeit."
+            ),
+            "no_auto_research": (
+                "Bitte zuerst die automatische Vereinszuordnung durchführen."
+            ),
+            "version_rate_limited": (
+                "Zu viele neue Recherchestände in kurzer Zeit. "
+                "Bitte die bestehende Dossierversion verwenden."
+            ),
+            "conflicting_candidate": (
+                "Widersprüchliche Personenangaben wurden gefunden. "
+                "Die Kandidaten wurden nicht übernommen."
+            ),
+        }
+        return HttpResponse(
+            errors.get(exc.code, _MESSAGES.get(exc.code, _DEFAULT)),
+            status=503 if exc.code in ("network_error", "service_busy", "upstream_error")
+            else 409,
+            content_type="text/plain; charset=utf-8",
+        )
+    url = reverse("research-job", kwargs={"job_id": job.pk})
+    return redirect(url + "?" + urlencode({"version": dossier.version}))
