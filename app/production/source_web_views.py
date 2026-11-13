@@ -38,6 +38,20 @@ def manual_official_source(request, job_id):
         form = ManualOfficialSourceForm(
             initial_version=latest.version if latest else 0,
         )
+        if request.GET.get("candidate") in ("club", "league"):
+            from .official_source_candidates import proposed_site_for_context
+            candidate = proposed_site_for_context(
+                latest, request.GET["candidate"],
+            )
+            if candidate is not None:
+                # Only URL, category and title are filled automatically.
+                # The evidence assessment, basis and three required consent
+                # checkboxes remain blank for an actual human decision.
+                form.initial.update({
+                    "context": candidate["context"],
+                    "url": candidate["url"],
+                    "title": candidate["title"],
+                })
         return _response(request, job=job, latest=latest, form=form)
 
     # Request parameters are never used for a fetch. They undergo Django

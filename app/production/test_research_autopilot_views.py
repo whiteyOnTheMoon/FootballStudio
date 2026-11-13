@@ -87,7 +87,7 @@ class ResearchAutopilotWebTests(TestCase):
         self.assertEqual(data["version"], 1)
         self.assertEqual(data["next_stage"], "stadium")
         self.assertEqual(data["completed"], 1)
-        self.assertEqual(data["total"], 5)
+        self.assertEqual(data["total"], 6)
         self.assertEqual(FactDossier.objects.count(), 1)
         importer.assert_called_once()
 
@@ -180,6 +180,13 @@ class ResearchAutopilotWebTests(TestCase):
             retrieved_at=datetime(2026, 11, 13, tzinfo=timezone.utc),
             access_state="accessible",
         )
+        SourceReference.objects.create(
+            dossier=d, source_kind="wikidata", url=URL,
+            title="P856 candidate scan",
+            external_id="auto-p856-sites:" + QID,
+            retrieved_at=datetime(2026, 11, 13, tzinfo=timezone.utc),
+            access_state="accessible",
+        )
         for external, kind, url in (
             ("auto-official-legends:" + QID, "club_official",
              "https://sksturm.at/c/legendenklub"),
@@ -212,7 +219,7 @@ class ResearchAutopilotWebTests(TestCase):
                 self.url, {"expected_version": "7"},
                 HTTP_ACCEPT="application/json",
             )
-        self.assertContains(page, "Alle fünf derzeit unterstützten Recherchestufen")
+        self.assertContains(page, "Alle sechs derzeit unterstützten Recherchestufen")
         self.assertContains(page, "Englische Dokumentation: quellengebundener Story-Aufbau")
         self.assertContains(page, "2023/24")
         self.assertContains(page, "Voiceover-Freigabe: nein")

@@ -78,7 +78,7 @@
         </form>
         <p id="research-autopilot-status" class="meta" role="status" aria-live="polite">Die nächste Recherche beginnt erst nach deinem Klick. Mit aktiviertem JavaScript laufen die verfügbaren Schritte anschließend automatisch nacheinander. Ohne JavaScript führt ein Klick einen Schritt aus.</p>
       {% elif autopilot_plan.complete %}
-        <p class="notice">Alle fünf derzeit unterstützten Recherchestufen sind vorhanden. Das ist noch <strong>keine Faktenfreigabe</strong> und noch kein fertiger Film.</p>
+        <p class="notice">Alle sechs derzeit unterstützten Recherchestufen sind vorhanden. Das ist noch <strong>keine Faktenfreigabe</strong> und noch kein fertiger Film.</p>
       {% elif autopilot_plan.requires_source %}
         <p class="meta">Alle ohne zusätzliche Websitefreigabe verfügbaren Schritte sind abgeschlossen. Fehlende offizielle Quellen werden nicht automatisch als bestätigt ausgegeben. Die vorhandenen Ergebnisse sind weiterhin nutzbar.</p>
       {% else %}
@@ -88,6 +88,28 @@
     </section>
   {% endif %}
 
+
+  {% if source_candidates and selected_version == latest_version %}
+    <section class="panel" aria-labelledby="discovered-sites-heading">
+      <h2 id="discovered-sites-heading">Automatisch gefundene offizielle Website-Kandidaten</h2>
+      <p>Wikidata nennt diese HTTPS-Adressen als mögliche offizielle Websites. <strong>Das ist weder eine Prüfung der Domain noch eine Zustimmung zu Website-Bedingungen.</strong> FootballStudio hat diese Websites nicht aufgerufen.</p>
+      <ul>
+        {% for suggestion in source_candidates %}
+          <li>
+            <strong>{% if suggestion.context == "club" %}Verein{% else %}Liga{% endif %}:</strong>
+            <a href="{{ suggestion.url }}" target="_blank" rel="noopener noreferrer nofollow">{{ suggestion.url }}</a>
+            · Wikidata {{ suggestion.qid }}
+            {% if suggestion.confirmed %}
+              · <strong>Bereits von dir bestätigt</strong>
+            {% else %}
+              · <a href="{% url 'research-new-source' job.pk %}?candidate={{ suggestion.context }}">Als Quelle prüfen und übernehmen (vorbefüllt)</a>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+      <p class="meta">Zur Übernahme öffnest du die vorgeschlagene Seite selbst, prüfst Vereins-/Ligazugehörigkeit, Zugänglichkeit und Bedingungen und bestätigst sie anschließend im vorausgefüllten Formular. Ohne diese Prüfung erhält der automatische Ablauf keine Websitefreigabe.</p>
+    </section>
+  {% endif %}
 
   {% if not snapshot or selected_version == latest_version %}
     <details class="panel">
@@ -445,8 +467,8 @@
           try {
             // Each HTTP request handles only one stage and can be retried
             // manually if the browser closes. Bound one click to five stages.
-            for (let attempt = 0; attempt < 5; attempt += 1) {
-              status.textContent = "Recherche läuft: Schritt " + (attempt + 1) + " von maximal 5. Gespeicherte Ergebnisse bleiben erhalten.";
+            for (let attempt = 0; attempt < 6; attempt += 1) {
+              status.textContent = "Recherche läuft: Schritt " + (attempt + 1) + " von maximal 6. Gespeicherte Ergebnisse bleiben erhalten.";
               const body = new URLSearchParams();
               body.set("expected_version", version);
               body.set("csrfmiddlewaretoken", csrf.value);
@@ -478,7 +500,7 @@
                 return;
               }
             }
-            status.textContent = "Fünf Schritte verarbeitet. Der aktuelle Forschungsstand wird geöffnet.";
+            status.textContent = "Sechs Schritte verarbeitet. Der aktuelle Forschungsstand wird geöffnet.";
             window.location.assign(dossierUrl + "?version=" + encodeURIComponent(version));
           } catch (_error) {
             status.textContent = "Der Browser konnte die Recherche nicht abschließen. " +
