@@ -84,6 +84,12 @@ class ResearchAutopilotServiceTests(TestCase):
             external_id="auto-p54:" + CLUB_QID,
         )
         self.source(
+            dossier,
+            url=WD_CLUB, kind="wikidata",
+            title="P856 official-site candidate scan",
+            external_id="auto-p856-sites:" + CLUB_QID,
+        )
+        self.source(
             dossier, url="https://sksturm.at/c/legendenklub",
             kind="club_official", title="[auto] legend roster",
             external_id="auto-official-legends:" + CLUB_QID,
@@ -106,7 +112,7 @@ class ResearchAutopilotServiceTests(TestCase):
         self.assertEqual(plan["completed"], 0)
         self.assertEqual(
             [item["status"] for item in plan["steps"]],
-            ["ready", "waiting", "waiting", "waiting", "waiting"],
+            ["ready", "waiting", "waiting", "waiting", "waiting", "waiting"],
         )
 
     def test_after_entity_finds_stadium_and_players_without_manual_links(self):
@@ -117,7 +123,7 @@ class ResearchAutopilotServiceTests(TestCase):
         self.assertEqual(plan["completed"], 1)
         self.assertEqual(plan["steps"][2]["status"], "ready")
         self.assertEqual(plan["steps"][3]["status"], "waiting")
-        self.assertEqual(plan["steps"][4]["status"], "requires_source")
+        self.assertEqual(plan["steps"][5]["status"], "requires_source")
 
     def test_after_free_steps_no_official_crawl_without_site_confirmation(self):
         dossier = self.dossier()
@@ -131,17 +137,23 @@ class ResearchAutopilotServiceTests(TestCase):
             dossier=dossier, predicate="stadium_name", value="Merkur Arena",
             assertion_text="Home venue candidate.",
         )
+        self.source(
+            dossier,
+            url=WD_CLUB, kind="wikidata",
+            title="P856 official-site candidate scan",
+            external_id="auto-p856-sites:" + CLUB_QID,
+        )
         # A raw official-looking URL is not consent to fetch it.
         self.source(
             dossier, url="https://sksturm.at/",
             kind="club_official", title="Manually typed homepage",
         )
         plan = research_plan(job=self.job, dossier=dossier)
-        self.assertEqual(plan["completed"], 3)
+        self.assertEqual(plan["completed"], 4)
         self.assertIsNone(plan["next_id"])
         self.assertTrue(plan["requires_source"])
-        self.assertEqual(plan["steps"][3]["status"], "requires_source")
         self.assertEqual(plan["steps"][4]["status"], "requires_source")
+        self.assertEqual(plan["steps"][5]["status"], "requires_source")
 
     def test_source_confirmation_enables_both_official_stages(self):
         dossier = self.dossier()
@@ -155,6 +167,12 @@ class ResearchAutopilotServiceTests(TestCase):
             dossier=dossier, predicate="stadium_name", value="Merkur Arena",
             assertion_text="Home venue candidate.",
         )
+        self.source(
+            dossier,
+            url=WD_CLUB, kind="wikidata",
+            title="P856 official-site candidate scan",
+            external_id="auto-p856-sites:" + CLUB_QID,
+        )
         self.confirmed(
             dossier, kind="club_official",
             home="https://sksturm.at/", host="sksturm.at",
@@ -165,15 +183,15 @@ class ResearchAutopilotServiceTests(TestCase):
         )
         plan = research_plan(job=self.job, dossier=dossier)
         self.assertEqual(plan["next_id"], "legends")
-        self.assertEqual(plan["steps"][3]["status"], "ready")
         self.assertEqual(plan["steps"][4]["status"], "ready")
+        self.assertEqual(plan["steps"][5]["status"], "ready")
 
     def test_complete_existing_sturm_dossier_does_not_query_network(self):
         dossier = self.dossier(version=7)
         self.stage_markers(dossier)
         plan = research_plan(job=self.job, dossier=dossier)
         self.assertTrue(plan["complete"])
-        self.assertEqual(plan["completed"], 5)
+        self.assertEqual(plan["completed"], 6)
         self.assertIsNone(plan["next_id"])
         with patch(
             "app.production.wikimedia_auto.import_free_club_research"
