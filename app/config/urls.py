@@ -5,7 +5,7 @@ from app.accounts.forms import EmailAuthenticationForm
 from django.urls import include, path
 from app.studio import views
 from app.production import views as production_views
-from app.production import title_web_views, fact_web_views, source_web_views, evidence_web_views, fact_decision_web_views, script_preview_views, preflight_web_views, research_consent_web_views
+from app.production import title_web_views, fact_web_views, source_web_views, evidence_web_views, fact_decision_web_views, script_preview_views, scene_storyboard_views, preflight_web_views, research_consent_web_views
 
 urlpatterns = [
     path("", views.home, name="home"),
@@ -30,6 +30,8 @@ urlpatterns = [
          fact_decision_web_views.decide_fact_in_browser, name="research-decide-fact"),
     path("jobs/<int:job_id>/research/script-preview/",
          script_preview_views.safe_script_preview, name="research-script-preview"),
+    path("jobs/<int:job_id>/research/scenes/",
+         scene_storyboard_views.scene_storyboard, name="research-scene-plan"),
     path("jobs/<int:job_id>/research/preflight/",
          preflight_web_views.official_research_preflight,
          name="research-preflight"),
