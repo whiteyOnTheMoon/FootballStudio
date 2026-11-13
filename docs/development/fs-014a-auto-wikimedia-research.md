@@ -453,3 +453,67 @@ Die browserseitige automatische Fortsetzung ist
 **kein** im Hintergrund weiterlaufender Worker.
 
 Keine Migration, keine Paid API, keine Filmproduktion.
+
+
+## FS-014e: Offizielle Website-Kandidaten aus Wikidata automatisch vorschlagen
+
+Der bisherige browsergesteuerte Rechercheablauf besitzt nun **sechs**
+statt fünf Stufen. Nach dem freien Wikimedia-Club-, Stadion- und
+Spielerimport läuft automatisch eine neue bounded Wikidata-P856-Abfrage:
+
+1. Der zuvor anhand von Name, Land und Football-Club-Instanz
+   identifizierte Club-QID wird aus der neuesten eigenen Dossierversion
+   verwendet, niemals als freie Nutzereingabe.
+2. Die Wikidata-Entität wird über den bestehenden freien, begrenzten
+   Fixed-Host-HTTPS-Client geladen. Nur ein **eindeutiger**
+   `P856`-Eintrag mit sicher aussehendem öffentlichem HTTPS-URL-Schema,
+   ohne Port, Login, Query oder Fragment, gilt als Club-Website-Kandidat.
+   Zwei unterschiedliche geeignete URLs gelten als **mehrdeutig**.
+3. Für eine Liga darf nur ein per `P118` (Liga der Club-Entität)
+   verknüpfter Wikidata-Liga-QID als Kandidat dienen. Die Liga muss
+   einen **konservativ exakt** passenden englischen/deutschen
+   Liga-Namen (mit wenigen sportbezogenen Stoppwörtern) und eine
+   `P17`-Länderzuordnung haben, deren `P297`-ISO-Code zum
+   ausgewählten Land passt. Maximal vier P118-Einträge
+   werden geprüft; mehrdeutige Ergebnisse werden verworfen.
+4. In einer neuen unveränderlichen Dossierversion werden nur
+   `official_club_site_candidate` und gegebenenfalls
+   `official_league_site_candidate` mit `unverified`-Status,
+   P856-Beleg und Wikidata-Original-URL gespeichert. Ein
+   persistenter Abrufmarker macht die Aktion bei erneutem Klick
+   idempotent. Leere sichere Ergebnislisten bleiben leer,
+   keine URL wird erfunden.
+5. **Kein HTTP-/DNS-/Robots-Abruf der gefundenen Websites** beim
+   Discovery-Schritt, beim GET des Dossiers oder beim Öffnen
+   des vorausgefüllten Quellenformulars. Der Nutzer kann die
+   vorgeschlagene HTTPS-Adresse als externen Link öffnen.
+6. Der Link **„Als Quelle prüfen und übernehmen (vorbefüllt)“**
+   öffnet das bestehende manuelle Quellenformular. Dort sind
+   nur `url`, `context`, `title` und die aktuelle
+   Dossierversion automatisch gesetzt. Die persönliche
+   Begründung bleibt leer; die drei Identitäts-, Zugriffs-
+   und Websitebedingungen-Bestätigungen bleiben **nicht
+   angekreuzt**. Der vorhandene Eigentümer-/CSRF-/Stale-/
+   Rate-Limit-/URL-Schutz von `register_manual_official_source`
+   bleibt maßgeblich. Erst ein tatsächlich separat
+   bestätigter Quelleneintrag erlaubt dem Autopilot den
+   späteren offiziellen Vereins- oder Ligaabruf.
+
+**Begrenzungen:** Wikidata P856 ist ein Drittanbieter-Hinweis,
+keine Echtheitsgarantie. Einige Vereine haben keinen P856-Eintrag,
+mehrere Websites oder keine passende P118-Liga. Dann bleibt die
+bisherige manuelle Quellenerfassung möglich. Ein vorgeschlagener
+Link kann veraltet oder ungeeignet sein. Die Software behauptet
+nicht, die Domain, Nutzungsbedingungen oder Erreichbarkeit
+bereits selbst geprüft zu haben. Es entsteht weiterhin
+**kein automatisch verifizierter Fakt, kein Voiceover und kein
+Video**. Die Recherche läuft browsergebunden, nicht
+als dauerhafter Hintergrundjob.
+
+**Offline-Tests:** `python manage.py test
+app.production.test_official_source_candidates
+app.production.test_official_source_candidates_views
+app.production.test_research_autopilot
+app.production.test_research_autopilot_views`
+
+Keine Migration, keine kostenpflichtige API.
