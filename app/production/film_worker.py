@@ -25,10 +25,11 @@ _STAGES = ("club", "stadium", "players", "sources", "legends", "honours")
 _MAX_STAGE_ATTEMPTS = 6
 _STALE_AFTER = timedelta(minutes=60)
 _NO_RENDERER = (
-    "Die automatische Recherche wurde soweit möglich ausgeführt. "
-    "Ein fertiges Video ist noch nicht verfügbar: der eigenständige "
-    "Skript-, Sprach-, Medien- und MP4-Renderer befindet sich im Aufbau. "
-    "Quellen und Recherche lassen sich optional bearbeiten."
+    "Die Recherche und ein quellengebundener englischer Rohentwurf "
+    "wurden soweit möglich automatisch vorbereitet. Ein vollständiges "
+    "8–10-Minuten-Drehbuch, Sprecherstimme, lizenzierte Medien und der "
+    "MP4-Renderer fehlen noch. Es wurde kein Video erstellt. "
+    "Quellen und Entwurf können optional angesehen werden."
 )
 _NO_CLUB = (
     "Die Vereinszuordnung konnte mit den freien Quellen nicht eindeutig "
