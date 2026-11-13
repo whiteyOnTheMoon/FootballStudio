@@ -49,10 +49,50 @@
 
   <h1>Recherchedossier: {{ job.club_name }}</h1>
   <p class="muted">Job #{{ job.pk }} · {{ job.title }} · {{ job.league_name }} · {{ job.country_code }}</p>
-  <p class="notice">Diese Ansicht ist <strong>nur lesend</strong>. Eine gespeicherte Quelle beweist keine Aussage. Nur ausdrücklich geprüfte Fakten können den Status „verifiziert“ besitzen. Es wird weder eine Website abgerufen noch ein Video erzeugt.</p>
+  <p class="notice">Das Öffnen dieser Ansicht ist <strong>nur lesend</strong>. Rechercheabrufe starten ausschließlich nach einem ausdrücklichen Klick. Eine gespeicherte Quelle beweist keine Aussage. Nur ausdrücklich geprüfte Fakten können als „verifiziert“ gelten. Es wird kein Video erzeugt.</p>
+
+  {% if autopilot_plan %}
+    <section class="panel" aria-labelledby="autopilot-heading">
+      <h2 id="autopilot-heading">Automatischer Rechercheablauf</h2>
+      <p>Ein gemeinsamer Start führt die kostenfreien Rechercheschritte nacheinander aus. Bereits vorhandene Ergebnisse bleiben erhalten und werden nicht doppelt importiert. Für offizielle Websites gelten weiterhin die vorher bestätigten Domain- und robots.txt-Regeln.</p>
+      <p><strong>{{ autopilot_plan.completed }} von {{ autopilot_plan.total }} Recherchestufen abgeschlossen</strong></p>
+      <ol>
+        {% for step in autopilot_plan.steps %}
+          <li>
+            {{ step.title }}
+            {% if step.status == "completed" %}· <strong>recherchiert</strong>
+            {% elif step.status == "ready" %}· zur Recherche bereit
+            {% elif step.status == "requires_source" %}· wartet auf bestätigte offizielle Quelle
+            {% else %}· wartet auf vorherigen Schritt{% endif %}
+            <span class="meta">({{ step.source }})</span>
+          </li>
+        {% endfor %}
+      </ol>
+      {% if autopilot_plan.next_id %}
+        <form id="research-autopilot" method="post"
+              action="{% url 'research-autopilot-continue' job.pk %}"
+              data-dossier-url="{% url 'research-job' job.pk %}">
+          {% csrf_token %}
+          <input type="hidden" name="expected_version" value="{{ autopilot_plan.version }}">
+          <button type="submit">Automatische Recherche starten / fortsetzen</button>
+        </form>
+        <p id="research-autopilot-status" class="meta" role="status" aria-live="polite">Die nächste Recherche beginnt erst nach deinem Klick. Mit aktiviertem JavaScript laufen die verfügbaren Schritte anschließend automatisch nacheinander. Ohne JavaScript führt ein Klick einen Schritt aus.</p>
+      {% elif autopilot_plan.complete %}
+        <p class="notice">Alle fünf derzeit unterstützten Recherchestufen sind vorhanden. Das ist noch <strong>keine Faktenfreigabe</strong> und noch kein fertiger Film.</p>
+      {% elif autopilot_plan.requires_source %}
+        <p class="meta">Alle ohne zusätzliche Websitefreigabe verfügbaren Schritte sind abgeschlossen. Fehlende offizielle Quellen werden nicht automatisch als bestätigt ausgegeben. Die vorhandenen Ergebnisse sind weiterhin nutzbar.</p>
+      {% else %}
+        <p class="meta">Aktuell ist kein weiterer sicherer automatischer Schritt verfügbar.</p>
+      {% endif %}
+      <p class="meta">Jeder Serveraufruf verarbeitet höchstens eine Stufe. Schlägt eine Stufe fehl, stoppt die automatische Fortsetzung; erfolgreiche frühere Dossierversionen bleiben bestehen. Keine kostenpflichtigen APIs, keine automatische menschliche Faktenprüfung.</p>
+    </section>
+  {% endif %}
+
 
   {% if not snapshot or selected_version == latest_version %}
-    <section class="panel" aria-labelledby="auto-research-heading">
+    <details class="panel">
+      <summary><strong>Einzelne Rechercheaktionen (optional)</strong></summary>
+    <section aria-labelledby="auto-research-heading">
       <h2 id="auto-research-heading">Automatische, kostenfreie Vereinsrecherche</h2>
       <p>FootballStudio sucht anhand des ausgewählten Vereins und Landes selbst nach dem passenden Wikidata-Eintrag und nach englischen Wikipedia-Quellen. Eine Wikidata-Q-ID musst du nicht kennen oder selbst eingeben.</p>
       {% if auto_research_imported %}
@@ -108,6 +148,7 @@
         <p class="meta">Nur freie Wikimedia-Daten, keine kostenpflichtige API. Gefundene Fakten sind zunächst als <strong>ungeprüfte Vorschläge</strong> gekennzeichnet. Bei unklarer Vereinszuordnung wird nichts übernommen; später soll die automatische Quellenprüfung folgen.</p>
       {% endif %}
     </section>
+    </details>
   {% endif %}
 
   {% if not snapshot or selected_version == latest_version %}
@@ -192,6 +233,34 @@
         {% endfor %}
       </ul>
       <p class="meta">Eine fehlende Saison im Vereinsprofil beweist keinen falschen Ligaeintrag. Auch bei Übereinstimmung wird nichts automatisch als menschlich verifiziert oder für den Sprechertext freigegeben.</p>
+    </section>
+  {% endif %}
+
+
+  {% if research_outline %}
+    <section class="panel" aria-labelledby="story-outline-heading">
+      <h2 id="story-outline-heading">Englische Dokumentation: quellengebundener Story-Aufbau</h2>
+      <p>Vorschlag für einen <strong>9-Minuten-Aufbau</strong>, keine fertige oder freigegebene Erzählung. Die folgenden englischen Stichpunkte sind <strong>Recherche-Kandidaten</strong> aus dieser Dossierversion; unbestätigte Aussagen dürfen noch nicht in die Sprecherstimme übernommen werden.</p>
+      <p class="meta">{{ research_outline.total_candidate_count }} geeignete Story-Kandidaten · {{ research_outline.reviewed_count }} ausdrücklich geprüft · Voiceover-Freigabe: nein</p>
+      {% for beat in research_outline.sections %}
+        <div class="item">
+          <h3>{{ beat.time_window }} · {{ beat.title }}</h3>
+          <p class="meta">{{ beat.candidate_count }} Kandidaten · {{ beat.reviewed_count }} ausdrücklich geprüft</p>
+          {% if beat.items %}
+            <ul>
+              {% for item in beat.items %}
+                <li>{{ item.label }}
+                  · <span class="meta">{% if item.status == "reviewed" %}Geprüft{% else %}Ungeprüft{% endif %} · {{ item.source_ids|length }} Quellenverweise · Fakt #{{ item.fact_id }}</span>
+                </li>
+              {% endfor %}
+            </ul>
+            {% if beat.additional_count %}<p class="meta">{{ beat.additional_count }} weitere Einträge im vollständigen Dossier.</p>{% endif %}
+          {% else %}
+            <p class="meta">Für dieses Kapitel fehlen noch passende strukturierte Fakten.</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+      <p class="meta">Eine ungeprüfte Quellenaussage wird hier nur für die Rechercheplanung angezeigt. Für Drehbuch und Audio gelten unverändert die strengen Freigaberegeln.</p>
     </section>
   {% endif %}
 
@@ -350,6 +419,77 @@
         <p>Für diese Dossierversion sind noch keine atomaren Fakten erfasst.</p>
       {% endfor %}
     </section>
+  {% endif %}
+
+
+  {% if autopilot_plan and autopilot_plan.next_id %}
+    <script>
+      (function () {
+        "use strict";
+        const form = document.getElementById("research-autopilot");
+        const status = document.getElementById("research-autopilot-status");
+        if (!form || !status || !window.fetch) return;
+        const button = form.querySelector('button[type="submit"]');
+        const csrf = form.querySelector('[name="csrfmiddlewaretoken"]');
+        const versionField = form.querySelector('[name="expected_version"]');
+        const dossierUrl = form.dataset.dossierUrl;
+        let running = false;
+
+        form.addEventListener("submit", async function (event) {
+          event.preventDefault();
+          if (running) return;
+          running = true;
+          button.disabled = true;
+          let version = versionField.value;
+          let successful = 0;
+          try {
+            // Each HTTP request handles only one stage and can be retried
+            // manually if the browser closes. Bound one click to five stages.
+            for (let attempt = 0; attempt < 5; attempt += 1) {
+              status.textContent = "Recherche läuft: Schritt " + (attempt + 1) + " von maximal 5. Gespeicherte Ergebnisse bleiben erhalten.";
+              const body = new URLSearchParams();
+              body.set("expected_version", version);
+              body.set("csrfmiddlewaretoken", csrf.value);
+              const response = await fetch(form.action, {
+                method: "POST",
+                credentials: "same-origin",
+                redirect: "error",
+                headers: {
+                  "Accept": "application/json",
+                  "X-CSRFToken": csrf.value
+                },
+                body: body
+              });
+              const result = await response.json();
+              if (!response.ok || result.status === "stopped") {
+                status.textContent = (result.message || "Recherche sicher gestoppt.") +
+                  " Bereits erfolgreiche Schritte bleiben im Dossier. Bitte die Seite aktualisieren.";
+                return;
+              }
+              version = String(result.version);
+              versionField.value = version;
+              if (result.stage) successful += 1;
+              status.textContent = result.message + " (" + result.completed +
+                "/" + result.total + " Recherchestufen)";
+              if (!result.next_stage) {
+                window.location.assign(
+                  dossierUrl + (Number(version) > 0 ? "?version=" + encodeURIComponent(version) : "")
+                );
+                return;
+              }
+            }
+            status.textContent = "Fünf Schritte verarbeitet. Der aktuelle Forschungsstand wird geöffnet.";
+            window.location.assign(dossierUrl + "?version=" + encodeURIComponent(version));
+          } catch (_error) {
+            status.textContent = "Der Browser konnte die Recherche nicht abschließen. " +
+              "Bereits gespeicherte Schritte bleiben erhalten; bitte die Seite aktualisieren.";
+          } finally {
+            running = false;
+            button.disabled = false;
+          }
+        });
+      }());
+    </script>
   {% endif %}
 
   <footer>Private Rechercheansicht · Keine automatische Faktenfreigabe · Keine Filmproduktion</footer>
