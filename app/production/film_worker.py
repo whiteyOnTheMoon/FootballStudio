@@ -166,12 +166,20 @@ def perform_film_research(job_id):
                 owner=job.owner, job_id=job.pk, version=latest.version,
             )
             assessment = assess_research_snapshot(snapshot)
+            from .automatic_english_script import (
+                assemble_english_documentary_draft,
+            )
+            draft = assemble_english_documentary_draft(
+                snapshot, assessment=assessment,
+            )
             logger.info(
-                "Film source assessment: job_id=%s dossier=%s machine_matches=%s "
-                "listing_differences=%s; no human reviews or narration released",
+                "Film draft assembled: job_id=%s dossier=%s machine_matches=%s "
+                "source_attributed_paragraphs=%s English_words=%s "
+                "quality_gate=%s; NOT narration-approved or rendered",
                 job_id, latest.version,
                 assessment["counts"]["matching_records"],
-                assessment["counts"]["listing_difference"],
+                draft["paragraph_count"], draft["word_count"],
+                draft["quality_gate"],
             )
         _finish_failed(job_id, _NO_RENDERER)
     except Exception:
