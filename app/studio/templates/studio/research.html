@@ -55,12 +55,26 @@
     <section class="panel" aria-labelledby="auto-research-heading">
       <h2 id="auto-research-heading">Automatische, kostenfreie Vereinsrecherche</h2>
       <p>FootballStudio sucht anhand des ausgewählten Vereins und Landes selbst nach dem passenden Wikidata-Eintrag und nach englischen Wikipedia-Quellen. Eine Wikidata-Q-ID musst du nicht kennen oder selbst eingeben.</p>
-      <form method="post" action="{% url 'research-auto-wikimedia' job.pk %}">
-        {% csrf_token %}
-        <input type="hidden" name="expected_version" value="{% if selected_version %}{{ selected_version }}{% else %}0{% endif %}">
-        <button type="submit">Vereinsdaten automatisch recherchieren</button>
-      </form>
-      <p class="meta">Nur freie Wikimedia-Daten, keine kostenpflichtige API. Gefundene Fakten sind zunächst als <strong>ungeprüfte Vorschläge</strong> gekennzeichnet. Bei unklarer Vereinszuordnung wird nichts übernommen; später soll die automatische Quellenprüfung folgen.</p>
+      {% if auto_research_imported %}
+        <p class="notice">Die automatische Wikidata-/Wikipedia-Vereinszuordnung ist für diese Dossierversion bereits vorhanden. Die vorhandenen Faktenvorschläge bleiben unverändert.</p>
+        {% if not has_stadium_fact %}
+          <form method="post" action="{% url 'research-auto-wikimedia-stadium' job.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="expected_version" value="{{ selected_version }}">
+            <button type="submit">Weitere Fakten automatisch recherchieren: Stadion</button>
+          </form>
+          <p class="meta">Wikidata P115 (Heimspielstätte) wird automatisch ausgewertet. Bei Mehrdeutigkeit wird kein Stadion behauptet. Gefundene Angaben bleiben <strong>ungeprüft</strong>; bisherige Dossiers werden nicht überschrieben.</p>
+        {% else %}
+          <p class="meta">Ein Stadion-Faktenvorschlag ist bereits vorhanden. Kein doppelter Import nötig.</p>
+        {% endif %}
+      {% else %}
+        <form method="post" action="{% url 'research-auto-wikimedia' job.pk %}">
+          {% csrf_token %}
+          <input type="hidden" name="expected_version" value="{% if selected_version %}{{ selected_version }}{% else %}0{% endif %}">
+          <button type="submit">Vereinsdaten automatisch recherchieren</button>
+        </form>
+        <p class="meta">Nur freie Wikimedia-Daten, keine kostenpflichtige API. Gefundene Fakten sind zunächst als <strong>ungeprüfte Vorschläge</strong> gekennzeichnet. Bei unklarer Vereinszuordnung wird nichts übernommen; später soll die automatische Quellenprüfung folgen.</p>
+      {% endif %}
     </section>
   {% endif %}
 
