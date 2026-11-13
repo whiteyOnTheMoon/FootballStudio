@@ -150,3 +150,64 @@ Grundlage ein dramaturgisch vollständiges englisches 8–10-Minuten-Skript
 mit belastbarer automatischer Quellenentscheidung erzeugen.
 
 Offline-Tests: python manage.py test app.production.test_automatic_english_script
+
+## FS-020: lokale Video- und Sprachengine als technischer Selbsttest
+
+Die Docker-App installiert jetzt die frei verfügbaren Debian-Werkzeuge
+**FFmpeg/FFprobe**, **espeak-ng** (englische Sprachsynthese) und
+**DejaVu Sans** für selbst erzeugte Testgrafik. Der film-worker
+prüft beim Start nur deren Verfügbarkeit (ohne etwas zu rendern).
+
+Die Compose-CI führt nach den Django- und PostgreSQL-Tests automatisch
+einen **echten Kurzrender innerhalb des film-worker-Containers** aus.
+Es wird eine vollständig originale, neutral beschriftete 960x540-Grafik
+mit dem gesprochenen englischen Testsatz
+'This is a FootballStudio local production pipeline test. It is not a
+football documentary, and it contains no researched claims.'
+kombiniert. FFmpeg kodiert H.264-Video und AAC-Ton in eine kurze MP4;
+ffprobe validiert die tatsächlichen Streams, Größe und Dauer.
+
+**Keine Nutzereingaben, Filme, Logos, geschützten Vereinsfotos,
+Clubnamen, Wikidata-Aussagen, heruntergeladenen Videos oder paid APIs**
+werden für diesen Test verwendet. Der englische Testsatz wurde
+speziell für FootballStudio verfasst; die Testgrafik besteht nur
+aus synthetischer Farbfläche und originalem Text.
+
+Das Smoke-Testvideo liegt ausschließlich in einem privaten
+TemporaryDirectory im Container und wird danach automatisch gelöscht.
+Ausführung ohne Shell, mit begrenzten Laufzeiten, Seitenverhältnis,
+Clipdauer und Dateigröße. Externe Befehlsfehlermeldungen werden nicht
+an die Oberfläche weitergereicht. Fehlende Encoder oder falsche
+Audio-/Video-Codecs führen zu einem harten Fehler.
+
+Prüfen auf dem Ubuntu-Server (optional, **kein Pflichtschritt**
+für den normalen Workflow):
+
+```bash
+cd /home/ap/www/footballstudio
+docker compose -f compose.yaml -f compose.tunnel.yaml \
+  exec -T film-worker python manage.py check_render_engine --smoke
+```
+
+Erwartet: `LOCAL RENDER SMOKE OK: ... h264/aac ...`.
+Dieser Befehl verändert **keine** Filmjobs oder Faktendossiers.
+Die CI testet denselben Vorgang automatisch. Im normalen
+`Video erstellen`-Ablauf gibt es **keinen zusätzlichen Klick**.
+
+**Keine abgeschlossene Dokumentation:** Noch fehlt ein langes,
+ausreichend belegtes und freigegebenes englisches Drehbuch mit
+korrekten Lizenzen für Filmmedien und die eigentliche Produktions-
+und Exportlogik. Daher werden reale Filmjobs weiterhin **nicht**
+als erfolgreich markiert und erhalten noch keine MP4-Download-URL.
+Die synthetische MP4 ist ein technischer Kompatibilitätstest, keine
+permanent gespeicherte Filmdatei.
+
+Die installierten Debian-Werkzeuge und Fonts besitzen eigene Open-
+Source-Lizenzbedingungen. Beim Verteilen von Docker-Images sind
+diese und die mitgelieferten Copyright-Hinweise einzuhalten;
+sie können im Image unter `/usr/share/doc/` eingesehen werden.
+Die Stimme von espeak-ng ist eine zunächst zweckmäßige lokale
+technische TTS-Basis, kein endgültig ausgewählter Studio-Sprecher.
+
+Offline-Unit-Tests:
+`python manage.py test app.production.test_local_render`

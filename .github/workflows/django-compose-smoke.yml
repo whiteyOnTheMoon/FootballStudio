@@ -159,6 +159,14 @@ jobs:
           docker compose exec -T web python manage.py migrate --noinput
           docker compose exec -T web python manage.py seed_world_catalog
           docker compose exec -T web python manage.py test app.studio app.accounts app.clubs app.production --verbosity=1
+      - name: Verify original synthetic voice, H264/AAC and MP4 in worker image
+        run: |
+          set -euo pipefail
+          # All assets are original; this smoke contains no club facts, user
+          # content, external media, or paid provider access. Output is
+          # automatically deleted by the management command.
+          docker compose exec -T film-worker python manage.py check_render_engine --smoke
+
       - name: Check PostgreSQL data survives database restart
         run: |
           set -euo pipefail

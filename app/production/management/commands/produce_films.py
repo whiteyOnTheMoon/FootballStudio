@@ -42,6 +42,22 @@ class Command(BaseCommand):
             )
             return
         self.stdout.write("Film production worker started; one process, persistent database queue.")
+        # Read-only startup probe: no audio/video is generated for actual film
+        # jobs until narration, media licensing and script gates exist.
+        from app.production.local_render import (
+            RenderEngineError, inspect_render_stack,
+        )
+        try:
+            inspect_render_stack()
+            self.stdout.write(
+                "Offline FFmpeg/English TTS tools detected. "
+                "Full documentary rendering is NOT yet enabled."
+            )
+        except RenderEngineError as exc:
+            self.stderr.write(
+                f"Local render prerequisites unavailable: {exc}. "
+                "Research queue remains available."
+            )
         while True:
             try:
                 recovered = recover_stale_film_jobs()
