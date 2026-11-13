@@ -141,3 +141,69 @@ Offline-Tests (Wikidata-HTTP gemockt):
 Keine Datenbankmigration; bestehende Dossierversion 3
 von Sturm Graz wird erst durch ausdrückliches Klicken
 der neuen Folgeaktion um einen Stadionkandidaten ergänzt.
+
+
+## Ergänzung: Kandidaten bekannter ehemaliger/aktueller Spieler (P54)
+
+Die nächste ausdrücklich bestätigte Rechercheaktion
+**„Spieler und mögliche Vereinslegenden automatisch suchen“**
+steht allen zuvor automatisch identifizierten Vereinsjobs zur
+Verfügung, darunter Sturm Graz. Der Nutzer muss weder Spieler
+noch Q-IDs oder Quellen von Hand eingeben.
+
+- Einmalige, auf **eine exakte Club-Q-ID** eingeschränkte
+  Wikidata Query Service-Abfrage nach \`P54\` (Vereinszugehörigkeit),
+  \`P31=Q5\` (Mensch) und \`P106=Q937857\` (Fußballspieler).
+  Keine Stichwortsuche über alle Wikidata-Objekte.
+- Maximal 12 strukturierte Treffer vom Query Service, davon
+  bis zu acht eindeutige Namen mit englischem Label und
+  mindestens drei Wikimedia-Sitelinks speichern.
+  Die Sitelink-Anzahl bestimmt lediglich die Reihenfolge
+  einer **begrenzten Auswahl**, niemals einen sportlichen
+  Wert oder eine Legendenbewertung.
+- Eigene Faktenart \`club_player_candidate\` mit
+  \`unverified\`-Status, strukturierter Person-Q-ID,
+  Wikidata-P54-Fundstelle und individueller Quellen-URL.
+  **Kein** \`FactReview\`, kein Freigeben für Skript,
+  Szenen, TTS oder Rendering.
+- Alte Fakten, Dossiers und manuelle Reviewentscheidungen
+  werden nicht überschrieben. Der erste erfolgreiche Import
+  forked die aktuellste Dossierversion; wiederholte Starts
+  erkennen einen persistierten Abrufmarker und rufen die
+  externe API nicht erneut auf.
+- Abruf ausschließlich von
+  \`https://query.wikidata.org/sparql\`,
+  ohne Redirect, mit festem User-Agent, maximal
+  8 Sekunden Wartezeit und 128 KiB JSON-Antwort.
+  Owner, CSRF, Job, Dossier-Version und vorherige
+  automatische Club-Zuordnung werden vor der Anfrage
+  überprüft. Clientseitig frei gewählte Q-IDs und
+  externe URLs werden nicht akzeptiert.
+- Die Weboberfläche zeigt die Kandidaten **separat**
+  von endgültig belegten Fakten mit eindeutiger Warnung:
+  **„Noch keine offiziell anerkannten Vereinslegenden“**.
+
+**Bedeutender Unterschied:** Wikidata \`P54\` bedeutet lediglich,
+dass jemand für eine Mannschaft spielte oder spielt. Daraus
+folgt **weder** ein Legendenstatus **noch**, dass die Person
+heute nicht mehr dort spielt. Eine gesonderte automatische
+Gegenprüfung in offiziellen Vereinsquellen ist weiterhin
+erforderlich.
+
+**Sturm-Graz-Testziel:** Der Verein veröffentlicht einen
+eigenen offiziellen Legendenklub und die Aufnahmekriterien:
+- https://sksturm.at/c/legendenklub
+- https://sksturm.at/c/sk-sturm-graz-legenden
+
+Diese URLs sind **externe Belegbeispiele**, kein
+fest kodierter Klub-Sonderfall und werden in diesem PR
+nicht serverseitig gecrawlt. Ein separater zukünftiger
+Adapter muss die bestätigte Clubdomain, Websitebedingungen,
+robots.txt, sichere DNS-/TLS-Verbindung und belegte
+Namenszuordnung beachten. Erst dann darf die Anwendung
+die offizielle Legendenbenennung ausgeben.
+
+Offline-Tests:
+\`python manage.py test app.production.test_wikimedia_players app.production.test_wikimedia_players_views\`.
+Keine echte Query-Service-Anfrage in CI, keine Paid API,
+keine Migration.
