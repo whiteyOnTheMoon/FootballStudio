@@ -369,3 +369,87 @@ Offline-Tests:
 Keine neue Migration; bestehender Sturm-Graz-Job
 Version 6 bleibt unverändert, bis die
 neue Aktion ausdrücklich gestartet wird.
+
+## FS-014c: Gemeinsamer Rechercheablauf mit browserseitiger Fortsetzung
+
+Das private Recherchedossier zeigt einen gemeinsamen Start
+**„Automatische Recherche starten / fortsetzen“** und einen Plan aus
+fünf bereits existierenden Recherchediensten:
+
+1. Kostenlose Wikidata-/Wikipedia-Vereinszuordnung.
+2. Kostenfreie P115-Heimspielstätte.
+3. Kostenfreie P54-Spieler der Vereinsgeschichte.
+4. Offizielle Vereinslegenden (nur mit zuvor bestätigter offizieller
+   Vereinsdomain und bereits dokumentierter Website-/Terms-Bestätigung).
+5. Meisterschafts-/Pokalchronik (nur mit zuvor bestätigter offizieller
+   Ligadomain).
+
+Der zentrale Controller ersetzt **keine** der bisherigen
+Sicherheitsgrenzen. Jeder POST /jobs/<id>/research/auto-continue/
+führt höchstens einen vorhandenen Importdienst aus. Dieser prüft
+erneut Job-Eigentümer, die exakt aktuelle Dossierversion, die
+Quellenherkunft und die bestehenden Robots-/DNS-gepinnten
+TLS-/Domainregeln. GET ist stets lesend. Der Knopf akzeptiert
+keine nutzerseitige Club-Q-ID, Spieler, Ziel-URLs oder Providerbudgets.
+Eine fehlende bestätigte offizielle Quelle wird **nie**
+automatisch autorisiert; die betreffende Stufe erscheint
+als „wartet auf bestätigte offizielle Quelle“.
+
+Im Browser können nach **einem ausdrücklichen Klick** bis zu
+fünf nacheinander abgeschlossene POST-Requests per JavaScript
+fortgesetzt werden. So blockiert kein einzelner HTTP-Request
+für die gesamte Recherche. Bei einem Netzwerk-/Robots-/
+CSRF-Fehler, mehrdeutigen Ergebnissen oder geändertem Dossier
+stoppt die Fortsetzung ohne automatischen Retry. Vorherige
+Stufen behalten ihre unveränderlichen Dossierversionen.
+Ein Statusbereich ist für Screenreader per aria-live markiert.
+Ohne JavaScript führt die Form pro Klick nur einen Schritt
+aus und leitet zum aktuellen Dossier weiter.
+
+Vorherige Einzelaktionen bleiben optional in einem
+aufklappbaren Bereich. Bei vollständig recherchierten
+Dossiers (Sturm Graz, ab Version 7) wird kein Netzabruf
+wiederholt, sondern „5/5 Recherchestufen abgeschlossen“
+angezeigt. Das bedeutet **nicht**, dass alle Fakten
+bewiesen oder für die Filmproduktion freigegeben sind.
+
+### Englischer Story-Aufbau – nur Rechercheplanung
+
+Der deterministische Adapter research_outline.py
+gruppiert bereits gespeicherte strukturierte Fakten
+in einen vorgeschlagenen 9-Minuten-Aufbau:
+
+- 0:00–1:00: *Origins of the club* – Gründungsjahr.
+- 1:00–2:00: *A home and an identity* – Stadion.
+- 2:00–6:30: *Turning points and silverware* – Titeljahre.
+- 6:30–9:00: *People who shaped the club* – offiziell
+  gelistete Spieler- und Trainerlegenden.
+
+Jede Gruppe zeigt höchstens zehn Faktenbeispiele samt
+Quelle-/Fact-ID und Reviewstatus. Nur klar definierte,
+strukturierte Prädikate gehen in die Kapitel ein.
+Nicht offiziell zugeordnete P54-Spieler werden
+**nicht** als Legenden dargestellt. Die Ausgabe ist
+mode=research_outline_only mit ready_for_voiceover=false;
+kein Skript, kein TTS und keine automatische Filmproduktion.
+Bestehende FactReview- und Skript-Gates bleiben unangetastet.
+
+### Tests und Grenzen
+
+python manage.py test app.production.test_research_autopilot app.production.test_research_autopilot_views app.production.test_research_outline
+
+Alle Importer-Aufrufe sind in CI gemockt.
+Geprüft werden Eigentümer und CSRF, Planreihenfolge,
+fehlende offizielle Websitebestätigung, lesende GET-
+Ansicht, Idempotenz bereits erledigter Jobs, stale
+Formulare, Fehlerstopp, korrekte Quellenzuordnung
+und keine Sprechertextfreigabe.
+
+**Noch offen:** dauerhafter Hintergrund-Worker,
+sichere offizielle Domain-Discovery ohne fingierte
+Nutzerfreigabe, vollständige unabhängige Quellencrosschecks
+und ein generiertes englisches 8–10-Minuten-Drehbuch.
+Die browserseitige automatische Fortsetzung ist
+**kein** im Hintergrund weiterlaufender Worker.
+
+Keine Migration, keine Paid API, keine Filmproduktion.
