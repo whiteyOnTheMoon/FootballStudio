@@ -58,6 +58,7 @@ def league_entity(*, title="Austrian Football Bundesliga", site=LEAGUE_SITE,
 class SourceCandidateSelectionTests(SimpleTestCase):
     def test_p856_accepts_one_https_url_no_conflicting_domains(self):
         self.assertEqual(_one_p856(club_entity()), CLUB_SITE)
+        self.assertEqual(_one_p856(club_entity(site="https://sksturm.at")), CLUB_SITE)
         for website in (
             "http://sksturm.at/", "https://127.0.0.1/",
             "https://evil.example/", "https://user:secret@sksturm.at/",
