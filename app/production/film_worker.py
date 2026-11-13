@@ -118,6 +118,15 @@ def perform_film_research(job_id):
             latest = FactDossier.objects.filter(job=job).order_by("-version").first()
             plan = research_plan(job=job, dossier=latest)
             state = next(item["status"] for item in plan["steps"] if item["id"] == stage)
+            # The interactive planner originally waited for P54 players
+            # before P856 source discovery. For one-click production, P856
+            # is independently useful even if the optional player scan
+            # yielded no candidates.
+            if (
+                stage == "sources" and state == "waiting"
+                and plan["steps"][0]["status"] == "completed"
+            ):
+                state = "ready"
             if state in ("completed", "requires_source", "waiting"):
                 continue
 
