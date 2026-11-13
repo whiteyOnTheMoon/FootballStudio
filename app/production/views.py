@@ -254,7 +254,58 @@ def research_dossier(request, job_id):
                 official_player_legends.append(entry)
             else:
                 official_trainer_legends.append(entry)
+    has_official_honours = (
+        snapshot is not None
+        and any(
+            source["source_kind"] == "league_official"
+            and source["external_id"].startswith("auto-honours:Q")
+            for source in snapshot["sources"]
+        )
+    )
+    official_honours = []
+    honours_counts = {"both": 0, "league_only": 0, "club_only": 0, "club_not_checked": 0}
+    if snapshot is not None:
+        for fact in snapshot["facts"]:
+            value = fact.get("value")
+            if (
+                fact["predicate"] != "club_honour_candidate"
+                or not isinstance(value, dict)
+                or value.get("category") not in (
+                    "league_champion", "domestic_cup"
+                )
+                or not isinstance(value.get("season"), str)
+                or value.get("corroboration") not in honours_counts
+                or fact.get("verification_state") != "unverified"
+            ):
+                continue
+            kind = value["category"]
+            status = value["corroboration"]
+            honours_counts[status] += 1
+            official_honours.append({
+                "season": value["season"],
+                "category": kind,
+                "category_name": (
+                    "Meisterschaft" if kind == "league_champion" else "Pokal"
+                ),
+                "status": status,
+                "evidence": [
+                    {
+                        "source_url": item["source"].get("safe_link")
+                        if isinstance(item.get("source"), dict) else None,
+                        "source_title": item["source"].get("title")
+                        if isinstance(item.get("source"), dict) else "",
+                    }
+                    for item in fact["evidence"]
+                ],
+            })
+    official_honours.sort(
+        key=lambda entry: (entry["season"], entry["category"]),
+        reverse=True,
+    )
     return render(request, "studio/research.html", {
+        "has_official_honours": has_official_honours,
+        "official_honours": official_honours,
+        "honours_counts": honours_counts,
         "official_legends_compared": official_legends_compared,
         "official_player_legends": official_player_legends,
         "official_trainer_legends": official_trainer_legends,

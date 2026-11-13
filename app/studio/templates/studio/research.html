@@ -77,6 +77,16 @@
         {% else %}
           <p class="meta">Die automatisch gefundenen Spieler-Kandidaten sind gespeichert. Mehrfaches Abrufen ist nicht erforderlich.</p>
         {% endif %}
+        {% if has_official_honours %}
+          <p class="meta">Die automatische Titelchronik aus offiziellen Liga- und gegebenenfalls Vereinsquellen ist bereits gespeichert. Keine doppelte Recherche erforderlich.</p>
+        {% else %}
+          <form method="post" action="{% url 'research-auto-official-honours' job.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="expected_version" value="{{ selected_version }}">
+            <button type="submit">Meisterschaften und Pokalsiege automatisch recherchieren</button>
+          </form>
+          <p class="meta">Aus der zuvor bestätigten Ligaseite werden Gewinner pro Saison recherchiert und nach Möglichkeit mit der zuvor bestätigten Vereinsseite abgeglichen. Unterschiedliche Angaben bleiben sichtbar und ungeprüft; robots.txt und sichere Domain-Prüfung gelten für jeden Abruf.</p>
+        {% endif %}
         {% if has_player_scan %}
           {% if official_legends_compared %}
             <p class="meta">Der automatische Abgleich mit einer ausdrücklich bestätigten offiziellen Vereinsdomain ist bereits gespeichert.</p>
@@ -154,6 +164,34 @@
         </ul>
       {% endif %}
       <p class="meta">Der Quellabgleich belegt nur die Veröffentlichung eines Namens auf der Vereinsliste, nicht automatisch die Richtigkeit aller biografischen Angaben oder die Freigabe für Sprechertext und Rendering.</p>
+    </section>
+  {% endif %}
+
+  {% if has_official_honours %}
+    <section class="panel" aria-labelledby="honours-heading">
+      <h2 id="honours-heading">Automatische Vereinschronik: Titel und Spielzeiten</h2>
+      <p>Die offiziellen historischen Liga-Ergebnisse wurden saisonweise ausgewertet. Wenn ein eigenständiges Vereinsprofil zugänglich war, zeigt FootballStudio auch dessen Übereinstimmung oder Abweichung. <strong>Alle Einträge sind automatisch recherchierte, ungeprüfte Faktenvorschläge.</strong></p>
+      <p class="meta">Beide Quellen nennen denselben Titel: <strong>{{ honours_counts.both }}</strong> · Nur auf der Ligaseite: <strong>{{ honours_counts.league_only }}</strong> · Nur im Vereinsprofil: <strong>{{ honours_counts.club_only }}</strong> · Vereinsprofil nicht geprüft: <strong>{{ honours_counts.club_not_checked }}</strong></p>
+      <ul>
+        {% for title in official_honours %}
+          <li>
+            <strong>{{ title.season }} · {{ title.category_name }}</strong>
+            {% if title.status == "both" %} · Übereinstimmung zwischen offizieller Liga und Vereinsprofil
+            {% elif title.status == "league_only" %} · Nur Ligaseite; im ausgelesenen Vereinsprofil nicht aufgeführt
+            {% elif title.status == "club_only" %} · Nur Vereinsprofil; kein Treffer in der Ligatabelle
+            {% else %} · Ligaseite; unabhängiges Vereinsprofil nicht geprüft
+            {% endif %}
+            <span class="meta">
+              {% for evidence in title.evidence %}
+                {% if evidence.source_url %}
+                  · <a href="{{ evidence.source_url }}" target="_blank" rel="noopener noreferrer nofollow">{{ evidence.source_title }}</a>
+                {% endif %}
+              {% endfor %}
+            </span>
+          </li>
+        {% endfor %}
+      </ul>
+      <p class="meta">Eine fehlende Saison im Vereinsprofil beweist keinen falschen Ligaeintrag. Auch bei Übereinstimmung wird nichts automatisch als menschlich verifiziert oder für den Sprechertext freigegeben.</p>
     </section>
   {% endif %}
 
