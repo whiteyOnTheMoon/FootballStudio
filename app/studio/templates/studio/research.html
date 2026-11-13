@@ -67,6 +67,16 @@
         {% else %}
           <p class="meta">Ein Stadion-Faktenvorschlag ist bereits vorhanden. Kein doppelter Import nötig.</p>
         {% endif %}
+        {% if not has_player_scan %}
+          <form method="post" action="{% url 'research-auto-wikimedia-players' job.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="expected_version" value="{{ selected_version }}">
+            <button type="submit">Spieler und mögliche Vereinslegenden automatisch suchen</button>
+          </form>
+          <p class="meta">Wikidata P54 liefert eine begrenzte Auswahl von Spielern mit dokumentierter Vereinszugehörigkeit. <strong>Die Auswahl ist noch keine Liste offiziell anerkannter Vereinslegenden.</strong> Anerkennungen müssen separat mit Vereinsquellen abgeglichen werden.</p>
+        {% else %}
+          <p class="meta">Die automatisch gefundenen Spieler-Kandidaten sind gespeichert. Mehrfaches Abrufen ist nicht erforderlich.</p>
+        {% endif %}
       {% else %}
         <form method="post" action="{% url 'research-auto-wikimedia' job.pk %}">
           {% csrf_token %}
@@ -91,6 +101,23 @@
       <h2 id="research-preflight-heading">Sichere Website-Recherche vorbereiten</h2>
       <p>Prüfe vor einer späteren, ausdrücklich freizugebenden Recherche die bereits bestätigte Vereins- oder Ligadomain und die strengen Grenzen eines möglichen Abrufs. <strong>Der Vorabcheck besucht keine Website und startet keinen Crawler.</strong></p>
       <p><a href="{% url 'research-preflight' job.pk %}">Offizielle Quellen und Recherchegrenzen vorab prüfen</a></p>
+    </section>
+  {% endif %}
+
+  {% if player_candidates %}
+    <section class="panel" aria-labelledby="players-heading">
+      <h2 id="players-heading">Spieler aus der Vereinsgeschichte (automatische Kandidatenliste)</h2>
+      <p>Die Namen wurden durch Wikidata P54 mit der ausgewählten Club-Q-ID verknüpft. Die Auswahl nach Verfügbarkeit von Wikimedia-Artikeln ist keine Bewertung der sportlichen Bedeutung. <strong>Keiner der Namen wird allein dadurch zur Vereinslegende erklärt.</strong></p>
+      <ul>
+        {% for candidate in player_candidates %}
+          <li>{{ candidate.name }}
+            {% if candidate.source_url %}
+              · <a href="{{ candidate.source_url }}" target="_blank" rel="noopener noreferrer nofollow">Wikidata-Bezug prüfen</a>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+      <p class="meta">Offiziell ausgezeichnete Spieler-/Trainerlegenden brauchen einen separaten Nachweis des Vereins. Für mögliche spätere Drehbuchaussagen bleiben sämtliche Einträge ungeprüft.</p>
     </section>
   {% endif %}
 
