@@ -123,8 +123,17 @@
     </div>
 
     <section id="job-panel" class="jobs hidden" aria-labelledby="job-heading">
-      <h3 id="job-heading">M1-Testjob anlegen</h3>
-      <p class="muted">Vergib einen Arbeitstitel. Wir speichern deine Vereinsauswahl und den Teststatus in PostgreSQL – es wird <strong>noch kein Video produziert</strong>.</p>
+      <h3 id="job-heading">Video erstellen</h3>
+      <p class="muted">Ein Klick startet einen dauerhaften Produktionsauftrag. Die kostenlose Recherche läuft im Backend weiter, auch wenn du die Seite schließt. <strong>Hinweis zur aktuellen Entwicklungsstufe:</strong> Sprecherstimme, lizenzierte Medien und MP4-Rendering sind noch nicht verfügbar; es wird noch kein fertiges Video ausgegeben.</p>
+      <form id="film-form" method="post" action="{% url 'production:create-film' %}">
+        {% csrf_token %}
+        <button type="submit" id="film-submit">Video erstellen</button>
+      </form>
+      <p id="film-feedback" class="feedback" role="status" aria-live="polite"></p>
+      <details>
+        <summary>Erweiterte Testwerkzeuge (optional)</summary>
+        <h4>M1-Testjob anlegen</h4>
+        <p class="muted">Nur für Entwickler: Testjob ohne automatische Videoerstellung speichern.</p>
       <form id="job-form" method="post" action="{% url 'production:create-test' %}">
         {% csrf_token %}
         <label for="job-title">Arbeitstitel</label>
@@ -159,6 +168,7 @@
         <button type="submit" id="job-submit">Testjob speichern</button>
       </form>
       <p id="job-feedback" class="feedback" role="status" aria-live="polite"></p>
+      </details>
     </section>
   </section>
 
@@ -193,6 +203,7 @@
     selection: "{% url 'clubs:selection' %}",
     manual: "{% url 'clubs:manual' %}",
     createJob: "{% url 'production:create-test' %}",
+    createFilm: "{% url 'production:create-film' %}",
     listJobs: "{% url 'production:list' %}"
   };
   const confederation = document.getElementById("confederation");
@@ -210,6 +221,9 @@
   const manualSubmit = document.getElementById("manual-submit");
   const jobPanel = document.getElementById("job-panel");
   const jobForm = document.getElementById("job-form");
+  const filmForm = document.getElementById("film-form");
+  const filmSubmit = document.getElementById("film-submit");
+  const filmFeedback = document.getElementById("film-feedback");
   const jobTitle = document.getElementById("job-title");
   const marketValueDetails = document.getElementById("market-value-details");
   const marketValueMillions = document.getElementById("market-value-millions");
@@ -221,6 +235,7 @@
   const jobList = document.getElementById("job-list");
   const researchUrlTemplate = "{% url 'research-job' 987654321 %}";
   const editTitleUrlTemplate = "{% url 'edit-manual-title' 987654321 %}";
+  const filmStatusUrlTemplate = "{% url 'film-status-page' 987654321 %}";
   let revision = 0;
 
   function resetMarketValueFields() {
@@ -251,6 +266,7 @@
     selection.classList.add("hidden");
     jobPanel.classList.add("hidden");
     jobFeedback.textContent = "";
+    filmFeedback.textContent = "";
     manualFeedback.textContent = "";
     manualFeedback.classList.remove("error");
     manualPanel.classList.add("hidden");
@@ -396,7 +412,7 @@
       context.textContent = (result.selection.confederation || "") + " · " + result.selection.country + " · " + result.selection.league;
       selection.classList.remove("hidden");
       jobPanel.classList.remove("hidden");
-      message("Verein ausgewählt. Du kannst einen M1-Testjob speichern.");
+      message("Verein ausgewählt. Mit einem Klick kannst du die automatische Produktion starten.");
     } catch (error) {
       if (token !== revision) return;
       message(error.message, true);
@@ -485,6 +501,12 @@
           }
         }
         if (Number.isSafeInteger(job.id) && job.id > 0) {
+          if (job.kind === "film") {
+            const filmLink = document.createElement("a");
+            filmLink.href = filmStatusUrlTemplate.replace("987654321", String(job.id));
+            filmLink.textContent = "Produktionsstatus";
+            item.append(" · ", filmLink);
+          }
           const researchLink = document.createElement("a");
           researchLink.href = researchUrlTemplate.replace("987654321", String(job.id));
           researchLink.textContent = "Recherchedossier ansehen";
@@ -505,6 +527,48 @@
       jobList.appendChild(item);
     }
   }
+
+  filmForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!country.value || !league.value || !club.value) {
+      filmFeedback.textContent = "Bitte zuerst einen Verein auswählen.";
+      filmFeedback.classList.add("error");
+      return;
+    }
+    const token = revision;
+    filmFeedback.classList.remove("error");
+    filmFeedback.textContent = "Produktionsauftrag wird gespeichert …";
+    filmSubmit.disabled = true;
+    try {
+      const params = new URLSearchParams({
+        country: country.value, league: league.value, club: club.value
+      });
+      const result = await readJson(api.createFilm, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-CSRFToken": filmForm.querySelector('[name="csrfmiddlewaretoken"]').value
+        },
+        body: params.toString()
+      });
+      const filmId = Number(result.job && result.job.id);
+      if (!Number.isSafeInteger(filmId) || filmId <= 0) {
+        throw new Error("Der Produktionsauftrag konnte nicht zugeordnet werden.");
+      }
+      if (token === revision) {
+        window.location.assign(
+          filmStatusUrlTemplate.replace("987654321", String(filmId))
+        );
+      }
+    } catch (error) {
+      if (token === revision) {
+        filmFeedback.textContent = error.message;
+        filmFeedback.classList.add("error");
+      }
+    } finally {
+      filmSubmit.disabled = false;
+    }
+  });
 
   jobForm.addEventListener("submit", async (event) => {
     event.preventDefault();
