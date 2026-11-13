@@ -99,3 +99,54 @@ kostenfrei/legal verwendbare Quellen, maschinelle Vertrauensregeln
 sowie das englische Skript, TTS, Medienrechte und FFmpeg ergänzt werden.
 
 Tests: python manage.py test app.production.test_film_claim_assessment
+
+## FS-019: automatischer englischer, quellenbezogener Dokumentationsentwurf
+
+Der Film-Worker erzeugt nach den bestehenden kostenlosen Recherche- und
+maschinellen Quellenbewertungsstufen automatisch eine **englische
+Dokumentations-Rohfassung**. Das ist kein vom Nutzer separat zu startendes
+Recherchewerkzeug: Die private Filmstatus-Seite rekonstruiert denselben
+Entwurf direkt aus der neuesten gespeicherten Dossierversion; ein optional
+aufklappbarer Abschnitt zeigt die einzelnen englischen Absätze und zugehörige
+Fact-/Source-IDs. Der generierte Text wird **nicht** im Job als fertig
+gespeichert oder als Sprechertext exportiert.
+
+Der Adapter ist rein deterministisch und verwendet ausschließlich:
+
+- *Origins and identity*: einen eindeutigen, mit P571-Locator belegten
+  Gründungsjahreintrag des bereits identifizierten Club-Wikidata-Objekts.
+- *A place to call home*: eine eindeutige P115-Stadionverknüpfung plus
+  die konkret referenzierte Bezeichnung der Wikidata-Stadion-Entität.
+- *Seasons of silverware*: nur maschinell korrelierte Titeljahre aus
+  **zwei unterschiedlich zugeordneten offiziellen Quellseiten**, wie
+  durch FS-018 mit identischer Dossierversion nachgewiesen.
+- *The names the club remembers*: nur Namen in der tatsächlich
+  ausgelesenen offiziellen Vereinslegendenliste mit exaktem
+  Spieler- oder Trainer-Locator, korrekter Vereins-Q-ID und gespeicherter
+  offizieller Quelle. P54-Spielerkandidaten allein sind niemals Legenden.
+
+Die englischen Absätze machen die **Herkunft ausdrücklich sichtbar**
+(z. B. 'The Wikidata entry records ...' statt 'The club definitely ...').
+Das bedeutet keine unabhängige Wahrheitsprüfung. Jede Aussage enthält die
+zugeordneten Facts und Source-IDs; ungeprüfter Freitext, Source-Notizen,
+Webseitentext und automatisch gefundene ungeprüfte Webseiten-URLs
+werden nicht zu englischem Skript umgeschrieben.
+
+Es gibt weder freie Modell-Halluzination noch künstlich wiederholte
+Übergänge, um neun Minuten vorzutäuschen. Tatsächliche Wortzahl,
+geschätzte Sprechdauer bei 145 Wörtern pro Minute und die Zielspanne
+von ungefähr 1.100 bis 1.550 Wörtern stehen in der Statusseite.
+Fehlen ausreichende Quellen, lautet die Qualitätsampel
+insufficient_source_material. Selbst eine passende Wortzahl bedeutet
+**keine** inhaltliche oder technische Freigabe: approved_for_voiceover
+bleibt false, bestehende FactReviews und der menschlich abgesicherte
+Script-Safety-Adapter werden nicht verändert.
+
+Es wird keine kostenpflichtige API aufgerufen, keine Webseite neu
+abgerufen, kein TTS/Audio, keine Lizenzmedien und noch kein MP4 erstellt.
+Keine neue Migration. Das nächste Arbeitspaket muss zusätzliche
+unabhängig prüfbare historische Stationen erschließen und auf dieser
+Grundlage ein dramaturgisch vollständiges englisches 8–10-Minuten-Skript
+mit belastbarer automatischer Quellenentscheidung erzeugen.
+
+Offline-Tests: python manage.py test app.production.test_automatic_english_script

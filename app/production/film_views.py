@@ -18,6 +18,7 @@ from .models import FactDossier, ProductionJob
 from .research_autopilot import research_plan
 from .dossiers import load_fact_dossier
 from .film_claim_assessment import assess_research_snapshot
+from .automatic_english_script import assemble_english_documentary_draft
 
 
 class FilmRequestForm(forms.Form):
@@ -30,11 +31,15 @@ def _film_status(job):
     latest = FactDossier.objects.filter(job=job).order_by("-version").first()
     plan = research_plan(job=job, dossier=latest)
     assessment = None
+    english_draft = None
     if latest is not None:
         snapshot = load_fact_dossier(
             owner=job.owner, job_id=job.pk, version=latest.version,
         )
         assessment = assess_research_snapshot(snapshot)
+        english_draft = assemble_english_documentary_draft(
+            snapshot, assessment=assessment,
+        )
     return {
         "id": job.pk,
         "club": job.club_name,
@@ -45,6 +50,7 @@ def _film_status(job):
         "research_total": plan["total"],
         "research_steps": plan["steps"],
         "machine_source_assessment": assessment,
+        "english_script_draft": english_draft,
         "video_ready": job.status == ProductionJob.Status.COMPLETED
         and bool(job.output_path),
         "message": job.error_message if job.status == ProductionJob.Status.FAILED

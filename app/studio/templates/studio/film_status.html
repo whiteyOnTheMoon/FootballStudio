@@ -45,7 +45,7 @@
       <p class="notice">Diese Seite darf geschlossen werden. Der separate Server-Worker verarbeitet den Auftrag weiter; die Anzeige aktualisiert sich automatisch.</p>
     {% else %}
       {% if not film.video_ready %}
-        <p class="notice">Noch keine MP4-Datei. Der englische Drehbuch-, Sprach-, Medien- und Renderdienst ist noch nicht einsatzbereit. Es wird kein fertiges Video behauptet und keine kostenpflichtige API gestartet.</p>
+        <p class="notice">Noch keine MP4-Datei. Ein englischer Rohentwurf kann bereits automatisch erstellt werden, aber das vollständige Drehbuch, die Sprecherstimme, lizenzierte Medien und der MP4-Renderer fehlen noch. Es wird kein fertiges Video behauptet und keine kostenpflichtige API gestartet.</p>
       {% endif %}
     {% endif %}
   </section>
@@ -72,6 +72,35 @@
         </ul>
         {% if film.machine_source_assessment.additional_facts_not_evaluated %}
           <p class="muted">Weitere {{ film.machine_source_assessment.additional_facts_not_evaluated }} Fakten wurden wegen der Auswertungsgrenze nicht automatisch bewertet.</p>
+        {% endif %}
+      </details>
+    </section>
+  {% endif %}
+  {% if film.english_script_draft %}
+    <section class="panel" aria-labelledby="script-draft-heading">
+      <h2 id="script-draft-heading">Englischer Dokumentationsentwurf</h2>
+      <p>Aus bereits gespeicherten Quellenangaben erstellt FootballStudio automatisch einen englischen <strong>Rohentwurf</strong>. Jede Passage bleibt mit der Fundstelle verknüpft; unbelegte Geschichten werden nicht ergänzt.</p>
+      <p><strong>{{ film.english_script_draft.word_count }} Wörter</strong> · ungefähr {{ film.english_script_draft.estimated_duration_minutes }} Minuten bei 145 Wörtern/Minute · Ziel ca. {{ film.english_script_draft.target_duration_minutes }} Minuten</p>
+      {% if film.english_script_draft.quality_gate == "insufficient_source_material" %}
+        <p class="notice">Für einen vollständigen 8–10-Minuten-Film sind noch zu wenige belastbar zuordenbare Aussagen vorhanden. Keine künstliche Verlängerung und keine erfundenen Ereignisse.</p>
+      {% elif film.english_script_draft.quality_gate == "excess_material" %}
+        <p class="notice">Der Entwurf muss noch sinnvoll gekürzt und redaktionell aufbereitet werden.</p>
+      {% else %}
+        <p class="notice">Die Textlänge liegt im Zielbereich. Die unabhängige inhaltliche Qualitätssicherung und die Freigabe für Sprecherstimme/Rendering fehlen weiterhin.</p>
+      {% endif %}
+      <details>
+        <summary>Englischen Entwurf und Quellen ansehen (optional)</summary>
+        {% for section in film.english_script_draft.sections %}
+          {% if section.paragraphs %}
+            <h3 lang="en">{{ section.heading }}</h3>
+            {% for passage in section.paragraphs %}
+              <p lang="en">{{ passage.text }}</p>
+              <p class="muted">Fakten-ID: {{ passage.fact_ids|join:", " }} · Quellen-ID: {{ passage.source_ids|join:", " }} · Grundlage: {{ passage.basis }} · nicht für Voiceover freigegeben</p>
+            {% endfor %}
+          {% endif %}
+        {% endfor %}
+        {% if not film.english_script_draft.paragraph_count %}
+          <p>Aktuell ist kein ausreichend nachvollziehbarer Satz für einen englischen Entwurf vorhanden. Die Recherche- und Quellenübersicht bleibt optional verfügbar.</p>
         {% endif %}
       </details>
     </section>
