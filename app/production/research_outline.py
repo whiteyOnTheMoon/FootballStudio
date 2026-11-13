@@ -95,7 +95,8 @@ def build_documentary_research_outline(snapshot):
             corroboration = value.get("corroboration")
             if (
                 isinstance(season, str) and _SEASON.fullmatch(season)
-                and category in _HONOUR_NAMES
+                and isinstance(category, str) and category in _HONOUR_NAMES
+                and isinstance(corroboration, str)
                 and corroboration in _CORROBORATION
             ):
                 label, section = (
